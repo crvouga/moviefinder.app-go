@@ -90,7 +90,7 @@ type DocumentData struct {
 }
 
 func document(route string) string {
-	tmpl, err := template.New("document").Parse(documentTemplate)
+	template, err := template.New("document").Parse(documentTemplate)
 	if err != nil {
 		panic(err)
 	}
@@ -101,7 +101,7 @@ func document(route string) string {
 	}
 
 	var result bytes.Buffer
-	err = tmpl.Execute(&result, data)
+	err = template.Execute(&result, data)
 	if err != nil {
 		panic(err)
 	}
