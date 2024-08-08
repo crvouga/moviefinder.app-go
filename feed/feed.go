@@ -6,7 +6,6 @@ import (
 )
 
 func RouteHx(w http.ResponseWriter, r *http.Request) {
-
 	switch r.URL.Path {
 	case "/feed":
 		w.Header().Set("Content-Type", "text/html")
