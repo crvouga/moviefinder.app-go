@@ -31,6 +31,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 func routeHx(w http.ResponseWriter, r *http.Request) {
 
 	switch r.URL.Path {
+
 	case "/feed":
 		feed.RouteHx(w, r)
 		return
