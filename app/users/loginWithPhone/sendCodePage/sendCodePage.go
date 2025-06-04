@@ -47,7 +47,7 @@ func Respond() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 			phoneNumber := r.FormValue(data.TextFieldPhoneNumber.Name)
-			verifyCodePage.Redirect(w, r, phoneNumber)
+			verifyCodePage.Redirect(w, r, phoneNumber, nil)
 			return
 		}
 		templateExt.Respond(templ, document.TemplateName, data, w)

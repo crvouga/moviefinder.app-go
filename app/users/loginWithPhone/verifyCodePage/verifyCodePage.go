@@ -55,10 +55,8 @@ func Respond() http.HandlerFunc {
 				homePage.Redirect(w, r)
 				return
 			}
-			query := url.Values{}
-			query.Set("phoneNumber", phoneNumber)
-			query.Set("error", "Invalid code")
-			http.Redirect(w, r, loginWithPhoneRoutes.VerifyCodePage+"?"+query.Encode(), http.StatusFound)
+			err := "Invalid code"
+			Redirect(w, r, phoneNumber, &err)
 			return
 		}
 		data := baseData
@@ -68,8 +66,11 @@ func Respond() http.HandlerFunc {
 	}
 }
 
-func Redirect(w http.ResponseWriter, r *http.Request, phoneNumber string) {
+func Redirect(w http.ResponseWriter, r *http.Request, phoneNumber string, err *string) {
 	query := url.Values{}
 	query.Set("phoneNumber", phoneNumber)
+	if err != nil {
+		query.Set("error", *err)
+	}
 	http.Redirect(w, r, loginWithPhoneRoutes.VerifyCodePage+"?"+query.Encode(), http.StatusFound)
 }
