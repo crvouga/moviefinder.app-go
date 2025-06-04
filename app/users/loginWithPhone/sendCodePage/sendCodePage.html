@@ -1,6 +1,7 @@
 {{define "page"}}
 {{template "topBar" .TopBar}}
-<form class="flex-1 w-full p-6 flex flex-col gap-12" method="POST">
+<form class="flex-1 w-full p-6 flex flex-col gap-12" method="POST"
+    onsubmit="this.querySelectorAll('input,button').forEach(e => e.disabled = true);">
     {{template "textField" .TextFieldPhoneNumber}}
     {{template "button" .ButtonSendCode}}
 </form>
