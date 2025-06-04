@@ -24,19 +24,18 @@ func respondLoadNext() http.HandlerFunc {
 	templ := templateExt.Combine([]string{
 		feedSwiperSlides.TemplatePath,
 	})
-	return func(w http.ResponseWriter, r *http.Request) {
-		type Data struct {
-			FeedSwiper feedSwiper.FeedSwiper
-		}
+	type Data struct {
+		FeedSwiper feedSwiper.FeedSwiper
+	}
 
-		data := Data{
-			FeedSwiper: feedSwiper.FeedSwiper{
-				Slides: []feedSwiperSlides.FeedSwiperSlide{
-					{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
-				},
+	data := Data{
+		FeedSwiper: feedSwiper.FeedSwiper{
+			Slides: []feedSwiperSlides.FeedSwiperSlide{
+				{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
 			},
-		}
-
+		},
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
 		templateExt.Respond(templ, feedSwiperSlides.TemplateName, data, w)
 	}
 }
@@ -49,26 +48,23 @@ func respondHomePage() http.HandlerFunc {
 	}
 	templPaths = append(templPaths, feedSwiper.TemplatePaths...)
 	templ := templateExt.Combine(templPaths)
-	return func(w http.ResponseWriter, r *http.Request) {
+	type Data struct {
+		FeedSwiper    feedSwiper.FeedSwiper
+		BottomButtons bottomButtons.BottomButtons
+		LoadNextURL   string
+	}
 
-		type Data struct {
-			FeedSwiper    feedSwiper.FeedSwiper
-			BottomButtons bottomButtons.BottomButtons
-			LoadNextURL   string
-		}
-
-		data := Data{
-			FeedSwiper: feedSwiper.FeedSwiper{
-				Slides: []feedSwiperSlides.FeedSwiperSlide{
-					{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
-				},
+	data := Data{
+		FeedSwiper: feedSwiper.FeedSwiper{
+			Slides: []feedSwiperSlides.FeedSwiperSlide{
+				{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
 			},
-			BottomButtons: appBottomButtons.AppBottomButtons(appBottomButtons.HomePage),
-			LoadNextURL:   LoadNext,
-		}
-
+		},
+		BottomButtons: appBottomButtons.AppBottomButtons(appBottomButtons.HomePage),
+		LoadNextURL:   LoadNext,
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
 		templateExt.Respond(templ, document.TemplateName, data, w)
-
 	}
 
 }
