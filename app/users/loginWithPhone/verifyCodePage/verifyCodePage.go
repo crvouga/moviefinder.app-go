@@ -1,7 +1,7 @@
 package verifyCodePage
 
 import (
-	"fmt"
+	"movieFinder/app/home/homePage"
 	"movieFinder/app/ui/button"
 	"movieFinder/app/ui/document"
 	"movieFinder/app/ui/templateExt"
@@ -10,6 +10,7 @@ import (
 	"movieFinder/app/users/loginWithPhone/loginWithPhoneRoutes"
 	"movieFinder/lib/static"
 	"net/http"
+	"net/url"
 )
 
 func Router(mux *http.ServeMux) {
@@ -30,6 +31,7 @@ func Respond() http.HandlerFunc {
 		PhoneNumber      string
 		TextFieldCode    textField.Data
 		ButtonVerifyCode button.Data
+		Error            string
 	}
 	baseData := Data{
 		TopBar: topBar.Data{
@@ -47,17 +49,27 @@ func Respond() http.HandlerFunc {
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
-			phoneNumber := r.FormValue(baseData.TextFieldCode.Name)
-			fmt.Println(phoneNumber)
-			http.Redirect(w, r, loginWithPhoneRoutes.VerifyCodePage, http.StatusFound)
+			code := r.FormValue(baseData.TextFieldCode.Name)
+			phoneNumber := r.URL.Query().Get("phoneNumber")
+			if code == "123" {
+				homePage.Redirect(w, r)
+				return
+			}
+			query := url.Values{}
+			query.Set("phoneNumber", phoneNumber)
+			query.Set("error", "Invalid code")
+			http.Redirect(w, r, loginWithPhoneRoutes.VerifyCodePage+"?"+query.Encode(), http.StatusFound)
 			return
 		}
 		data := baseData
 		data.PhoneNumber = r.URL.Query().Get("phoneNumber")
+		data.Error = r.URL.Query().Get("error")
 		templateExt.Respond(templ, document.TemplateName, data, w)
 	}
 }
 
 func Redirect(w http.ResponseWriter, r *http.Request, phoneNumber string) {
-	http.Redirect(w, r, loginWithPhoneRoutes.VerifyCodePage+"?phoneNumber="+phoneNumber, http.StatusFound)
+	query := url.Values{}
+	query.Set("phoneNumber", phoneNumber)
+	http.Redirect(w, r, loginWithPhoneRoutes.VerifyCodePage+"?"+query.Encode(), http.StatusFound)
 }

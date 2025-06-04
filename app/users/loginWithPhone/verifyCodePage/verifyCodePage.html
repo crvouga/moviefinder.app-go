@@ -4,5 +4,8 @@
     <p>Enter the code sent to <strong>{{.PhoneNumber}}</strong></p>
     {{template "textField" .TextFieldCode}}
     {{template "button" .ButtonVerifyCode}}
+    {{if .Error}}
+    <p class="text-red-500">{{.Error}}</p>
+    {{end}}
 </form>
 {{end}}
