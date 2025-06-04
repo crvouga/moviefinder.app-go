@@ -1,12 +1,10 @@
-package button
+package textField
 
 import "movieFinder/lib/static"
 
 type Data struct {
-	Text  string
-	Href  string
-	Class string
+	Label string
 }
 
-var TemplateName = "button"
+var TemplateName = "textField"
 var TemplatePath = static.GetSiblingPath(TemplateName + ".html")

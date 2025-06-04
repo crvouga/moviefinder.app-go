@@ -1,12 +1,11 @@
-package button
+package topBar
 
 import "movieFinder/lib/static"
 
 type Data struct {
-	Text  string
-	Href  string
-	Class string
+	Title    string
+	BackHref string
 }
 
-var TemplateName = "button"
+var TemplateName = "topBar"
 var TemplatePath = static.GetSiblingPath(TemplateName + ".html")
