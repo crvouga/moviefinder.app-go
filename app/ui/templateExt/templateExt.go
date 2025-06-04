@@ -2,7 +2,6 @@ package templateExt
 
 import (
 	"html/template"
-	"movieFinder/app/ui/page"
 	"net/http"
 )
 
@@ -13,7 +12,7 @@ var FuncMap = template.FuncMap{
 }
 
 func Combine(templatePaths ...string) *template.Template {
-	return template.Must(template.New("").Funcs(page.FuncMap).ParseFiles(
+	return template.Must(template.New("").Funcs(FuncMap).ParseFiles(
 		templatePaths...,
 	))
 }

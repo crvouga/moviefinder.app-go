@@ -2,24 +2,13 @@
 package feedSwiper
 
 import (
-	"html/template"
+	"movieFinder/app/home/homePage/feedSwiperSlides"
 	"movieFinder/lib/static"
 )
 
 type FeedSwiper struct {
-	Slides []FeedSwiperSlide
+	Slides []feedSwiperSlides.FeedSwiperSlide
 }
 
-type FeedSwiperSlide struct {
-	ImageSrc string
-	URL      string
-}
-
-var TemplatePath = static.GetSiblingPath("feedSwiper.html")
-
-var TemplatePathSwiperSlides = static.GetSiblingPath("feedSwiperSlides.html")
-
-var Templates = template.Must(template.ParseFiles(
-	TemplatePath,
-	TemplatePathSwiperSlides,
-))
+var TemplateName = "feedSwiper.html"
+var TemplatePath = static.GetSiblingPath(TemplateName)

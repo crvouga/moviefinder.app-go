@@ -3,52 +3,52 @@ package homePage
 import (
 	"movieFinder/app/ctx/appCtx"
 	"movieFinder/app/home/homePage/feedSwiper"
+	"movieFinder/app/home/homePage/feedSwiperSlides"
 	"movieFinder/app/home/homeRoutes"
 	"movieFinder/app/ui/appBottomButtons"
 	"movieFinder/app/ui/bottomButtons"
 	"movieFinder/app/ui/document"
-	"movieFinder/app/ui/page"
 	"movieFinder/app/ui/templateExt"
 	"movieFinder/lib/static"
 	"net/http"
 )
 
-const LoadNext = "/loadNext"
+const LoadNext = "/load-next"
 
 func Router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 	mux.HandleFunc(homeRoutes.HomePage, respondHomePage())
+	mux.HandleFunc(LoadNext, respondLoadNext())
+}
 
-	mux.HandleFunc(LoadNext, func(w http.ResponseWriter, r *http.Request) {
-		_q := `SELECT media_id, title, poster_urls, popularity FROM media ORDER BY popularity DESC LIMIT 10`
-
-		println(_q)
-
+func respondLoadNext() http.HandlerFunc {
+	templ := templateExt.Combine(
+		feedSwiperSlides.TemplatePath,
+	)
+	return func(w http.ResponseWriter, r *http.Request) {
 		type Data struct {
 			FeedSwiper feedSwiper.FeedSwiper
 		}
 
 		data := Data{
 			FeedSwiper: feedSwiper.FeedSwiper{
-				Slides: []feedSwiper.FeedSwiperSlide{
-					{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
-					{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
-					{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
+				Slides: []feedSwiperSlides.FeedSwiperSlide{
 					{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
 				},
 			},
 		}
 
-		page.Respond(data, feedSwiper.TemplatePathSwiperSlides)(w, r)
-	})
+		templateExt.Respond(templ, feedSwiperSlides.TemplateName, data, w)
+
+	}
 }
 
 func respondHomePage() http.HandlerFunc {
-	template := templateExt.Combine(
+	templ := templateExt.Combine(
 		static.GetSiblingPath("homePage.html"),
 		document.TemplatePath,
 		bottomButtons.TemplatePath,
 		feedSwiper.TemplatePath,
-		feedSwiper.TemplatePathSwiperSlides,
+		feedSwiperSlides.TemplatePath,
 	)
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -60,10 +60,7 @@ func respondHomePage() http.HandlerFunc {
 
 		data := Data{
 			FeedSwiper: feedSwiper.FeedSwiper{
-				Slides: []feedSwiper.FeedSwiperSlide{
-					{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
-					{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
-					{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
+				Slides: []feedSwiperSlides.FeedSwiperSlide{
 					{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
 				},
 			},
@@ -71,7 +68,7 @@ func respondHomePage() http.HandlerFunc {
 			LoadNextURL:   LoadNext,
 		}
 
-		templateExt.Respond(template, "document.html", data, w)
+		templateExt.Respond(templ, document.TemplateName, data, w)
 
 	}
 

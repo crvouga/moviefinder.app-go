@@ -11,4 +11,5 @@ var FuncMap = template.FuncMap{
 	},
 }
 
-var TemplatePath = static.GetSiblingPath("document.html")
+var TemplateName = "document.html"
+var TemplatePath = static.GetSiblingPath(TemplateName)
