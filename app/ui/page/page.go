@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-var funcMap = template.FuncMap{
+var FuncMap = template.FuncMap{
 	"safeHTML": func(s string) template.HTML {
 		return template.HTML(s)
 	},
@@ -20,7 +20,7 @@ func Respond(pageData any, templatePaths ...string) http.HandlerFunc {
 
 		allTemplatePaths = append(allTemplatePaths, templatePaths...)
 
-		tmpl, err := template.New("page.html").Funcs(funcMap).ParseFiles(allTemplatePaths...)
+		tmpl, err := template.New("page.html").Funcs(FuncMap).ParseFiles(allTemplatePaths...)
 		if err != nil {
 			errStr := err.Error()
 			http.Error(w, errStr, http.StatusInternalServerError)
@@ -35,3 +35,5 @@ func Respond(pageData any, templatePaths ...string) http.HandlerFunc {
 		}
 	}
 }
+
+var TemplatePath = static.GetSiblingPath("page.html")

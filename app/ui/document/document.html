@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>moviefinder.app</title>
+  <meta name="description" content="Movie finder" />
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+</head>
+
+<body class="bg-black text-white grid place-items-center w-[100dvw] h-[100dvh] overflow-hidden">
+  <div
+    class="w-full h-full max-w-[600px] max-h-[900px] border rounded overflow-hidden flex flex-col border-neutral-600">
+    {{ template "document" . }}
+  </div>
+</body>
+
+</html>
