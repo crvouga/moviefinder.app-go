@@ -21,9 +21,9 @@ func Router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 }
 
 func respondLoadNext() http.HandlerFunc {
-	templ := templateExt.Combine(
+	templ := templateExt.Combine([]string{
 		feedSwiperSlides.TemplatePath,
-	)
+	})
 	return func(w http.ResponseWriter, r *http.Request) {
 		type Data struct {
 			FeedSwiper feedSwiper.FeedSwiper
@@ -42,13 +42,13 @@ func respondLoadNext() http.HandlerFunc {
 }
 
 func respondHomePage() http.HandlerFunc {
-	templ := templateExt.Combine(
+	templPaths := []string{
 		static.GetSiblingPath("homePage.html"),
 		document.TemplatePath,
 		bottomButtons.TemplatePath,
-		feedSwiper.TemplatePath,
-		feedSwiperSlides.TemplatePath,
-	)
+	}
+	templPaths = append(templPaths, feedSwiper.TemplatePaths...)
+	templ := templateExt.Combine(templPaths)
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		type Data struct {

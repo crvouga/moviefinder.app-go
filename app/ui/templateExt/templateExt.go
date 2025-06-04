@@ -11,10 +11,8 @@ var FuncMap = template.FuncMap{
 	},
 }
 
-func Combine(templatePaths ...string) *template.Template {
-	return template.Must(template.New("").Funcs(FuncMap).ParseFiles(
-		templatePaths...,
-	))
+func Combine(templatePaths []string) *template.Template {
+	return template.Must(template.New("").Funcs(FuncMap).ParseFiles(templatePaths...))
 }
 
 func Respond(template *template.Template, templateName string, data any, w http.ResponseWriter) {
