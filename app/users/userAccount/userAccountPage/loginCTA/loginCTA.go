@@ -15,7 +15,4 @@ var IconSize = "size-24"
 var TemplateName = "loginCTA.html"
 var TemplatePath = static.GetSiblingPath(TemplateName)
 
-var TemplatePaths = []string{
-	TemplatePath,
-	button.TemplatePath,
-}
+var TemplatePaths = append(button.TemplatePaths, TemplatePath)

@@ -10,6 +10,7 @@ import (
 	"movieFinder/app/users/loginWithPhone/verifyCodePage"
 	"movieFinder/lib/static"
 	"net/http"
+	"time"
 )
 
 func Router(mux *http.ServeMux) {
@@ -22,8 +23,8 @@ func Respond() http.HandlerFunc {
 		document.TemplatePath,
 		topBar.TemplatePath,
 		textField.TemplatePath,
-		button.TemplatePath,
 	}
+	templatePaths = append(templatePaths, button.TemplatePaths...)
 	templ := templateExt.Combine(templatePaths)
 	type Data struct {
 		TopBar               topBar.Data
@@ -42,11 +43,13 @@ func Respond() http.HandlerFunc {
 		ButtonSendCode: button.Data{
 			Text:  "Send Code",
 			Class: "w-full",
+			Type:  button.TypeSubmit,
 		},
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 			phoneNumber := r.FormValue(data.TextFieldPhoneNumber.Name)
+			time.Sleep(2 * time.Second)
 			verifyCodePage.Redirect(w, r, phoneNumber, nil)
 			return
 		}

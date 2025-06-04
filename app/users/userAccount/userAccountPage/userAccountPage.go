@@ -26,6 +26,7 @@ func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
 		bottomButtons.TemplatePath,
 	}
 	templatePaths = append(templatePaths, loginCTA.TemplatePaths...)
+	templatePaths = append(templatePaths, button.TemplatePaths...)
 	templ := templateExt.Combine(templatePaths)
 	return func(w http.ResponseWriter, r *http.Request) {
 

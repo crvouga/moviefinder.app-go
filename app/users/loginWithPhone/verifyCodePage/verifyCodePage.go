@@ -23,8 +23,8 @@ func Respond() http.HandlerFunc {
 		document.TemplatePath,
 		topBar.TemplatePath,
 		textField.TemplatePath,
-		button.TemplatePath,
 	}
+	templatePaths = append(templatePaths, button.TemplatePaths...)
 	templ := templateExt.Combine(templatePaths)
 	type Data struct {
 		TopBar           topBar.Data

@@ -5,8 +5,9 @@
     {{.Text}}
 </a>
 {{else}}
-<button class="{{$baseClasses}} {{.Class}}">
+<button type="{{.Type}}" class="{{$baseClasses}} {{.Class}} disabled:opacity-50 disabled:cursor-not-allowed">
     {{.Text}}
+    <!-- {{template "spinner" (dict "Class" "size-9")}}Ø -->
 </button>
 {{end}}
 {{end}}
