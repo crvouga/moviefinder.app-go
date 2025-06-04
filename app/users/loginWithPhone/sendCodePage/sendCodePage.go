@@ -26,11 +26,13 @@ func Respond() http.HandlerFunc {
 	templ := templateExt.Combine(templatePaths)
 	return func(w http.ResponseWriter, r *http.Request) {
 		type Data struct {
+			Action               string
 			TopBar               topBar.Data
 			TextFieldPhoneNumber textField.Data
 			ButtonSendCode       button.Data
 		}
 		data := Data{
+			Action: "",
 			TopBar: topBar.Data{
 				Title: "Send Code",
 			},
