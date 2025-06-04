@@ -5,9 +5,14 @@
     {{.Text}}
 </a>
 {{else}}
-<button type="{{.Type}}" class="{{$baseClasses}} {{.Class}} disabled:opacity-50 disabled:cursor-not-allowed">
-    {{.Text}}
-    <!-- {{template "spinner" (dict "Class" "size-9")}}Ø -->
+<button type="{{.Type}}" class="{{$baseClasses}} {{.Class}} group disabled:opacity-50 disabled:cursor-not-allowed"
+    aria-busy="false">
+    <span class="group-aria-busy:opacity-0">
+        {{.Text}}
+    </span>
+    <span class="group-aria-busy:block hidden absolute inset-0 w-full h-full flex items-center justify-center">
+        {{template "spinner" (dict "Class" "size-9")}}
+    </span>
 </button>
 {{end}}
 {{end}}
