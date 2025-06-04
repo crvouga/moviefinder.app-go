@@ -1,27 +1,4 @@
 {{define "page"}}
-{{ template "header" . }}
-<main class="container">
-    {{ template "breadcrumbs" . }}
-    {{ template "pageHeader" . }}
-
-
-    <section>
-        <p>
-            Email: {{.UserAccount.EmailAddress}}
-        </p>
-        <p>
-            UserID: {{.UserAccount.UserID}}
-        </p>
-        <p>
-            Role: {{.UserAccount.Role}}
-        </p>
-        <p>
-            SessionID: {{.UserSession.SessionID}}
-        </p>
-        <p>
-            CreatedAt: {{.UserSession.CreatedAt}}
-        </p>
-    </section>
-</main>
-
+<div class="flex-1 w-full"></div>
+{{template "bottomButtons" .}}
 {{end}}

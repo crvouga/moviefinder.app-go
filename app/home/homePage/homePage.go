@@ -5,6 +5,8 @@ import (
 	"movieFinder/app/ctx/appCtx"
 	"movieFinder/app/home/homeRoutes"
 	"movieFinder/app/projects/projectRoutes"
+	"movieFinder/app/ui/appBottomButtons"
+	"movieFinder/app/ui/bottomButtons"
 	"movieFinder/app/ui/mainMenu"
 	"movieFinder/app/ui/page"
 	"movieFinder/app/ui/pageHeader"
@@ -20,11 +22,6 @@ func Router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 const (
 	PageTitle = "Home"
 )
-
-type Data struct {
-	PageHeader pageHeader.PageHeader
-	MainMenu   mainMenu.MainMenu
-}
 
 func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -50,14 +47,21 @@ func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
 			},
 		}
 
+		type Data struct {
+			PageHeader    pageHeader.PageHeader
+			MainMenu      mainMenu.MainMenu
+			BottomButtons bottomButtons.BottomButtons
+		}
+
 		data := Data{
 			PageHeader: pageHeader.PageHeader{
 				Title: PageTitle,
 			},
-			MainMenu: mainMenuData,
+			MainMenu:      mainMenuData,
+			BottomButtons: appBottomButtons.AppBottomButtons(appBottomButtons.HomePage),
 		}
 
-		page.Respond(data, static.GetSiblingPath("homePage.html"))(w, r)
+		page.Respond(data, static.GetSiblingPath("homePage.html"), bottomButtons.TemplatePath)(w, r)
 	}
 }
 

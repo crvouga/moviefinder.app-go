@@ -16,4 +16,5 @@ func Router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 
 func RouterLoggedOut(mux *http.ServeMux, ac *appCtx.AppCtx) {
 	login.RouterLoggedOut(mux, ac)
+	accountPage.Router(mux, ac)
 }
