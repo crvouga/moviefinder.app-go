@@ -12,8 +12,10 @@
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 
-<body class="bg-black text-white">
-  {{ template "page" . }}
+<body class="bg-black text-white grid place-items-center w-screen h-screen">
+  <div class="w-full h-full max-w-[600px] max-h-[900px] border rounded overflow-hidden">
+    {{ template "page" . }}
+  </div>
 </body>
 
 </html>
