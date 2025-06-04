@@ -2,7 +2,7 @@ package keyValueDB
 
 import (
 	"encoding/json"
-	"movieFinder/library/uow"
+	"movieFinder/lib/uow"
 	"os"
 	"path/filepath"
 	"sort"

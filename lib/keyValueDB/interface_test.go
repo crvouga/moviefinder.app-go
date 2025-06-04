@@ -3,8 +3,8 @@ package keyValueDB
 import (
 	"testing"
 
-	"movieFinder/library/sqlite"
-	"movieFinder/library/uow"
+	"movieFinder/lib/sqlite"
+	"movieFinder/lib/uow"
 )
 
 type Fixture struct {

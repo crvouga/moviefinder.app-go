@@ -1,7 +1,7 @@
 package keyValueDB
 
 import (
-	"movieFinder/library/uow"
+	"movieFinder/lib/uow"
 	"sync"
 )
 

@@ -1,6 +1,6 @@
 package keyValueDB
 
-import "movieFinder/library/uow"
+import "movieFinder/lib/uow"
 
 type KeyValueDB interface {
 	// Get retrieves a value by key. Returns nil if key not found.

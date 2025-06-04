@@ -1,6 +1,6 @@
 package userSessionID
 
-import "movieFinder/library/id"
+import "movieFinder/lib/id"
 
 type UserSessionID string
 

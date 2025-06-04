@@ -11,7 +11,7 @@ import (
 	"movieFinder/app/users/userAccount"
 	"movieFinder/app/users/userAccount/userAccountRoutes"
 	"movieFinder/app/users/userSession"
-	"movieFinder/library/static"
+	"movieFinder/lib/static"
 	"net/http"
 )
 

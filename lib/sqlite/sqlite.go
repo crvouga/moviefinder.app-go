@@ -3,7 +3,7 @@ package sqlite
 import (
 	"database/sql"
 
-	"movieFinder/library/sql/noop"
+	"movieFinder/lib/sql/noop"
 )
 
 func New() *sql.DB {

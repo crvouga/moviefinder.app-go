@@ -3,8 +3,8 @@ package linkDB
 import (
 	"movieFinder/app/users/login/link"
 	"movieFinder/app/users/login/link/linkID"
-	"movieFinder/library/sessionID"
-	"movieFinder/library/uow"
+	"movieFinder/lib/sessionID"
+	"movieFinder/lib/uow"
 )
 
 type LinkDB interface {

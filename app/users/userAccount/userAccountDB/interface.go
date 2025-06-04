@@ -4,8 +4,8 @@ import (
 	"movieFinder/app/users/userAccount"
 	"movieFinder/app/users/userAccount/userRole"
 	"movieFinder/app/users/userID"
-	"movieFinder/library/email/emailAddress"
-	"movieFinder/library/uow"
+	"movieFinder/lib/email/emailAddress"
+	"movieFinder/lib/uow"
 )
 
 type UserAccountDB interface {

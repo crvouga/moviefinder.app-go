@@ -1,7 +1,7 @@
 package sessionID
 
 import (
-	"movieFinder/library/id"
+	"movieFinder/lib/id"
 	"net/http"
 )
 

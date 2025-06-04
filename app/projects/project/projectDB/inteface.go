@@ -4,7 +4,7 @@ import (
 	"movieFinder/app/projects/project"
 	"movieFinder/app/projects/project/projectID"
 	"movieFinder/app/users/userID"
-	"movieFinder/library/uow"
+	"movieFinder/lib/uow"
 )
 
 type ProjectDB interface {

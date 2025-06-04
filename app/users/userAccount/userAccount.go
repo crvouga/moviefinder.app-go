@@ -3,7 +3,7 @@ package userAccount
 import (
 	"movieFinder/app/users/userAccount/userRole"
 	"movieFinder/app/users/userID"
-	"movieFinder/library/email/emailAddress"
+	"movieFinder/lib/email/emailAddress"
 	"time"
 )
 

@@ -2,7 +2,7 @@ package keyValueDB
 
 import (
 	"fmt"
-	"movieFinder/library/uow"
+	"movieFinder/lib/uow"
 )
 
 // ImplNamespaced implements the KeyValueDB interface by wrapping another KeyValueDB

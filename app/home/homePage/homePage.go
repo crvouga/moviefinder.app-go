@@ -13,7 +13,7 @@ import (
 	"movieFinder/app/ui/pageHeader"
 	"movieFinder/app/users/userAccount/userAccountRoutes"
 	"movieFinder/app/users/userAccount/userRole"
-	"movieFinder/library/static"
+	"movieFinder/lib/static"
 	"net/http"
 )
 

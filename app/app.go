@@ -13,9 +13,9 @@ import (
 	"movieFinder/app/users"
 	"movieFinder/app/users/auth"
 	"movieFinder/app/users/login/sendLink"
-	"movieFinder/library/sessionID"
-	"movieFinder/library/static"
-	"movieFinder/library/traceID"
+	"movieFinder/lib/sessionID"
+	"movieFinder/lib/static"
+	"movieFinder/lib/traceID"
 	"net/http"
 )
 

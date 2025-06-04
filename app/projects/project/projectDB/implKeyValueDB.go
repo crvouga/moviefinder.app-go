@@ -5,8 +5,8 @@ import (
 	"movieFinder/app/projects/project"
 	"movieFinder/app/projects/project/projectID"
 	"movieFinder/app/users/userID"
-	"movieFinder/library/keyValueDB"
-	"movieFinder/library/uow"
+	"movieFinder/lib/keyValueDB"
+	"movieFinder/lib/uow"
 	"strings"
 	"time"
 )

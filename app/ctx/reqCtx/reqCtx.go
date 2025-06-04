@@ -5,9 +5,9 @@ import (
 	"movieFinder/app/ctx/appCtx"
 	"movieFinder/app/users/userAccount"
 	"movieFinder/app/users/userSession"
-	"movieFinder/library/httpRequest"
-	"movieFinder/library/sessionID"
-	"movieFinder/library/traceID"
+	"movieFinder/lib/httpRequest"
+	"movieFinder/lib/sessionID"
+	"movieFinder/lib/traceID"
 	"net/http"
 )
 

@@ -2,8 +2,8 @@ package userSessionDB
 
 import (
 	"movieFinder/app/users/userSession"
-	"movieFinder/library/sessionID"
-	"movieFinder/library/uow"
+	"movieFinder/lib/sessionID"
+	"movieFinder/lib/uow"
 )
 
 type UserSessionDB interface {

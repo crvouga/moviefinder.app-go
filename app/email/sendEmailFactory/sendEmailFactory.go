@@ -2,7 +2,7 @@ package sendEmailFactory
 
 import (
 	"movieFinder/app/ctx/reqCtx"
-	"movieFinder/library/email/sendEmail"
+	"movieFinder/lib/email/sendEmail"
 )
 
 func IsConfigured() bool {

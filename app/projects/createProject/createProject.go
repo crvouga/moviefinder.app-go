@@ -12,7 +12,7 @@ import (
 	"movieFinder/app/ui/breadcrumbs"
 	"movieFinder/app/ui/errorPage"
 	"movieFinder/app/ui/page"
-	"movieFinder/library/static"
+	"movieFinder/lib/static"
 	"net/http"
 	"time"
 )

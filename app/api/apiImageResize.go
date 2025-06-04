@@ -8,7 +8,7 @@ import (
 	"image/png"
 	"movieFinder/app/ctx/appCtx"
 	"movieFinder/app/projects/project/projectID"
-	"movieFinder/library/imageExt"
+	"movieFinder/lib/imageExt"
 	"net/http"
 	"strconv"
 )

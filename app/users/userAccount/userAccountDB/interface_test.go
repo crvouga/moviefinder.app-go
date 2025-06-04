@@ -7,10 +7,10 @@ import (
 	"movieFinder/app/users/userAccount"
 	"movieFinder/app/users/userAccount/userRole"
 	"movieFinder/app/users/userID"
-	"movieFinder/library/email/emailAddress"
-	"movieFinder/library/keyValueDB"
-	"movieFinder/library/sqlite"
-	"movieFinder/library/uow"
+	"movieFinder/lib/email/emailAddress"
+	"movieFinder/lib/keyValueDB"
+	"movieFinder/lib/sqlite"
+	"movieFinder/lib/uow"
 )
 
 type Fixture struct {

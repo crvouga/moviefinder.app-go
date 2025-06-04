@@ -3,7 +3,7 @@ package userSession
 import (
 	"movieFinder/app/users/userID"
 	"movieFinder/app/users/userSession/userSessionID"
-	"movieFinder/library/sessionID"
+	"movieFinder/lib/sessionID"
 	"time"
 )
 

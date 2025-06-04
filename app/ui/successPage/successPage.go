@@ -2,7 +2,7 @@ package successPage
 
 import (
 	"movieFinder/app/ui/page"
-	"movieFinder/library/static"
+	"movieFinder/lib/static"
 	"net/http"
 	"net/url"
 )

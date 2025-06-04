@@ -1,6 +1,6 @@
 package linkID
 
-import "movieFinder/library/id"
+import "movieFinder/lib/id"
 
 type LinkID string
 

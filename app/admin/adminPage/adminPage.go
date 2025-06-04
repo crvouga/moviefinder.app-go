@@ -7,7 +7,7 @@ import (
 	"movieFinder/app/ui/breadcrumbs"
 	"movieFinder/app/ui/page"
 	"movieFinder/app/ui/pageHeader"
-	"movieFinder/library/static"
+	"movieFinder/lib/static"
 	"net/http"
 )
 

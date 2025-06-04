@@ -13,7 +13,7 @@ import (
 	"movieFinder/app/ui/notFoundPage"
 	"movieFinder/app/ui/page"
 	"movieFinder/app/ui/pageHeader"
-	"movieFinder/library/static"
+	"movieFinder/lib/static"
 	"net/http"
 )
 

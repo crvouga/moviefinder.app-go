@@ -1,8 +1,8 @@
 package sendEmail
 
 import (
-	"movieFinder/library/email/email"
-	"movieFinder/library/uow"
+	"movieFinder/lib/email/email"
+	"movieFinder/lib/uow"
 )
 
 type SendEmail interface {

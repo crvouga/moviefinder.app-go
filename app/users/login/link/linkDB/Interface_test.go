@@ -5,11 +5,11 @@ import (
 
 	"movieFinder/app/users/login/link"
 	"movieFinder/app/users/login/link/linkID"
-	"movieFinder/library/email/emailAddress"
-	"movieFinder/library/keyValueDB"
-	"movieFinder/library/sessionID"
-	"movieFinder/library/sqlite"
-	"movieFinder/library/uow"
+	"movieFinder/lib/email/emailAddress"
+	"movieFinder/lib/keyValueDB"
+	"movieFinder/lib/sessionID"
+	"movieFinder/lib/sqlite"
+	"movieFinder/lib/uow"
 )
 
 type Fixture struct {

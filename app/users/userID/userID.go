@@ -1,6 +1,6 @@
 package userID
 
-import "movieFinder/library/id"
+import "movieFinder/lib/id"
 
 type UserID string
 

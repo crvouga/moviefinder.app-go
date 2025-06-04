@@ -2,8 +2,8 @@ package uow
 
 import (
 	"database/sql"
-	"movieFinder/library/uow/uowInMemory"
-	"movieFinder/library/uow/uowSql"
+	"movieFinder/lib/uow/uowInMemory"
+	"movieFinder/lib/uow/uowSql"
 )
 
 type Uow struct {

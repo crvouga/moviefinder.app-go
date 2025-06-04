@@ -3,9 +3,9 @@ package emailOutbox
 import (
 	"encoding/json"
 	"errors"
-	"movieFinder/library/email/email"
-	"movieFinder/library/keyValueDB"
-	"movieFinder/library/uow"
+	"movieFinder/lib/email/email"
+	"movieFinder/lib/keyValueDB"
+	"movieFinder/lib/uow"
 )
 
 type ImplKeyValueDB struct {

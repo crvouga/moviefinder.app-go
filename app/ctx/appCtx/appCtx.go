@@ -8,10 +8,10 @@ import (
 	"movieFinder/app/users/login/link/linkDB"
 	"movieFinder/app/users/userAccount/userAccountDB"
 	"movieFinder/app/users/userSession/userSessionDB"
-	"movieFinder/library/email/emailOutbox"
-	"movieFinder/library/keyValueDB"
-	"movieFinder/library/sqlite"
-	"movieFinder/library/uow"
+	"movieFinder/lib/email/emailOutbox"
+	"movieFinder/lib/keyValueDB"
+	"movieFinder/lib/sqlite"
+	"movieFinder/lib/uow"
 )
 
 type AppCtx struct {

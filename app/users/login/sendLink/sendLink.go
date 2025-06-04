@@ -17,9 +17,9 @@ import (
 	"movieFinder/app/users/login/link/linkID"
 	"movieFinder/app/users/login/loginRoutes"
 	"movieFinder/app/users/login/useLink"
-	"movieFinder/library/email/email"
-	"movieFinder/library/email/emailAddress"
-	"movieFinder/library/static"
+	"movieFinder/lib/email/email"
+	"movieFinder/lib/email/emailAddress"
+	"movieFinder/lib/static"
 )
 
 type Data struct {

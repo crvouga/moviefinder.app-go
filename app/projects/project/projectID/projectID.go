@@ -2,7 +2,7 @@ package projectID
 
 import (
 	"errors"
-	"movieFinder/library/id"
+	"movieFinder/lib/id"
 )
 
 type ProjectID string

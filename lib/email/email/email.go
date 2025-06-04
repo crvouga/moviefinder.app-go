@@ -1,7 +1,7 @@
 package email
 
 import (
-	"movieFinder/library/email/emailAddress"
+	"movieFinder/lib/email/emailAddress"
 )
 
 type Email struct {

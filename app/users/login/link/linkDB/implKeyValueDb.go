@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"movieFinder/app/users/login/link"
 	"movieFinder/app/users/login/link/linkID"
-	"movieFinder/library/keyValueDB"
-	"movieFinder/library/sessionID"
-	"movieFinder/library/uow"
+	"movieFinder/lib/keyValueDB"
+	"movieFinder/lib/sessionID"
+	"movieFinder/lib/uow"
 )
 
 type ImplKeyValueDB struct {

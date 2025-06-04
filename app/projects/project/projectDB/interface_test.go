@@ -9,9 +9,9 @@ import (
 	"movieFinder/app/projects/project/projectID"
 	"movieFinder/app/projects/project/projectName"
 	"movieFinder/app/users/userID"
-	"movieFinder/library/keyValueDB"
-	"movieFinder/library/sqlite"
-	"movieFinder/library/uow"
+	"movieFinder/lib/keyValueDB"
+	"movieFinder/lib/sqlite"
+	"movieFinder/lib/uow"
 )
 
 type Fixture struct {

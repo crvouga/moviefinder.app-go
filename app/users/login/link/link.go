@@ -2,8 +2,8 @@ package link
 
 import (
 	"movieFinder/app/users/login/link/linkID"
-	"movieFinder/library/email/emailAddress"
-	"movieFinder/library/sessionID"
+	"movieFinder/lib/email/emailAddress"
+	"movieFinder/lib/sessionID"
 	"time"
 )
 
