@@ -12,7 +12,6 @@ import (
 	"movieFinder/app/ui/pages"
 	"movieFinder/app/users"
 	"movieFinder/app/users/auth"
-	"movieFinder/app/users/login/sendLink"
 	"movieFinder/lib/sessionID"
 	"movieFinder/lib/static"
 	"movieFinder/lib/traceID"
@@ -40,9 +39,7 @@ func router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 		rc := reqCtx.FromHttpRequest(ac, r)
 		rc.Logger.Info("request received", "path", r.URL.Path)
 
-		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-		w.Header().Set("Pragma", "no-cache")
-		w.Header().Set("Expires", "0")
+		noCache(w)
 
 		if err := static.ServeStaticAssets(w, r); err == nil {
 			return
@@ -56,6 +53,12 @@ func router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 		muxLoggedOut.ServeHTTP(w, r)
 	})
 	mux.Handle("/", handler)
+}
+
+func noCache(w http.ResponseWriter) {
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
 }
 
 // newMuxLoggedIn is the mux for the logged in user.
@@ -79,9 +82,10 @@ func newMuxLoggedOut(ac *appCtx.AppCtx) *http.ServeMux {
 	mux := http.NewServeMux()
 	users.RouterLoggedOut(mux, ac)
 	api.Router(mux, ac)
+	home.Router(mux, ac)
 	pages.Router(mux)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		sendLink.Redirect(w, r)
+		homePage.Redirect(w, r)
 	})
 	return mux
 }

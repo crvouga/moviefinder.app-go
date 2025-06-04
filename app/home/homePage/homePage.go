@@ -1,18 +1,14 @@
 package homePage
 
 import (
-	"movieFinder/app/admin/adminRoutes"
 	"movieFinder/app/apiDocs/apiDocsRoutes"
 	"movieFinder/app/ctx/appCtx"
-	"movieFinder/app/ctx/reqCtx"
 	"movieFinder/app/home/homeRoutes"
 	"movieFinder/app/projects/projectRoutes"
-	"movieFinder/app/ui/errorPage"
 	"movieFinder/app/ui/mainMenu"
 	"movieFinder/app/ui/page"
 	"movieFinder/app/ui/pageHeader"
 	"movieFinder/app/users/userAccount/userAccountRoutes"
-	"movieFinder/app/users/userAccount/userRole"
 	"movieFinder/lib/static"
 	"net/http"
 )
@@ -32,14 +28,7 @@ type Data struct {
 
 func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		rc := reqCtx.FromHttpRequest(ac, r)
-
-		admins, err := ac.UserAccountDB.GetByRole(userRole.Admin)
-
-		if err != nil {
-			errorPage.New(err).Redirect(w, r)
-			return
-		}
+		// _rc := reqCtx.FromHttpRequest(ac, r)
 
 		mainMenuData := mainMenu.MainMenu{
 			Items: []mainMenu.MainMenuItem{
@@ -59,20 +48,6 @@ func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
 					URL:         apiDocsRoutes.ApiDocsPage,
 				},
 			},
-		}
-
-		if rc.UserAccount.EnsureComputed().IsRoleAdmin {
-			mainMenuData.Items = append(mainMenuData.Items, mainMenu.MainMenuItem{
-				Label:       "Admin",
-				Description: "Manage the admin",
-				URL:         adminRoutes.AdminPage,
-			})
-		} else if len(admins) == 0 {
-			mainMenuData.Items = append(mainMenuData.Items, mainMenu.MainMenuItem{
-				Label:       "Claim Admin",
-				Description: "Claim the admin role",
-				URL:         adminRoutes.ClaimAdmin,
-			})
 		}
 
 		data := Data{
