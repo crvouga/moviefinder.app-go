@@ -2,6 +2,7 @@ package userAccountPage
 
 import (
 	"movieFinder/app/ctx/appCtx"
+	icons "movieFinder/app/ui"
 	"movieFinder/app/ui/appBottomButtons"
 	"movieFinder/app/ui/bottomButtons"
 	"movieFinder/app/ui/button"
@@ -35,6 +36,7 @@ func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
 		data := Data{
 			BottomButtons: appBottomButtons.AppBottomButtons(appBottomButtons.AccountPage),
 			LoginCTA: loginCTA.Data{
+				IconHTML: icons.DoorOpen(loginCTA.IconSize),
 				LoginButton: button.Data{
 					Text: "Login",
 				},
