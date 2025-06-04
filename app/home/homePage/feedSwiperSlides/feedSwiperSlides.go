@@ -10,5 +10,5 @@ type FeedSwiperSlide struct {
 	URL      string
 }
 
-var TemplateName = "feedSwiperSlides.html"
-var TemplatePath = static.GetSiblingPath(TemplateName)
+var TemplateName = "feedSwiperSlides"
+var TemplatePath = static.GetSiblingPath(TemplateName + ".html")

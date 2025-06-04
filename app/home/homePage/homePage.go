@@ -38,7 +38,6 @@ func respondLoadNext() http.HandlerFunc {
 		}
 
 		templateExt.Respond(templ, feedSwiperSlides.TemplateName, data, w)
-
 	}
 }
 
