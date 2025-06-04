@@ -9,6 +9,7 @@ import (
 	"movieFinder/app/ui/bottomButtons"
 	"movieFinder/app/ui/document"
 	"movieFinder/app/ui/templateExt"
+	"movieFinder/app/users/userAccount/userAccountRoutes"
 	"movieFinder/lib/static"
 	"net/http"
 )
@@ -49,12 +50,18 @@ func respondHomePage() http.HandlerFunc {
 	templPaths = append(templPaths, feedSwiper.TemplatePaths...)
 	templ := templateExt.Combine(templPaths)
 	type Data struct {
+		Document      document.Data
 		FeedSwiper    feedSwiper.FeedSwiper
 		BottomButtons bottomButtons.BottomButtons
 		LoadNextURL   string
 	}
 
 	data := Data{
+		Document: document.Data{
+			Preload: []document.Preload{
+				document.NewPreload(userAccountRoutes.UserAccountPage),
+			},
+		},
 		FeedSwiper: feedSwiper.FeedSwiper{
 			Slides: []feedSwiperSlides.FeedSwiperSlide{
 				{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},

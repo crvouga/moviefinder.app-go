@@ -2,12 +2,14 @@ package sendCodePage
 
 import (
 	"movieFinder/app/ui/button"
+	"movieFinder/app/ui/caching"
 	"movieFinder/app/ui/document"
 	"movieFinder/app/ui/templateExt"
 	"movieFinder/app/ui/textField"
 	"movieFinder/app/ui/topBar"
 	"movieFinder/app/users/loginWithPhone/loginWithPhoneRoutes"
 	"movieFinder/app/users/loginWithPhone/verifyCodePage"
+	"movieFinder/app/users/userAccount/userAccountRoutes"
 	"movieFinder/lib/static"
 	"net/http"
 	"time"
@@ -27,11 +29,18 @@ func Respond() http.HandlerFunc {
 	templatePaths = append(templatePaths, button.TemplatePaths...)
 	templ := templateExt.Combine(templatePaths)
 	type Data struct {
+		Document             document.Data
 		TopBar               topBar.Data
 		TextFieldPhoneNumber textField.Data
 		ButtonSendCode       button.Data
 	}
 	data := Data{
+		Document: document.Data{
+			Preload: []document.Preload{
+				document.NewPreload(userAccountRoutes.UserAccountPage),
+				document.NewPreload(loginWithPhoneRoutes.VerifyCodePage),
+			},
+		},
 		TopBar: topBar.Data{
 			Title: "Send Code",
 		},
@@ -53,6 +62,7 @@ func Respond() http.HandlerFunc {
 			verifyCodePage.Redirect(w, r, phoneNumber, nil)
 			return
 		}
+		caching.Yes(w)
 		templateExt.Respond(templ, document.TemplateName, data, w)
 	}
 }
