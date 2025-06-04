@@ -21,7 +21,11 @@ func Respond(pageData any, templatePaths ...string) http.HandlerFunc {
 		allTemplatePaths = append(allTemplatePaths, templatePaths...)
 
 		// Define function map for templates
-		funcMap := template.FuncMap{}
+		funcMap := template.FuncMap{
+			"safeHTML": func(s string) template.HTML {
+				return template.HTML(s)
+			},
+		}
 
 		// Create template with function map
 		tmpl, err := template.New("page.html").Funcs(funcMap).ParseFiles(allTemplatePaths...)

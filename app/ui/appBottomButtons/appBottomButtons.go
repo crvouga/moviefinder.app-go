@@ -2,6 +2,7 @@ package appBottomButtons
 
 import (
 	"movieFinder/app/home/homeRoutes"
+	icons "movieFinder/app/ui"
 	"movieFinder/app/ui/bottomButtons"
 	"movieFinder/app/users/userAccount/userAccountRoutes"
 )
@@ -18,13 +19,13 @@ func AppBottomButtons(activePage string) bottomButtons.BottomButtons {
 				Label:    HomePage,
 				URL:      homeRoutes.HomePage,
 				Active:   activePage == HomePage,
-				IconHTML: "🏠",
+				IconHTML: icons.HomeSolid("size-6"),
 			},
 			{
 				Label:    AccountPage,
 				URL:      userAccountRoutes.UserAccountPage,
 				Active:   activePage == AccountPage,
-				IconHTML: "👤",
+				IconHTML: icons.UserSolid("size-6"),
 			},
 		},
 	}
