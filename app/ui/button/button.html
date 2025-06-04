@@ -1,18 +1,19 @@
 {{define "button"}}
-{{$baseClasses := "text-white px-5 py-3 text-lg rounded-md bg-blue-500 font-bold active:bg-blue-600 cursor-pointer"}}
+{{$baseClasses1 := "text-white px-5 py-3 text-lg rounded-md bg-blue-500 font-bold "}}
+{{$baseClasses2 := "enabled:active:bg-blue-600 cursor-pointer"}}
+{{$baseClasses := printf "%s %s" $baseClasses1 $baseClasses2}}
 {{if .Href}}
 <a href="{{.Href}}" class="{{$baseClasses}} {{.Class}} inline-block">
     {{.Text}}
 </a>
 {{else}}
-<button type="{{.Type}}" class="{{$baseClasses}} {{.Class}} group disabled:opacity-50 disabled:cursor-not-allowed"
-    aria-busy="false">
-    <span class="group-aria-busy:opacity-0">
-        {{.Text}}
-    </span>
-    <span class="group-aria-busy:block hidden absolute inset-0 w-full h-full flex items-center justify-center">
-        {{template "spinner" (dict "Class" "size-9")}}
-    </span>
+<button type="{{.Type}}"
+    class="{{$baseClasses}} {{.Class}} group disabled:opacity-50 disabled:cursor-not-allowed relative aria-busy:text-transparent">
+    {{.Text}}
+    {{$spinnerClassBase := "size-9 group-aria-busy:block hidden fill-white stroke-white"}}
+    {{$spinnerClassPos := "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"}}
+    {{$spinnerClass := printf "%s %s" $spinnerClassBase $spinnerClassPos}}
+    {{template "spinner" (dict "Class" $spinnerClass)}}
 </button>
 {{end}}
 {{end}}
