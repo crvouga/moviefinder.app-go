@@ -1,0 +1,8 @@
+{{define "page"}}
+{{template "topBar" .TopBar}}
+<form class="flex-1 w-full p-6 flex flex-col gap-12" method="POST">
+    <p>Enter the code sent to <strong>{{.PhoneNumber}}</strong></p>
+    {{template "textField" .TextFieldCode}}
+    {{template "button" .ButtonVerifyCode}}
+</form>
+{{end}}

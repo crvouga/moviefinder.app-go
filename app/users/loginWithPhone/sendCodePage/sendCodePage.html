@@ -1,8 +1,7 @@
 {{define "page"}}
 {{template "topBar" .TopBar}}
-<form class="flex-1 w-full p-6 flex flex-col gap-6" action="{{.Action}}" method="POST">
+<form class="flex-1 w-full p-6 flex flex-col gap-12" method="POST">
     {{template "textField" .TextFieldPhoneNumber}}
-    <div></div>
     {{template "button" .ButtonSendCode}}
 </form>
 {{end}}

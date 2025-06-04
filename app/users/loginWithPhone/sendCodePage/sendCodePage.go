@@ -7,6 +7,7 @@ import (
 	"movieFinder/app/ui/textField"
 	"movieFinder/app/ui/topBar"
 	"movieFinder/app/users/loginWithPhone/loginWithPhoneRoutes"
+	"movieFinder/app/users/loginWithPhone/verifyCodePage"
 	"movieFinder/lib/static"
 	"net/http"
 )
@@ -25,18 +26,18 @@ func Respond() http.HandlerFunc {
 	}
 	templ := templateExt.Combine(templatePaths)
 	type Data struct {
-		Action               string
 		TopBar               topBar.Data
 		TextFieldPhoneNumber textField.Data
 		ButtonSendCode       button.Data
 	}
 	data := Data{
-		Action: "",
 		TopBar: topBar.Data{
 			Title: "Send Code",
 		},
 		TextFieldPhoneNumber: textField.Data{
 			Label: "Phone Number",
+			Name:  "phoneNumber",
+			Type:  textField.TypeTel,
 		},
 		ButtonSendCode: button.Data{
 			Text:  "Send Code",
@@ -44,6 +45,11 @@ func Respond() http.HandlerFunc {
 		},
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			phoneNumber := r.FormValue(data.TextFieldPhoneNumber.Name)
+			verifyCodePage.Redirect(w, r, phoneNumber)
+			return
+		}
 		templateExt.Respond(templ, document.TemplateName, data, w)
 	}
 }
