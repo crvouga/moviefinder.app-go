@@ -15,6 +15,10 @@ const LoadNext = "/loadNext"
 
 func Router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 	mux.HandleFunc(homeRoutes.HomePage, func(w http.ResponseWriter, r *http.Request) {
+		_q := `SELECT media_id, title, poster_urls, popularity FROM media ORDER BY popularity DESC LIMIT 10`
+
+		println(_q)
+
 		type Data struct {
 			FeedSwiper    feedSwiper.FeedSwiper
 			BottomButtons bottomButtons.BottomButtons
@@ -38,6 +42,10 @@ func Router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 	})
 
 	mux.HandleFunc(LoadNext, func(w http.ResponseWriter, r *http.Request) {
+		_q := `SELECT media_id, title, poster_urls, popularity FROM media ORDER BY popularity DESC LIMIT 10`
+
+		println(_q)
+
 		type Data struct {
 			FeedSwiper feedSwiper.FeedSwiper
 		}

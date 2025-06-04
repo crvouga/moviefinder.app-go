@@ -6,6 +6,12 @@ import (
 	"net/http"
 )
 
+var funcMap = template.FuncMap{
+	"safeHTML": func(s string) template.HTML {
+		return template.HTML(s)
+	},
+}
+
 func Respond(pageData any, templatePaths ...string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		allTemplatePaths := []string{
@@ -13,12 +19,6 @@ func Respond(pageData any, templatePaths ...string) http.HandlerFunc {
 		}
 
 		allTemplatePaths = append(allTemplatePaths, templatePaths...)
-
-		funcMap := template.FuncMap{
-			"safeHTML": func(s string) template.HTML {
-				return template.HTML(s)
-			},
-		}
 
 		tmpl, err := template.New("page.html").Funcs(funcMap).ParseFiles(allTemplatePaths...)
 		if err != nil {
