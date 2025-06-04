@@ -24,7 +24,7 @@ func AppBottomButtons(activePage string) bottomButtons.BottomButtons {
 				Label:    AccountPage,
 				URL:      userAccountRoutes.UserAccountPage,
 				Active:   activePage == AccountPage,
-				IconHTML: "�",
+				IconHTML: "👤",
 			},
 		},
 	}

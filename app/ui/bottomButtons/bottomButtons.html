@@ -1,8 +1,8 @@
 {{define "bottomButtons"}}
 <div class="flex w-full justify-around">
 	{{range .BottomButtons.Items}}
-	<a href="{{.URL}}"
-		class="flex h-16 flex-1 cursor-pointer flex-col items-center justify-center {{if .Active}}text-blue-500{{else}}text-neutral-200{{end}}">
+	<a href="{{.URL}}" onmousedown="window.location.href='{{.URL}}'"
+		class="flex h-16 flex-1 cursor-pointer flex-col items-center justify-center font-bold {{if .Active}}font-bold text-blue-500{{else}}text-neutral-200{{end}}">
 		{{if .IconHTML}}
 		<span class="text-2xl">{{.IconHTML}}</span>
 		{{end}}
