@@ -15,3 +15,5 @@ type BottomButtonsItem struct {
 }
 
 var TemplatePath = static.GetSiblingPath("bottomButtons.html")
+
+const IconSize = "size-7"

@@ -19,13 +19,13 @@ func AppBottomButtons(activePage string) bottomButtons.BottomButtons {
 				Label:    HomePage,
 				URL:      homeRoutes.HomePage,
 				Active:   activePage == HomePage,
-				IconHTML: icons.HomeSolid("size-6"),
+				IconHTML: icons.HomeSolid(bottomButtons.IconSize),
 			},
 			{
 				Label:    AccountPage,
 				URL:      userAccountRoutes.UserAccountPage,
 				Active:   activePage == AccountPage,
-				IconHTML: icons.UserSolid("size-6"),
+				IconHTML: icons.UserSolid(bottomButtons.IconSize),
 			},
 		},
 	}
