@@ -1,17 +1,21 @@
 {{define "feedSwiper"}}
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-element-bundle.min.js"></script>
 <div class="flex w-full flex-1 flex-col items-center justify-start overflow-x-hidden overflow-y-auto">
-	<swiper-container slides-per-view="1" class="w-full h-full" direction="vertical">
-		{{range .FeedSwiper.Items}}
-		<swiper-slide>
-			<a class="w-full h-full" href="{{.URL}}">
-				<img src="{{.ImageSrc}}" alt=" " class="w-full h-full object-cover bg-neutral-900" />
-			</a>
-		</swiper-slide>
-		{{end}}
-		<swiper-slide>
+	<swiper-container slides-per-view="1" class="w-full h-full" direction="vertical" id="feed-swiper">
+		{{template "feedSwiperSlides" .}}
+		<swiper-slide id="last-side">
 			<div class="w-full h-full bg-neutral-800 animate-pulse"></div>
 		</swiper-slide>
 	</swiper-container>
 </div>
+<script>
+	const swiper = document.getElementById("feed-swiper");
+	const lastSide = document.getElementById("last-side");
+	const loadNextURL = "{{.LoadNextURL}}";
+	swiper.addEventListener("swiperslidechange", () => {
+		if (swiper.swiper.activeIndex === swiper.swiper.slides.length - 1) {
+			fetch(loadNextURL).then(res => res.text()).then(html => lastSide.insertAdjacentHTML("beforebegin", html));
+		}
+	});
+</script>
 {{end}}

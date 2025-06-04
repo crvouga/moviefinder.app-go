@@ -1,0 +1,9 @@
+{{define "feedSwiperSlides"}}
+{{range .FeedSwiper.Slides}}
+<swiper-slide>
+	<a class="w-full h-full" href="{{.URL}}">
+		<img src="{{.ImageSrc}}" alt=" " class="w-full h-full object-cover bg-neutral-900" />
+	</a>
+</swiper-slide>
+{{end}}
+{{end}}

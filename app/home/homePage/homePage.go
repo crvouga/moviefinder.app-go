@@ -11,23 +11,19 @@ import (
 	"net/http"
 )
 
+const LoadNext = "/loadNext"
+
 func Router(mux *http.ServeMux, ac *appCtx.AppCtx) {
-	mux.HandleFunc(homeRoutes.HomePage, Respond(ac))
-}
-
-var templatePath = static.GetSiblingPath("homePage.html")
-
-func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
+	mux.HandleFunc(homeRoutes.HomePage, func(w http.ResponseWriter, r *http.Request) {
 		type Data struct {
 			FeedSwiper    feedSwiper.FeedSwiper
 			BottomButtons bottomButtons.BottomButtons
+			LoadNextURL   string
 		}
 
 		data := Data{
 			FeedSwiper: feedSwiper.FeedSwiper{
-				Items: []feedSwiper.FeedSwiperItem{
+				Slides: []feedSwiper.FeedSwiperSlide{
 					{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
 					{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
 					{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
@@ -35,11 +31,33 @@ func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
 				},
 			},
 			BottomButtons: appBottomButtons.AppBottomButtons(appBottomButtons.HomePage),
+			LoadNextURL:   LoadNext,
 		}
 
-		page.Respond(data, templatePath, bottomButtons.TemplatePath, feedSwiper.TemplatePath)(w, r)
-	}
+		page.Respond(data, templatePath, bottomButtons.TemplatePath, feedSwiper.TemplatePath, feedSwiper.TemplatePathSwiperSlides)(w, r)
+	})
+
+	mux.HandleFunc(LoadNext, func(w http.ResponseWriter, r *http.Request) {
+		type Data struct {
+			FeedSwiper feedSwiper.FeedSwiper
+		}
+
+		data := Data{
+			FeedSwiper: feedSwiper.FeedSwiper{
+				Slides: []feedSwiper.FeedSwiperSlide{
+					{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
+					{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
+					{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
+					{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
+				},
+			},
+		}
+
+		page.Respond(data, feedSwiper.TemplatePathSwiperSlides)(w, r)
+	})
 }
+
+var templatePath = static.GetSiblingPath("homePage.html")
 
 func Redirect(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, homeRoutes.HomePage, http.StatusSeeOther)
