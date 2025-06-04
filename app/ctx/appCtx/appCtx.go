@@ -1,0 +1,67 @@
+package appCtx
+
+import (
+	"database/sql"
+
+	"log/slog"
+	"movieFinder/app/projects/project/projectDB"
+	"movieFinder/app/users/login/link/linkDB"
+	"movieFinder/app/users/userAccount/userAccountDB"
+	"movieFinder/app/users/userSession/userSessionDB"
+	"movieFinder/library/email/emailOutbox"
+	"movieFinder/library/keyValueDB"
+	"movieFinder/library/sqlite"
+	"movieFinder/library/uow"
+)
+
+type AppCtx struct {
+	DB            *sql.DB
+	Logger        *slog.Logger
+	UowFactory    uow.UowFactory
+	LinkDB        linkDB.LinkDB
+	EmailOutbox   emailOutbox.EmailOutbox
+	KeyValueDB    keyValueDB.KeyValueDB
+	UserSessionDB userSessionDB.UserSessionDB
+	UserAccountDB userAccountDB.UserAccountDB
+	ProjectDB     projectDB.ProjectDB
+}
+
+func (ac *AppCtx) CleanUp() {
+	ac.DB.Close()
+}
+
+func New() AppCtx {
+	db := sqlite.New()
+
+	keyValueDBFs := keyValueDB.NewImplFs("keyValueDB.json")
+
+	return AppCtx{
+		DB:            db,
+		UowFactory:    *uow.NewFactory(db),
+		Logger:        slog.Default(),
+		KeyValueDB:    keyValueDB.NewImplNamespaced(keyValueDBFs, "app"),
+		LinkDB:        linkDB.NewImplKeyValueDB(keyValueDBFs),
+		EmailOutbox:   emailOutbox.NewImplKeyValueDB(keyValueDBFs),
+		UserSessionDB: userSessionDB.NewImplKeyValueDB(keyValueDBFs),
+		UserAccountDB: userAccountDB.NewImplKeyValueDB(keyValueDBFs),
+		ProjectDB:     projectDB.NewImplKeyValueDB(keyValueDBFs),
+	}
+}
+
+func NewTest() AppCtx {
+	db := sqlite.New()
+
+	keyValueDBHashMap := keyValueDB.ImplHashMap{}
+
+	return AppCtx{
+		DB:            db,
+		UowFactory:    *uow.NewFactory(db),
+		Logger:        slog.Default(),
+		KeyValueDB:    &keyValueDBHashMap,
+		LinkDB:        linkDB.NewImplKeyValueDB(&keyValueDBHashMap),
+		EmailOutbox:   emailOutbox.NewImplKeyValueDB(&keyValueDBHashMap),
+		UserSessionDB: userSessionDB.NewImplKeyValueDB(&keyValueDBHashMap),
+		UserAccountDB: userAccountDB.NewImplKeyValueDB(&keyValueDBHashMap),
+		ProjectDB:     projectDB.NewImplKeyValueDB(&keyValueDBHashMap),
+	}
+}

@@ -1,0 +1,40 @@
+{{define "page"}}
+{{ template "header" . }}
+<main class="container">
+    {{ template "breadcrumbs" . }}
+    {{ template "pageHeader" . }}
+
+
+
+    <section>
+        <p>
+            <strong>Project ID:</strong> {{.Project.ID}}
+        </p>
+        <p>
+            <strong>Name:</strong> {{.Project.Name}}
+        </p>
+        <p>
+            <strong>Created By:</strong> {{.Project.CreatedByUserID}}
+        </p>
+        <p>
+            <strong>Created At:</strong> {{.Project.CreatedAt}}
+        </p>
+        <p>
+            <strong>Last Updated:</strong> {{.Project.UpdatedAt}}
+        </p>
+    </section>
+    <section>
+        <h3>Allowed Domains:</h3>
+        {{if .Project.AllowedDomains}}
+        <ul>
+            {{range .Project.AllowedDomains}}
+            <li>{{.String}}</li>
+            {{end}}
+        </ul>
+        {{else}}
+        <p>No domains configured</p>
+        {{end}}
+    </section>
+</main>
+
+{{end}}

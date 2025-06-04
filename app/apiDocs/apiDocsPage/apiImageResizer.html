@@ -1,0 +1,111 @@
+{{define "page"}}
+{{ template "header" . }}
+<main class="container">
+    {{ template "breadcrumbs" . }}
+    {{ template "pageHeader" . }}
+    <section>
+        <form id="form">
+            <div>
+                {{ template "projectIDSelect" . }}
+                <div>
+                    <label for="image-url">imageURL: <span class="required">*</span></label>
+                    <input type="url" id="image-url" name="imageUrl" placeholder="Enter image URL" required />
+                </div>
+                <div>
+                    <label for="image-width">width: <span class="required">*</span></label>
+                    <input type="number" id="image-width" name="width" placeholder="Width in pixels" min="1" max="1000"
+                        value="600" required />
+                </div>
+                <div>
+                    <label for="image-height">height: <span class="required">*</span></label>
+                    <input type="number" id="image-height" name="height" placeholder="Height in pixels" min="1"
+                        max="1000" value="400" required />
+                </div>
+                <div>
+                    <button type="submit">SUBMIT</button>
+                </div>
+            </div>
+        </form>
+        <div>
+            <p>
+                <strong>Endpoint:</strong>
+            </p>
+            <p>
+                <code id="api-endpoint" style="word-break: break-all;"></code>
+            </p>
+        </div>
+        <div>
+            <p>
+                <strong>Input:</strong> <span id="original-size"></span>
+            </p>
+            <img id="input"
+                style="border: none; outline: none; max-width: 600px; max-height: 600px; width: auto; height: auto;" />
+        </div>
+        <div>
+            <p>
+                <strong>Output:</strong>
+            </p>
+            <img id="output"
+                style="border: none; outline: none; max-width: 600px; max-height: 600px; width: auto; height: auto;" />
+        </div>
+        <script>
+            const form = document.getElementById('form');
+            const imageURLInput = document.getElementById('image-url');
+            const imageWidthInput = document.getElementById('image-width');
+            const imageHeightInput = document.getElementById('image-height');
+            const projectIDSelect = document.getElementById('project-select');
+            const outputImage = document.getElementById('output');
+            const inputImage = document.getElementById('input');
+            const apiEndpoint = document.getElementById('api-endpoint');
+            const resizeTitle = document.getElementById('resize-title');
+            const originalSizeSpan = document.getElementById('original-size');
+            const getMinWidth = () => parseInt(imageWidthInput.getAttribute('min'));
+            const getMaxWidth = () => parseInt(imageWidthInput.getAttribute('max'));
+            const getMinHeight = () => parseInt(imageHeightInput.getAttribute('min'));
+            const getMaxHeight = () => parseInt(imageHeightInput.getAttribute('max'));
+            const getWidth = () => parseInt(imageWidthInput.value);
+            const getHeight = () => parseInt(imageHeightInput.value);
+
+            const ENDPOINT = '{{.Endpoint}}';
+            const getApiEndpoint = () => {
+                const projectID = projectIDSelect.value;
+                const imageURL = imageURLInput.value;
+                const width = getWidth();
+                const height = getHeight();
+                const params = new URLSearchParams();
+                params.set('imageURL', imageURL);
+                params.set('width', width.toString());
+                params.set('height', height.toString());
+                params.set('projectID', projectID);
+                const endpoint = ENDPOINT + '?' + params.toString();
+                return endpoint;
+            }
+
+            const updateUI = () => {
+                outputImage.width = getWidth();
+                outputImage.height = getHeight();
+                if (inputImage.src !== imageURLInput.value) {
+                    inputImage.src = imageURLInput.value;
+                    outputImage.src = '';
+                }
+                apiEndpoint.textContent = getApiEndpoint();
+                if (inputImage.naturalWidth && inputImage.naturalHeight) {
+                    originalSizeSpan.textContent = `(Original size: ${inputImage.naturalWidth}x${inputImage.naturalHeight}px)`;
+                }
+            }
+
+            updateUI()
+            imageWidthInput.addEventListener('input', updateUI);
+            imageHeightInput.addEventListener('input', updateUI);
+            projectIDSelect.addEventListener('change', updateUI);
+            inputImage.addEventListener('load', updateUI);
+            imageURLInput.addEventListener('input', updateUI);
+
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+                outputImage.src = getApiEndpoint();
+            });
+        </script>
+    </section>
+</main>
+{{end}}

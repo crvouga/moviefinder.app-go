@@ -1,0 +1,23 @@
+{{define "page"}}
+{{ template "header" . }}
+<main class="container">
+    <section>
+        {{ template "icon-circle-exclamation" . }}
+        <style>
+            .icon-circle-exclamation {
+                width: 52px;
+                height: 52px;
+                margin-bottom: 12px;
+            }
+        </style>
+
+        <h1>
+            {{.Headline}}
+        </h1>
+        <p>
+            {{.Body}}
+        </p>
+        <a href="{{.NextURL}}" role="button">{{.NextText}}</a>
+    </section>
+</main>
+{{end}}

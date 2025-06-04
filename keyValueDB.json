@@ -1,0 +1,10 @@
+{
+  "link:cb6e2d9afb2f48a8c8eee05848e15869": "{\"ID\":\"cb6e2d9afb2f48a8c8eee05848e15869\",\"EmailAddress\":\"crvouga@gmail.com\",\"CreatedAt\":\"2025-05-14T15:20:30.599004-07:00\",\"UsedAt\":\"2025-05-14T15:20:31.933794-07:00\",\"SessionID\":\"b1ac4012c1bd8d1c53b6393886c72649\"}",
+  "link:index:linkIDsBySessionID:b1ac4012c1bd8d1c53b6393886c72649": "[\"cb6e2d9afb2f48a8c8eee05848e15869\"]",
+  "userAccount:ebdaf05cafb67345b076c7f9ad5ad6c6": "{\"UserID\":\"ebdaf05cafb67345b076c7f9ad5ad6c6\",\"EmailAddress\":\"crvouga@gmail.com\",\"CreatedAt\":\"2025-05-14T15:20:31.934921-07:00\",\"UpdatedAt\":\"2025-05-14T15:20:38.633916-07:00\",\"Role\":\"ADMIN\",\"IsRoleAdmin\":false,\"IsRoleStandard\":false}",
+  "userAccount:index:userIDByEmailAddress:crvouga@gmail.com": "ebdaf05cafb67345b076c7f9ad5ad6c6",
+  "userAccount:index:userIDsByRole:": "[\"ebdaf05cafb67345b076c7f9ad5ad6c6\"]",
+  "userAccount:index:userIDsByRole:ADMIN": "[\"ebdaf05cafb67345b076c7f9ad5ad6c6\"]",
+  "userSession:1e5656f84b8b0a01f4564269a58802ed": "{\"ID\":\"1e5656f84b8b0a01f4564269a58802ed\",\"UserID\":\"ebdaf05cafb67345b076c7f9ad5ad6c6\",\"SessionID\":\"b1ac4012c1bd8d1c53b6393886c72649\",\"CreatedAt\":\"2025-05-14T15:20:31.937245-07:00\",\"EndedAt\":\"0001-01-01T00:00:00Z\"}",
+  "userSession:index:userSessionIDBySessionID:b1ac4012c1bd8d1c53b6393886c72649": "1e5656f84b8b0a01f4564269a58802ed"
+}

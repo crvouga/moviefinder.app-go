@@ -1,2 +1,6 @@
-.clj-*
+tmp
 .lsp
+.clj*
+__*
+imageService
+main
