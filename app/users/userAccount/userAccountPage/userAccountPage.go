@@ -8,6 +8,7 @@ import (
 	"movieFinder/app/ui/button"
 	"movieFinder/app/ui/document"
 	"movieFinder/app/ui/templateExt"
+	"movieFinder/app/users/loginWithPhone/loginWithPhoneRoutes"
 	"movieFinder/app/users/userAccount/userAccountPage/loginCTA"
 	"movieFinder/app/users/userAccount/userAccountRoutes"
 	"movieFinder/lib/static"
@@ -39,6 +40,7 @@ func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
 				IconHTML: icons.DoorOpen(loginCTA.IconSize),
 				LoginButton: button.Data{
 					Text: "Login",
+					Href: loginWithPhoneRoutes.SendCodePage,
 				},
 			},
 		}

@@ -1,5 +1,12 @@
 {{define "button"}}
-<button class="text-white px-5 py-3 text-lg rounded-md bg-blue-500 font-bold active:bg-blue-600 cursor-pointer">
+{{$baseClasses := "text-white px-5 py-3 text-lg rounded-md bg-blue-500 font-bold active:bg-blue-600 cursor-pointer"}}
+{{if .Href}}
+<a href="{{.Href}}" class="{{$baseClasses}} inline-block">
+    {{.Text}}
+</a>
+{{else}}
+<button class="{{$baseClasses}}">
     {{.Text}}
 </button>
+{{end}}
 {{end}}
