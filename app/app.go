@@ -66,9 +66,8 @@ func cacheControl(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Expires", "0")
 		return
 	}
-	w.Header().Set("Cache-Control", "public, max-age=31536000")
+	w.Header().Set("Cache-Control", "public, max-age=31536000, stale-while-revalidate=86400, stale-if-error=86400, immutable")
 	w.Header().Set("Expires", time.Now().AddDate(1, 0, 0).Format(time.RFC1123))
-	w.Header().Set("Vary", "Accept-Encoding")
 }
 
 // newMuxLoggedIn is the mux for the logged in user.
