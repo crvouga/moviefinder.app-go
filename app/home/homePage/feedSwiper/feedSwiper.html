@@ -12,11 +12,30 @@
 	const loadNextURL = "{{.LoadNextURL}}";
 	const feedSwiper = document.getElementById("feed-swiper");
 	const feedSwiperLastSlide = document.getElementById("feed-swiper-last-slide");
+	let isLoading = false;
+	let loadTimeout = null;
+
 	const loadNext = () => {
+		if (isLoading || feedSwiper.swiper.moving) return;
+
 		if (feedSwiper.swiper.activeIndex >= feedSwiper.swiper.slides.length - 4) {
-			fetch(loadNextURL).then(res => res.text()).then(html => feedSwiperLastSlide.insertAdjacentHTML("beforebegin", html));
+			isLoading = true;
+			clearTimeout(loadTimeout);
+
+			loadTimeout = setTimeout(() => {
+				fetch(loadNextURL)
+					.then(res => res.text())
+					.then(html => {
+						feedSwiperLastSlide.insertAdjacentHTML("beforebegin", html);
+						isLoading = false;
+					})
+					.catch(() => {
+						isLoading = false;
+					});
+			}, 100); // Small delay to ensure smooth transitions
 		}
 	}
+
 	feedSwiper.addEventListener("swiperslidechange", loadNext);
 	document.addEventListener("DOMContentLoaded", loadNext);
 </script>
