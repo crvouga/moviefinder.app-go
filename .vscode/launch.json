@@ -1,16 +1,27 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Run Go Server",
-            "type": "go",
-            "request": "launch",
-            "mode": "auto",
-            "program": "${workspaceFolder}/main.go",
-            "env": {},
-            "args": [],
-            "buildFlags": "-tags=go1.24",
-            "dlvFlags": ["--check-go-version=false"]
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Go Server",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/main.go",
+      "env": {},
+      "args": [],
+      "buildFlags": "-tags=go1.24",
+      "dlvFlags": ["--check-go-version=false"]
+    },
+    {
+      "name": "Run Go Tests",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "program": "${workspaceFolder}/...",
+      "env": {},
+      "args": ["-v"],
+      "buildFlags": "-tags=go1.24",
+      "dlvFlags": ["--check-go-version=false"]
+    }
+  ]
 }

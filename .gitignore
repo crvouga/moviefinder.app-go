@@ -4,3 +4,4 @@ tmp
 __*
 imageService
 main
+.env
