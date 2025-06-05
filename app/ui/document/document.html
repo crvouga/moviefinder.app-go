@@ -11,9 +11,9 @@
   {{if .Document}}
   {{if .Document.Preload}}
   {{range .Document.Preload}}
-  <link rel="prerender" href="{{.Href}}?prefetch=true" as="document" crossorigin="anonymous" />
-  <link rel="prefetch" href="{{.Href}}?prefetch=true" as="document" crossorigin="anonymous" />
-  <link rel="preload" href="{{.Href}}?prefetch=true" as="document" crossorigin="anonymous" />
+  <link rel="prerender" href="{{.Href}}?no-cache=true" as="document" crossorigin="anonymous" />
+  <link rel="prefetch" href="{{.Href}}?no-cache=true" as="document" crossorigin="anonymous" />
+  <link rel="preload" href="{{.Href}}?no-cache=true" as="document" crossorigin="anonymous" />
   {{end}}
   {{end}}
   {{end}}

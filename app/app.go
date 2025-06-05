@@ -60,7 +60,7 @@ func router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 }
 
 func setCacheControlHeaders(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Query().Has("prefetch") {
+	if r.URL.Query().Has("no-cache") {
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 		w.Header().Set("Pragma", "no-cache")
 		w.Header().Set("Expires", "0")
