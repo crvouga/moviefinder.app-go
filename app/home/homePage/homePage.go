@@ -33,6 +33,8 @@ func respondLoadNext() http.HandlerFunc {
 		FeedSwiper: feedSwiper.FeedSwiper{
 			Slides: []feedSwiperSlides.FeedSwiperSlide{
 				{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
+				{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
+				{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
 			},
 		},
 	}

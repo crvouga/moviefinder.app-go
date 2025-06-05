@@ -3,18 +3,18 @@
 <div class="flex w-full flex-1 flex-col items-center justify-start overflow-x-hidden overflow-y-auto">
 	<swiper-container slides-per-view="1" class="w-full h-full" direction="vertical" id="feed-swiper">
 		{{template "feedSwiperSlides" .}}
-		<swiper-slide id="last-side">
+		<swiper-slide id="feed-swiper-last-slide">
 			<div class="w-full h-full bg-neutral-800 animate-pulse"></div>
 		</swiper-slide>
 	</swiper-container>
 </div>
 <script>
-	const swiper = document.getElementById("feed-swiper");
-	const lastSide = document.getElementById("last-side");
 	const loadNextURL = "{{.LoadNextURL}}";
-	swiper.addEventListener("swiperslidechange", () => {
-		if (swiper.swiper.activeIndex >= swiper.swiper.slides.length - 2) {
-			fetch(loadNextURL).then(res => res.text()).then(html => lastSide.insertAdjacentHTML("beforebegin", html));
+	const feedSwiper = document.getElementById("feed-swiper");
+	const feedSwiperLastSlide = document.getElementById("feed-swiper-last-slide");
+	feedSwiper.addEventListener("swiperslidechange", () => {
+		if (feedSwiper.swiper.activeIndex >= feedSwiper.swiper.slides.length - 4) {
+			fetch(loadNextURL).then(res => res.text()).then(html => feedSwiperLastSlide.insertAdjacentHTML("beforebegin", html));
 		}
 	});
 </script>
