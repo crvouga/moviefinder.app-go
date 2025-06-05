@@ -40,7 +40,9 @@ func router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 		rc := reqCtx.FromHttpRequest(ac, r)
 		rc.Logger.Info("request received", "path", r.URL.Path)
 
-		caching.No(w)
+		if false {
+			caching.No(w)
+		}
 
 		if err := static.ServeStaticAssets(w, r); err == nil {
 			return

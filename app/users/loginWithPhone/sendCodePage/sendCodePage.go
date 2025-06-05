@@ -42,7 +42,8 @@ func Respond() http.HandlerFunc {
 			},
 		},
 		TopBar: topBar.Data{
-			Title: "Send Code",
+			Title:    "Send Code",
+			BackHref: userAccountRoutes.UserAccountPage,
 		},
 		TextFieldPhoneNumber: textField.Data{
 			Label: "Phone Number",

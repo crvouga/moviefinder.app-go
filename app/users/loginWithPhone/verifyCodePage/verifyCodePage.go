@@ -8,6 +8,7 @@ import (
 	"movieFinder/app/ui/textField"
 	"movieFinder/app/ui/topBar"
 	"movieFinder/app/users/loginWithPhone/loginWithPhoneRoutes"
+	"movieFinder/app/users/userAccount/userAccountRoutes"
 	"movieFinder/lib/static"
 	"net/http"
 	"net/url"
@@ -27,6 +28,7 @@ func Respond() http.HandlerFunc {
 	templatePaths = append(templatePaths, button.TemplatePaths...)
 	templ := templateExt.Combine(templatePaths)
 	type Data struct {
+		Document         document.Data
 		TopBar           topBar.Data
 		PhoneNumber      string
 		TextFieldCode    textField.Data
@@ -34,8 +36,15 @@ func Respond() http.HandlerFunc {
 		Error            string
 	}
 	baseData := Data{
+		Document: document.Data{
+			Preload: []document.Preload{
+				document.NewPreload(userAccountRoutes.UserAccountPage),
+				document.NewPreload(loginWithPhoneRoutes.SendCodePage),
+			},
+		},
 		TopBar: topBar.Data{
-			Title: "Verify Code",
+			BackHref: loginWithPhoneRoutes.SendCodePage,
+			Title:    "Verify Code",
 		},
 		TextFieldCode: textField.Data{
 			Label: "Code",
