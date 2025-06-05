@@ -15,7 +15,7 @@ func TestCreateTable(t *testing.T) {
 	defer db.Close()
 
 	// Create the tables
-	CreateTable(db)
+	CreateTables(db)
 
 	// Verify tables were created by checking their existence
 	tables := []string{"media", "media_images", "genres", "media_genres"}

@@ -5,7 +5,10 @@ type Fixture struct {
 }
 
 func NewFixture() *Fixture {
-	tmdbAPI := NewFromEnv()
+	tmdbAPI, err := NewFromEnv()
+	if err != nil {
+		panic(err)
+	}
 	return &Fixture{
 		tmdbAPI: tmdbAPI,
 	}

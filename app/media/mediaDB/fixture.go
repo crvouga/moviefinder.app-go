@@ -1,0 +1,28 @@
+package mediaDB
+
+import (
+	"database/sql"
+	"movieFinder/lib/sqlite"
+	"movieFinder/lib/tmdbAPI"
+)
+
+type Fixture struct {
+	DB     *sql.DB
+	Client *tmdbAPI.Client
+}
+
+func NewFixture() *Fixture {
+	db, err := sqlite.New(":memory:")
+	if err != nil {
+		panic(err)
+	}
+	CreateTables(db)
+	client, err := tmdbAPI.NewFromEnv()
+	if err != nil {
+		panic(err)
+	}
+	return &Fixture{
+		DB:     db,
+		Client: client,
+	}
+}

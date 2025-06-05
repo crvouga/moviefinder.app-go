@@ -4,7 +4,7 @@ import (
 	"database/sql"
 )
 
-func CreateTable(db *sql.DB) {
+func CreateTables(db *sql.DB) {
 
 	db.Exec(`
 		CREATE TABLE IF NOT EXISTS media (

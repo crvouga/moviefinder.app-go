@@ -3,6 +3,7 @@ package tmdbAPI
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"movieFinder/lib/dotEnv"
@@ -24,16 +25,20 @@ func New(readAccessToken string) *Client {
 	}
 }
 
-func NewFromEnv() *Client {
+func NewFromEnv() (*Client, error) {
 	err := dotEnv.Load()
+
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
+
 	readAccessToken := os.Getenv("TMDB_API_READ_ACCESS_TOKEN")
+
 	if readAccessToken == "" {
-		panic("TMDB_API_READ_ACCESS_TOKEN is not set")
+		return nil, errors.New("TMDB_API_READ_ACCESS_TOKEN is not set")
 	}
-	return New(readAccessToken)
+
+	return New(readAccessToken), nil
 }
 
 func (t *Client) httpGet(path string, params interface{}, response interface{}) error {

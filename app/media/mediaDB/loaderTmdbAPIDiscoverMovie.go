@@ -148,7 +148,6 @@ func processMoviePage(db *sql.DB, client *tmdbAPI.Client, page int, configuratio
 }
 
 func LoaderTmdbAPIDiscoverMovie(db *sql.DB, client *tmdbAPI.Client, maxPages int) error {
-
 	go func() {
 		log.Println("Starting TMDB Discover Movie loader worker...")
 
