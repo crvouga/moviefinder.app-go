@@ -13,6 +13,7 @@ import (
 	"movieFinder/app/ui/pages"
 	"movieFinder/app/users"
 	"movieFinder/app/users/auth"
+	"movieFinder/lib/httpExt"
 	"movieFinder/lib/sessionID"
 	"movieFinder/lib/static"
 	"movieFinder/lib/traceID"
@@ -28,6 +29,7 @@ func Handler() http.Handler {
 	router(mux, &ac)
 
 	handler := traceID.WithTraceIDHeader(sessionID.WithSessionIDCookie(mux))
+	handler = httpExt.GzipMiddleware(handler)
 
 	return handler
 }
@@ -36,6 +38,7 @@ func Handler() http.Handler {
 func router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 	muxLoggedIn := newMuxLoggedIn(ac)
 	muxLoggedOut := newMuxLoggedOut(ac)
+
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rc := reqCtx.FromHttpRequest(ac, r)
 		rc.Logger.Info("request received", "path", r.URL.Path)

@@ -65,9 +65,7 @@ func respondHomePage() http.HandlerFunc {
 			},
 		},
 		FeedSwiper: feedSwiper.FeedSwiper{
-			Slides: []feedSwiperSlides.FeedSwiperSlide{
-				{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
-			},
+			Slides: []feedSwiperSlides.FeedSwiperSlide{},
 		},
 		BottomButtons: appBottomButtons.AppBottomButtons(appBottomButtons.HomePage),
 		LoadNextURL:   LoadNext,

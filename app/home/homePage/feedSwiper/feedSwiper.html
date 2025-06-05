@@ -12,10 +12,12 @@
 	const loadNextURL = "{{.LoadNextURL}}";
 	const feedSwiper = document.getElementById("feed-swiper");
 	const feedSwiperLastSlide = document.getElementById("feed-swiper-last-slide");
-	feedSwiper.addEventListener("swiperslidechange", () => {
+	const loadNext = () => {
 		if (feedSwiper.swiper.activeIndex >= feedSwiper.swiper.slides.length - 4) {
 			fetch(loadNextURL).then(res => res.text()).then(html => feedSwiperLastSlide.insertAdjacentHTML("beforebegin", html));
 		}
-	});
+	}
+	feedSwiper.addEventListener("swiperslidechange", loadNext);
+	document.addEventListener("DOMContentLoaded", loadNext);
 </script>
 {{end}}
