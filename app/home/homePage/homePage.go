@@ -14,7 +14,7 @@ import (
 	"net/http"
 )
 
-const LoadNext = "/load-next?no-cache=true"
+const LoadNext = "/load-next"
 
 func Router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 	mux.HandleFunc(homeRoutes.HomePage, respondHomePage())
