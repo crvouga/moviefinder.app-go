@@ -43,7 +43,7 @@ func router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 		rc := reqCtx.FromHttpRequest(ac, r)
 		rc.Logger.Info("request received", "path", r.URL.Path)
 
-		if false {
+		if r.URL.Query().Get("prefetch") == "true" {
 			caching.No(w)
 		} else {
 			caching.Yes(w)
