@@ -9,7 +9,6 @@ import (
 	"movieFinder/app/home"
 	"movieFinder/app/home/homePage"
 	"movieFinder/app/projects"
-	"movieFinder/app/ui/caching"
 	"movieFinder/app/ui/pages"
 	"movieFinder/app/users"
 	"movieFinder/app/users/auth"
@@ -18,6 +17,7 @@ import (
 	"movieFinder/lib/static"
 	"movieFinder/lib/traceID"
 	"net/http"
+	"time"
 )
 
 // Handler is the main handler for the application.
@@ -43,11 +43,7 @@ func router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 		rc := reqCtx.FromHttpRequest(ac, r)
 		rc.Logger.Info("request received", "path", r.URL.Path)
 
-		if r.URL.Query().Get("prefetch") == "true" {
-			caching.No(w)
-		} else {
-			caching.Yes(w)
-		}
+		cacheControl(w, r)
 
 		if err := static.ServeStaticAssets(w, r); err == nil {
 			return
@@ -61,6 +57,18 @@ func router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 		muxLoggedOut.ServeHTTP(w, r)
 	})
 	mux.Handle("/", handler)
+}
+
+func cacheControl(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Query().Get("prefetch") == "true" {
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
+		return
+	}
+	w.Header().Set("Cache-Control", "public, max-age=31536000")
+	w.Header().Set("Expires", time.Now().AddDate(1, 0, 0).Format(time.RFC1123))
+	w.Header().Set("Vary", "Accept-Encoding")
 }
 
 // newMuxLoggedIn is the mux for the logged in user.
