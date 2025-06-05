@@ -43,7 +43,7 @@ func router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 		rc := reqCtx.FromHttpRequest(ac, r)
 		rc.Logger.Info("request received", "path", r.URL.Path)
 
-		cacheControl(w, r)
+		setCacheControlHeaders(w, r)
 
 		if err := static.ServeStaticAssets(w, r); err == nil {
 			return
@@ -59,7 +59,7 @@ func router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 	mux.Handle("/", handler)
 }
 
-func cacheControl(w http.ResponseWriter, r *http.Request) {
+func setCacheControlHeaders(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Has("prefetch") {
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 		w.Header().Set("Pragma", "no-cache")
