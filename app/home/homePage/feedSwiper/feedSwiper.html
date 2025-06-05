@@ -13,29 +13,17 @@
 	const feedSwiper = document.getElementById("feed-swiper");
 	const feedSwiperLastSlide = document.getElementById("feed-swiper-last-slide");
 	let isLoading = false;
-	let loadTimeout = null;
-
-	const loadNext = () => {
-		if (isLoading || feedSwiper.swiper.moving) return;
-
-		if (feedSwiper.swiper.activeIndex >= feedSwiper.swiper.slides.length - 4) {
-			isLoading = true;
-			clearTimeout(loadTimeout);
-
-			loadTimeout = setTimeout(() => {
-				fetch(loadNextURL)
-					.then(res => res.text())
-					.then(html => {
-						feedSwiperLastSlide.insertAdjacentHTML("beforebegin", html);
-						isLoading = false;
-					})
-					.catch(() => {
-						isLoading = false;
-					});
-			}, 100); // Small delay to ensure smooth transitions
-		}
+	const loadNext = async () => {
+		if (isLoading) return
+		const shouldLoad = feedSwiper.swiper.activeIndex >= feedSwiper.swiper.slides.length - 4
+		if (!shouldLoad) return
+		isLoading = true;
+		const res = await fetch(loadNextURL)
+		const html = await res.text()
+		await new Promise(resolve => setTimeout(resolve, 100));
+		feedSwiperLastSlide.insertAdjacentHTML("beforebegin", html)
+		isLoading = false;
 	}
-
 	feedSwiper.addEventListener("swiperslidechange", loadNext);
 	document.addEventListener("DOMContentLoaded", loadNext);
 </script>
