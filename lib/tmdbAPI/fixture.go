@@ -1,7 +1,7 @@
 package tmdbAPI
 
 type Fixture struct {
-	tmdbAPI *TmdbAPI
+	tmdbAPI *Client
 }
 
 func NewFixture() *Fixture {

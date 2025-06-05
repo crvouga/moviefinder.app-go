@@ -18,7 +18,10 @@ type Fixture struct {
 }
 
 func newFixture() *Fixture {
-	db := sqlite.New()
+	db, err := sqlite.New(":memory:")
+	if err != nil {
+		panic(err)
+	}
 
 	return &Fixture{
 		LinkDB:     NewImplKeyValueDB(keyValueDB.NewImplHashMap()),

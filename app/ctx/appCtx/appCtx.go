@@ -31,7 +31,10 @@ func (ac *AppCtx) CleanUp() {
 }
 
 func New() AppCtx {
-	db := sqlite.New()
+	db, err := sqlite.New(":memory:")
+	if err != nil {
+		panic(err)
+	}
 
 	keyValueDBFs := keyValueDB.NewImplFs("keyValueDB.json")
 
@@ -49,7 +52,10 @@ func New() AppCtx {
 }
 
 func NewTest() AppCtx {
-	db := sqlite.New()
+	db, err := sqlite.New(":memory:")
+	if err != nil {
+		panic(err)
+	}
 
 	keyValueDBHashMap := keyValueDB.ImplHashMap{}
 

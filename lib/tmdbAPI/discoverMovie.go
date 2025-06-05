@@ -66,7 +66,7 @@ type DiscoverMovieResponseResult struct {
 	VoteCount        int     `json:"vote_count"`
 }
 
-func (t *TmdbAPI) DiscoverMovie(params DiscoverMovieParams) (DiscoverMovieResponse, error) {
+func (t *Client) DiscoverMovie(params DiscoverMovieParams) (DiscoverMovieResponse, error) {
 	var response DiscoverMovieResponse
 	err := t.httpGet("/discover/movie", params, &response)
 	if err != nil {

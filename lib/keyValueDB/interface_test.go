@@ -13,7 +13,10 @@ type Fixture struct {
 }
 
 func newFixtures() []*Fixture {
-	db := sqlite.New()
+	db, err := sqlite.New(":memory:")
+	if err != nil {
+		panic(err)
+	}
 
 	fixtures := make([]*Fixture, 0)
 

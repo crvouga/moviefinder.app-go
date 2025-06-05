@@ -11,20 +11,20 @@ import (
 	"os"
 )
 
-// TmdbAPI represents the TMDB API client configuration
-type TmdbAPI struct {
+// Client represents the TMDB API client configuration
+type Client struct {
 	ReadAccessToken string
 	BaseURL         string
 }
 
-func New(readAccessToken string) *TmdbAPI {
-	return &TmdbAPI{
+func New(readAccessToken string) *Client {
+	return &Client{
 		ReadAccessToken: readAccessToken,
 		BaseURL:         BASE_URL,
 	}
 }
 
-func NewFromEnv() *TmdbAPI {
+func NewFromEnv() *Client {
 	err := dotEnv.Load()
 	if err != nil {
 		panic(err)
@@ -36,7 +36,7 @@ func NewFromEnv() *TmdbAPI {
 	return New(readAccessToken)
 }
 
-func (t *TmdbAPI) httpGet(path string, params interface{}, response interface{}) error {
+func (t *Client) httpGet(path string, params interface{}, response interface{}) error {
 	// Create URL values
 	v := url.Values{}
 
