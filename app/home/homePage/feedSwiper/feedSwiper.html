@@ -13,7 +13,7 @@
 	const lastSide = document.getElementById("last-side");
 	const loadNextURL = "{{.LoadNextURL}}";
 	swiper.addEventListener("swiperslidechange", () => {
-		if (swiper.swiper.activeIndex === swiper.swiper.slides.length - 1) {
+		if (swiper.swiper.activeIndex >= swiper.swiper.slides.length - 2) {
 			fetch(loadNextURL).then(res => res.text()).then(html => lastSide.insertAdjacentHTML("beforebegin", html));
 		}
 	});
