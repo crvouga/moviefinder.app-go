@@ -9,6 +9,7 @@ type Data struct {
 	Label string
 	Name  string
 	Type  string
+	Error *string
 }
 
 var TemplateName = "textField"

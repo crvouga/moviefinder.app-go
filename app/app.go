@@ -45,6 +45,8 @@ func router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 
 		if false {
 			caching.No(w)
+		} else {
+			caching.Yes(w)
 		}
 
 		if err := static.ServeStaticAssets(w, r); err == nil {
