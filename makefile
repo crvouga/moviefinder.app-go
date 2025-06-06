@@ -17,6 +17,9 @@ clean:
 
 .PHONY: run dev test build clean
 
+tw:
+	make tw-watch
+
 tw-download:
 	curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-macos-arm64
 	chmod +x tailwindcss-macos-arm64

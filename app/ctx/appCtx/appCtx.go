@@ -41,7 +41,9 @@ func New() AppCtx {
 
 	keyValueDBFs := keyValueDB.NewImplFs("keyValueDB.json")
 
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})).WithGroup("app")
+	MAX_LOG_LEVEL := slog.LevelInfo
+
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: MAX_LOG_LEVEL})).WithGroup("app")
 
 	tmdbAPIClient, err := tmdbAPI.NewFromEnv(logger.WithGroup("tmdbAPI"))
 

@@ -7,6 +7,7 @@ import (
 	"math"
 	"movieFinder/lib/tmdbAPI"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -161,6 +162,58 @@ func processMoviePage(db *sql.DB, client *tmdbAPI.Client, page int, configuratio
 }
 
 const HARD_MAX_PAGES = 500
+const WORKERS = 10
+const RATE_LIMIT = 1 * time.Second
+
+func startWorkers(pageQueue chan int, db *sql.DB, client *tmdbAPI.Client, configuration tmdbAPI.ConfigurationResponse, logger *slog.Logger, rateLimiter *time.Ticker, wg *sync.WaitGroup, errChan chan error, pageCompleteChan chan bool) {
+	for w := 0; w < WORKERS; w++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for page := range pageQueue {
+				<-rateLimiter.C // Wait for rate limiter before processing
+				isLastPage, err := processMoviePage(db, client, page, configuration, logger.WithGroup("worker-"+strconv.Itoa(w)))
+				if err != nil {
+					errChan <- err
+					return
+				}
+				pageCompleteChan <- isLastPage
+			}
+		}()
+	}
+}
+
+func queuePages(pageQueue chan int, maxPages int) {
+	for page := 1; page <= maxPages && page <= HARD_MAX_PAGES; page++ {
+		pageQueue <- page
+	}
+	close(pageQueue)
+}
+
+func monitorCompletion(errChan chan error, pageCompleteChan chan bool, done chan struct{}, logger *slog.Logger) {
+	for {
+		select {
+		case err, ok := <-errChan:
+			if ok && err != nil {
+				logger.Error("Stopping loader due to error", "error", err)
+				close(done)
+				return
+			}
+		case isLastPage, ok := <-pageCompleteChan:
+			if !ok {
+				// All pages processed successfully
+				logger.Info("TMDB Discover Movie loader completed")
+				close(done)
+				return
+			}
+			if isLastPage {
+				logger.Info("Reached last page, media loader complete")
+				close(done)
+				return
+			}
+		}
+	}
+}
 
 func LoaderTmdbAPIDiscoverMovie(db *sql.DB, client *tmdbAPI.Client, maxPages int, logger *slog.Logger) chan struct{} {
 	maxPages = int(math.Min(float64(maxPages), float64(HARD_MAX_PAGES)))
@@ -180,25 +233,31 @@ func LoaderTmdbAPIDiscoverMovie(db *sql.DB, client *tmdbAPI.Client, maxPages int
 		logger.Debug("Image sizes", "posterSizes", configuration.Images.PosterSizes, "backdropSizes", configuration.Images.BackdropSizes)
 
 		// Create rate limiter for 40 requests per 10 seconds (TMDB API limit)
-		rateLimiter := time.NewTicker(250 * time.Millisecond)
+		rateLimiter := time.NewTicker(RATE_LIMIT)
 		defer rateLimiter.Stop()
 
-		for page := 1; page <= maxPages && page <= HARD_MAX_PAGES; page++ {
-			<-rateLimiter.C // Wait for rate limiter before processing
-			isLastPage, err := processMoviePage(db, client, page, configuration, logger)
-			if err != nil {
-				logger.Error("Stopping loader due to error", "error", err, "page", page)
-				close(done)
-				return
-			}
-			if isLastPage {
-				logger.Info("Reached last page, media loader complete")
-				break
-			}
-		}
+		// Create error channel and page completion channel
+		errChan := make(chan error, maxPages)
+		pageCompleteChan := make(chan bool, maxPages)
 
-		logger.Info("TMDB Discover Movie loader completed")
-		close(done)
+		// Create worker pool
+		pageQueue := make(chan int, maxPages)
+		var wg sync.WaitGroup
+
+		// Start workers
+		startWorkers(pageQueue, db, client, configuration, logger, rateLimiter, &wg, errChan, pageCompleteChan)
+
+		// Queue up pages
+		queuePages(pageQueue, maxPages)
+
+		// Wait for completion or error
+		go func() {
+			wg.Wait()
+			close(errChan)
+			close(pageCompleteChan)
+		}()
+
+		monitorCompletion(errChan, pageCompleteChan, done, logger)
 	}()
 
 	return done
