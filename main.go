@@ -4,6 +4,7 @@ import (
 	"embed"
 	"log"
 	"movieFinder/app"
+	appDb "movieFinder/app/db"
 	"movieFinder/lib/dbMigrations"
 	"movieFinder/lib/tailwindcss"
 	"net/http"
@@ -17,17 +18,13 @@ var migrationsFs embed.FS
 func main() {
 	tailwindcss.Minify("./public/input.css", "./public/output.css")
 
-	dbPath := "db/db.sqlite"
-
-	log.Println("Running migrations for", dbPath)
-
-	dbUrl := "sqlite:" + dbPath
+	dbUrl := "sqlite:" + appDb.DB_PATH
 
 	log.Println("Running migrations for", dbUrl)
 
 	dbMigrations.Run(migrationsFs, dbUrl)
 
-	handler := app.Handler(dbPath)
+	handler := app.Handler()
 
 	addr := ":8080"
 

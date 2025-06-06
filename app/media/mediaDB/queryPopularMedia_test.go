@@ -10,14 +10,8 @@ func TestQueryPopularMedia(t *testing.T) {
 	f := NewFixture()
 	defer f.DB.Close()
 
-	// Create tables before running the test
-	err := CreateTables(f.DB, slog.Default())
-	if err != nil {
-		t.Fatalf("Failed to create tables: %v", err)
-	}
-
 	// Load one page of movies
-	done := LoaderTmdbAPIDiscoverMovie(f.DB, f.Client, 1, slog.Default())
+	done := WorkerLoadTmdbAPIDiscoverMovie(f.DB, f.Client, 1, slog.Default())
 
 	// Wait for loading to complete
 	select {

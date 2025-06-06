@@ -23,20 +23,12 @@ import (
 )
 
 // Handler is the main handler for the application.
-func Handler(dbPath string) http.Handler {
-	ac := appCtx.New(dbPath)
+func Handler() http.Handler {
+	ac := appCtx.New()
 	ac.Logger.Debug("initializing application handler")
 
-	ac.Logger.Debug("creating media tables")
-	err := mediaDB.CreateTables(ac.DB, ac.Logger)
-	if err != nil {
-		ac.Logger.Error("failed to create media tables", "error", err)
-		panic(err)
-	}
-	ac.Logger.Debug("starting tmdb api discover movie loader")
-
 	ac.Logger.Debug("starting media loader")
-	done := mediaDB.Loader(ac.DB, ac.TmdbAPIClient, ac.Logger)
+	done := mediaDB.Worker(ac.DB, ac.TmdbAPIClient, ac.Logger)
 	go func() {
 		<-done
 		ac.Logger.Debug("media loader completed")

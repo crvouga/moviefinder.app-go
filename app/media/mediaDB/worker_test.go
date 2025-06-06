@@ -6,11 +6,11 @@ import (
 	"time"
 )
 
-func TestLoader(t *testing.T) {
+func TestWorker(t *testing.T) {
 	f := NewFixture()
 	defer f.DB.Close()
 
-	done := Loader(f.DB, f.Client, slog.Default())
+	done := Worker(f.DB, f.Client, slog.Default())
 
 	// Wait for loading to complete with timeout
 	select {

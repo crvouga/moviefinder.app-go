@@ -215,7 +215,7 @@ func monitorCompletion(errChan chan error, pageCompleteChan chan bool, done chan
 	}
 }
 
-func LoaderTmdbAPIDiscoverMovie(db *sql.DB, client *tmdbAPI.Client, maxPages int, logger *slog.Logger) chan struct{} {
+func WorkerLoadTmdbAPIDiscoverMovie(db *sql.DB, client *tmdbAPI.Client, maxPages int, logger *slog.Logger) chan struct{} {
 	maxPages = int(math.Min(float64(maxPages), float64(HARD_MAX_PAGES)))
 	done := make(chan struct{})
 

@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"log/slog"
+	appDb "movieFinder/app/db"
 	"movieFinder/app/projects/project/projectDB"
 	"movieFinder/app/users/login/link/linkDB"
 	"movieFinder/app/users/userAccount/userAccountDB"
@@ -34,13 +35,10 @@ func (ac *AppCtx) CleanUp() {
 	ac.DB.Close()
 }
 
-func New(dbPath string) AppCtx {
-	dbDurable, err := sqlite.New(dbPath)
-	db, err := sqlite.LoadIntoMemory(dbPath)
+func New() AppCtx {
+	dbDurable := appDb.Open()
 
-	if err != nil {
-		panic(err)
-	}
+	db := appDb.OpenInMemory()
 
 	keyValueDBFs := keyValueDB.NewImplFs("keyValueDB.json")
 

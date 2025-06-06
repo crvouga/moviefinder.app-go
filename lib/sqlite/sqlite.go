@@ -3,17 +3,27 @@ package sqlite
 import (
 	"database/sql"
 	"log/slog"
+	"os"
+	"path/filepath"
 	"time"
 
 	_ "modernc.org/sqlite"
 )
 
 func New(dbPath string) (*sql.DB, error) {
-	slog.Info("Opening SQLite database", "path", dbPath)
-
-	db, err := sql.Open("sqlite", dbPath)
+	// Convert relative path to absolute from current working directory
+	cwd, err := os.Getwd()
 	if err != nil {
-		slog.Error("Failed to open SQLite database", "path", dbPath, "error", err)
+		slog.Error("Failed to get working directory", "error", err)
+		return nil, err
+	}
+	absPath := filepath.Join(cwd, dbPath)
+
+	slog.Info("Opening SQLite database", "path", absPath)
+
+	db, err := sql.Open("sqlite", absPath)
+	if err != nil {
+		slog.Error("Failed to open SQLite database", "path", absPath, "error", err)
 		return nil, err
 	}
 
@@ -45,19 +55,28 @@ func New(dbPath string) (*sql.DB, error) {
 	db.SetMaxIdleConns(10)                  // Maximum number of idle connections
 	db.SetConnMaxLifetime(30 * time.Minute) // Maximum lifetime of a connection
 
-	slog.Info("Successfully opened SQLite database", "path", dbPath)
+	slog.Info("Successfully opened SQLite database", "path", absPath)
 	return db, nil
 }
 
 func LoadIntoMemory(loadDbPath string) (*sql.DB, error) {
 	slog.Info("Loading SQLite database into memory", "path", loadDbPath)
 
+	// Check if source file exists
+	if _, err := os.Stat(loadDbPath); os.IsNotExist(err) {
+		// Try looking in root directory
+		slog.Error("Source database file does not exist", "path", loadDbPath)
+		return nil, err
+	}
+
+	// Create in-memory database
 	db, err := sql.Open("sqlite", ":memory:")
 	if err != nil {
 		slog.Error("Failed to create in-memory database", "error", err)
 		return nil, err
 	}
 
+	// Open source database
 	sourceDb, err := sql.Open("sqlite", loadDbPath)
 	if err != nil {
 		slog.Error("Failed to open source database", "path", loadDbPath, "error", err)
@@ -65,31 +84,11 @@ func LoadIntoMemory(loadDbPath string) (*sql.DB, error) {
 	}
 	defer sourceDb.Close()
 
-	slog.Debug("Vacuuming source database")
-	_, err = sourceDb.Exec("VACUUM")
+	// Backup source database to memory
+	slog.Debug("Copying database to memory")
+	_, err = db.Exec("VACUUM INTO ?", loadDbPath)
 	if err != nil {
-		slog.Error("Failed to vacuum source database", "error", err)
-		return nil, err
-	}
-
-	slog.Debug("Attaching source database")
-	_, err = db.Exec("ATTACH DATABASE ? AS source", loadDbPath)
-	if err != nil {
-		slog.Error("Failed to attach source database", "error", err)
-		return nil, err
-	}
-
-	slog.Debug("Copying schema from source database")
-	_, err = db.Exec("SELECT sql FROM source.sqlite_master WHERE sql NOT NULL AND type='table'")
-	if err != nil {
-		slog.Error("Failed to copy schema from source database", "error", err)
-		return nil, err
-	}
-
-	slog.Debug("Detaching source database")
-	_, err = db.Exec("DETACH DATABASE source")
-	if err != nil {
-		slog.Error("Failed to detach source database", "error", err)
+		slog.Error("Failed to copy database to memory", "error", err)
 		return nil, err
 	}
 
