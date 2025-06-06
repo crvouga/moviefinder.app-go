@@ -11,6 +11,7 @@ func TestWorkerDiscoverMovie(t *testing.T) {
 	defer f.DB.Close()
 
 	worker := NewWorker(f.DB, f.Client, slog.Default())
+	worker.DiscoverMovieMaxPages = 1
 	done := worker.RunDiscoverMovie()
 
 	// Wait for loading to complete with timeout
@@ -48,6 +49,7 @@ func TestWorkerDiscoverMovieMultiplePages(t *testing.T) {
 
 	// First load just 1 page
 	worker := NewWorker(f.DB, f.Client, slog.Default())
+	worker.DiscoverMovieMaxPages = 1
 	done1 := worker.RunDiscoverMovie()
 
 	select {
@@ -67,6 +69,7 @@ func TestWorkerDiscoverMovieMultiplePages(t *testing.T) {
 	f = NewFixture()
 
 	worker = NewWorker(f.DB, f.Client, slog.Default())
+	worker.DiscoverMovieMaxPages = 2
 	done2 := worker.RunDiscoverMovie()
 
 	select {

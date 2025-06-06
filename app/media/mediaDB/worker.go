@@ -30,7 +30,10 @@ func (w *Worker) Run() chan struct{} {
 
 	done := w.RunDiscoverMovie()
 
-	w.Logger.Info("media worker completed successfully")
+	go func() {
+		<-done
+		w.Logger.Info("media worker completed successfully")
+	}()
 
 	return done
 }
