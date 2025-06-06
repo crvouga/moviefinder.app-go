@@ -32,7 +32,7 @@ func NewFromEnv() (*Client, error) {
 	err := dotEnv.Load()
 
 	if err != nil {
-		return nil, err
+		log.Printf("Error loading .env file: %v", err)
 	}
 
 	readAccessToken := os.Getenv("TMDB_API_READ_ACCESS_TOKEN")
