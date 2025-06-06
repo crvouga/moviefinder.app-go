@@ -17,11 +17,7 @@ func TestQueryPopularMedia(t *testing.T) {
 	}
 
 	// Load one page of movies
-	done := make(chan struct{})
-	err = LoaderTmdbAPIDiscoverMovie(f.DB, f.Client, 1, done, slog.Default())
-	if err != nil {
-		t.Errorf("Expected no error loading movies, got %v", err)
-	}
+	done := LoaderTmdbAPIDiscoverMovie(f.DB, f.Client, 1, slog.Default())
 
 	// Wait for loading to complete
 	select {

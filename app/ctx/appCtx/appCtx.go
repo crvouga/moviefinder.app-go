@@ -2,6 +2,7 @@ package appCtx
 
 import (
 	"database/sql"
+	"os"
 
 	"log/slog"
 	"movieFinder/app/projects/project/projectDB"
@@ -40,7 +41,10 @@ func New() AppCtx {
 
 	keyValueDBFs := keyValueDB.NewImplFs("keyValueDB.json")
 
-	tmdbAPIClient, err := tmdbAPI.NewFromEnv(slog.Default())
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})).WithGroup("app")
+
+	tmdbAPIClient, err := tmdbAPI.NewFromEnv(logger.WithGroup("tmdbAPI"))
+
 	if err != nil {
 		slog.Default().Error("Failed to create TMDB API client", "error", err)
 	}
@@ -53,7 +57,7 @@ func New() AppCtx {
 		DB:            db,
 		TmdbAPIClient: tmdbAPIClient,
 		UowFactory:    *uow.NewFactory(db),
-		Logger:        slog.Default(),
+		Logger:        logger,
 		KeyValueDB:    keyValueDB.NewImplNamespaced(keyValueDBFs, "app"),
 		LinkDB:        linkDB.NewImplKeyValueDB(keyValueDBFs),
 		EmailOutbox:   emailOutbox.NewImplKeyValueDB(keyValueDBFs),

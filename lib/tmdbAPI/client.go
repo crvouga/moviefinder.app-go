@@ -48,16 +48,16 @@ func NewFromEnv(logger *slog.Logger) (*Client, error) {
 }
 
 func (t *Client) httpGet(path string, params any, response any) error {
-	v := t.buildURLValues(params)
+	v := buildURLValues(params)
 	fullURL := fmt.Sprintf("%s%s?%s", t.BaseURL, path, v.Encode())
-	t.logger.Info("fullURL", "fullURL", fullURL)
+	t.logger.Debug("fullURL", "fullURL", fullURL)
 
-	req, err := t.createRequest(fullURL)
+	req, err := createRequest(fullURL, t.ReadAccessToken)
 	if err != nil {
 		return err
 	}
 
-	body, statusCode, err := t.makeRequest(req)
+	body, statusCode, err := makeRequest(req)
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func (t *Client) httpGet(path string, params any, response any) error {
 	return nil
 }
 
-func (t *Client) buildURLValues(params any) url.Values {
+func buildURLValues(params any) url.Values {
 	v := url.Values{}
 	if params == nil {
 		return v
@@ -81,43 +81,66 @@ func (t *Client) buildURLValues(params any) url.Values {
 
 	switch p := params.(type) {
 	case url.Values:
-		for key, values := range p {
-			for _, value := range values {
-				v.Add(key, value)
-			}
-		}
+		return copyURLValues(p)
 	default:
-		val := reflect.ValueOf(p)
-		typ := val.Type()
-		for i := 0; i < val.NumField(); i++ {
-			field := typ.Field(i)
-			tag := field.Tag.Get("url")
-			if tag == "" || tag == "-" {
-				continue
-			}
-			tagParts := strings.Split(tag, ",")
-			tag = tagParts[0]
+		return buildURLValuesFromStruct(p)
+	}
+}
 
-			value := val.Field(i).Interface()
-			if value == nil || value == "" || value == 0 || value == false {
-				continue
-			}
-			v.Add(tag, fmt.Sprintf("%v", value))
+func copyURLValues(values url.Values) url.Values {
+	v := url.Values{}
+	for key, vals := range values {
+		for _, value := range vals {
+			v.Add(key, value)
 		}
 	}
 	return v
 }
 
-func (t *Client) createRequest(url string) (*http.Request, error) {
+func buildURLValuesFromStruct(params any) url.Values {
+	v := url.Values{}
+	val := reflect.ValueOf(params)
+	typ := val.Type()
+
+	for i := 0; i < val.NumField(); i++ {
+		field := typ.Field(i)
+		tag := getURLTag(field)
+		if tag == "" {
+			continue
+		}
+
+		value := val.Field(i).Interface()
+		if isEmptyValue(value) {
+			continue
+		}
+		v.Add(tag, fmt.Sprintf("%v", value))
+	}
+	return v
+}
+
+func getURLTag(field reflect.StructField) string {
+	tag := field.Tag.Get("url")
+	if tag == "" || tag == "-" {
+		return ""
+	}
+	tagParts := strings.Split(tag, ",")
+	return tagParts[0]
+}
+
+func isEmptyValue(value interface{}) bool {
+	return value == nil || value == "" || value == 0 || value == false
+}
+
+func createRequest(url string, readAccessToken string) (*http.Request, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", t.ReadAccessToken))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", readAccessToken))
 	return req, nil
 }
 
-func (t *Client) makeRequest(req *http.Request) ([]byte, int, error) {
+func makeRequest(req *http.Request) ([]byte, int, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {

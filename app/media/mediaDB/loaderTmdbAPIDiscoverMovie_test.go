@@ -10,11 +10,7 @@ func TestLoaderTmdbAPIDiscoverMovie(t *testing.T) {
 	f := NewFixture()
 	defer f.DB.Close()
 
-	done := make(chan struct{})
-	err := LoaderTmdbAPIDiscoverMovie(f.DB, f.Client, 1, done, slog.Default())
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
-	}
+	done := LoaderTmdbAPIDiscoverMovie(f.DB, f.Client, 1, slog.Default())
 
 	// Wait for loading to complete with timeout
 	select {
@@ -25,7 +21,7 @@ func TestLoaderTmdbAPIDiscoverMovie(t *testing.T) {
 	}
 
 	var count int
-	err = f.DB.QueryRow("SELECT COUNT(*) FROM media").Scan(&count)
+	err := f.DB.QueryRow("SELECT COUNT(*) FROM media").Scan(&count)
 	if err != nil {
 		t.Errorf("Error counting media rows: %v", err)
 	}
@@ -50,11 +46,7 @@ func TestLoaderTmdbAPIDiscoverMovieMultiplePages(t *testing.T) {
 	defer f.DB.Close()
 
 	// First load just 1 page
-	done1 := make(chan struct{})
-	err := LoaderTmdbAPIDiscoverMovie(f.DB, f.Client, 1, done1, slog.Default())
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
-	}
+	done1 := LoaderTmdbAPIDiscoverMovie(f.DB, f.Client, 1, slog.Default())
 
 	select {
 	case <-done1:
@@ -64,18 +56,15 @@ func TestLoaderTmdbAPIDiscoverMovieMultiplePages(t *testing.T) {
 	}
 
 	var countPage1 int
-	err = f.DB.QueryRow("SELECT COUNT(*) FROM media").Scan(&countPage1)
+	err := f.DB.QueryRow("SELECT COUNT(*) FROM media").Scan(&countPage1)
 	if err != nil {
 		t.Errorf("Error counting media rows: %v", err)
 	}
 
 	// Now load 2 pages
 	f = NewFixture() // Reset the DB
-	done2 := make(chan struct{})
-	err = LoaderTmdbAPIDiscoverMovie(f.DB, f.Client, 2, done2, slog.Default())
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
-	}
+
+	done2 := LoaderTmdbAPIDiscoverMovie(f.DB, f.Client, 2, slog.Default())
 
 	select {
 	case <-done2:

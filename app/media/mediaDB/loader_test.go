@@ -10,11 +10,7 @@ func TestLoader(t *testing.T) {
 	f := NewFixture()
 	defer f.DB.Close()
 
-	done := make(chan struct{})
-	err := Loader(f.DB, f.Client, 1, done, slog.Default())
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
-	}
+	done := Loader(f.DB, f.Client, slog.Default())
 
 	// Wait for loading to complete with timeout
 	select {
@@ -25,7 +21,7 @@ func TestLoader(t *testing.T) {
 	}
 
 	var count int
-	err = f.DB.QueryRow("SELECT COUNT(*) FROM media").Scan(&count)
+	err := f.DB.QueryRow("SELECT COUNT(*) FROM media").Scan(&count)
 	if err != nil {
 		t.Errorf("Error counting media rows: %v", err)
 	}
