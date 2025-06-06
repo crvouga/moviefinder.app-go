@@ -29,8 +29,7 @@
 
 	loop(async () => {
 		await take(swiper, "swiperslidechange");
-		const url = new URL(slideChangedURL, window.location.origin);
-		url.searchParams.set("feedIndex", swiper.swiper.activeIndex.toString());
+		const url = `${slideChangedURL}?feedIndex=${swiper.swiper.activeIndex}`;
 		await fetch(url, { method: "POST" });
 	})
 </script>
