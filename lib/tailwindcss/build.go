@@ -24,6 +24,17 @@ func Download() {
 	}
 }
 
+func DownloadCached() {
+	log.Println("Checking for cached tailwindcss")
+
+	if _, err := os.Stat("tailwindcss"); os.IsNotExist(err) {
+		log.Println("No cached tailwindcss found, downloading...")
+		Download()
+	} else {
+		log.Println("Using cached tailwindcss")
+	}
+}
+
 func Invoke(inputPath string, outputPath string) {
 	log.Println("Invoking tailwindcss")
 	err := exec.Command("./tailwindcss", "-i", inputPath, "-o", outputPath, "--minify").Run()
@@ -35,14 +46,7 @@ func Invoke(inputPath string, outputPath string) {
 	}
 }
 
-func Remove() {
-	log.Println("Removing tailwindcss")
-	os.Remove("tailwindcss")
-	log.Println("Tailwindcss removed")
-}
-
 func Build(inputPath string, outputPath string) {
-	Download()
+	DownloadCached()
 	Invoke(inputPath, outputPath)
-	Remove()
 }
