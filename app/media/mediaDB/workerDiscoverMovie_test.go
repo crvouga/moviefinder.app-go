@@ -12,7 +12,7 @@ func TestWorkerDiscoverMovie(t *testing.T) {
 
 	worker := NewWorker(f.DB, f.Client, slog.Default())
 	worker.DiscoverMovieMaxPages = 1
-	done := worker.RunDiscoverMovieLoader()
+	done := worker.WorkerDiscoverMovieLoader()
 
 	// Wait for loading to complete with timeout
 	select {
@@ -50,7 +50,7 @@ func TestWorkerDiscoverMovieMultiplePages(t *testing.T) {
 	// First load just 1 page
 	worker := NewWorker(f.DB, f.Client, slog.Default())
 	worker.DiscoverMovieMaxPages = 1
-	done1 := worker.RunDiscoverMovieLoader()
+	done1 := worker.WorkerDiscoverMovieLoader()
 
 	select {
 	case <-done1:
@@ -70,7 +70,7 @@ func TestWorkerDiscoverMovieMultiplePages(t *testing.T) {
 
 	worker = NewWorker(f.DB, f.Client, slog.Default())
 	worker.DiscoverMovieMaxPages = 2
-	done2 := worker.RunDiscoverMovieLoader()
+	done2 := worker.WorkerDiscoverMovieLoader()
 
 	select {
 	case <-done2:

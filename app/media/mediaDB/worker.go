@@ -28,7 +28,7 @@ func NewWorker(db *sql.DB, client *tmdbAPI.Client, logger *slog.Logger) Worker {
 func (w *Worker) Run() chan struct{} {
 	w.Logger.Info("starting media worker")
 
-	done := w.RunDiscoverMovieLoader()
+	done := w.WorkerDiscoverMovieLoader()
 
 	go func() {
 		<-done
