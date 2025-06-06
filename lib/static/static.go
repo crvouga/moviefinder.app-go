@@ -23,19 +23,14 @@ func hasValidSuffix(requestPath string) bool {
 	return false
 }
 
-func ServeStaticAssets(w http.ResponseWriter, r *http.Request) error {
+func ServeStaticAssets(w http.ResponseWriter, r *http.Request, directory string) error {
 	requestPath := r.URL.Path
 
 	if !hasValidSuffix(requestPath) {
 		return ErrInvalidSuffix
 	}
 
-	currentDir, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
-	filePath := filepath.Join(currentDir, requestPath)
+	filePath := filepath.Join(directory, requestPath)
 
 	info, err := os.Stat(filePath)
 	if err != nil {

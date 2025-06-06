@@ -24,10 +24,10 @@ tw-download:
 	mv tailwindcss-macos-arm64 tailwindcss
 
 tw-watch:
-	./tailwindcss -i ./input.css -o ./output.css --watch
+	./tailwindcss -i ./public/input.css -o ./public/output.css --watch
 
 tw-build:
-	./tailwindcss -i ./input.css -o ./output.css --minify
+	./tailwindcss -i ./public/input.css -o ./public/output.css --minify
 
 
 preview:

@@ -66,7 +66,7 @@ func router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 
 		setCacheControlHeaders(w, r)
 
-		if err := static.ServeStaticAssets(w, r); err == nil {
+		if err := static.ServeStaticAssets(w, r, "public"); err == nil {
 			rc.Logger.Info("served static asset", "path", r.URL.Path)
 			return
 		}
