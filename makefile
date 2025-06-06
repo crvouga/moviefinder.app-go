@@ -30,3 +30,21 @@ dbmate:
 	curl -fsSL -o dbmate https://github.com/amacneil/dbmate/releases/latest/download/dbmate-macos-amd64
 	chmod +x dbmate
 	./dbmate --help
+
+
+tw-download:
+	curl -fsSL -o tailwindcss https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-macos-arm64
+	chmod +x tailwindcss
+	./tailwindcss --help
+
+tw-build:
+	./tailwindcss -i ./public/input.css -o ./public/output.css --minify
+
+tw-download-cached:
+	if [ ! -f tailwindcss ]; then \
+		make tw-download; \
+	fi
+
+tw:
+	make tw-download-cached
+	./tailwindcss -i ./public/input.css -o ./public/output.css --minify --watch
