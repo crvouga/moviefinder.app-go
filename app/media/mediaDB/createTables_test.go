@@ -2,11 +2,12 @@ package mediaDB
 
 import (
 	"database/sql"
+	"log/slog"
 	"movieFinder/lib/sqlite"
 	"testing"
 )
 
-func TestCreateTable(t *testing.T) {
+func TestCreateTables(t *testing.T) {
 	// Open an in-memory SQLite database
 	db, err := sqlite.New(":memory:")
 	if err != nil {
@@ -15,7 +16,7 @@ func TestCreateTable(t *testing.T) {
 	defer db.Close()
 
 	// Create the tables
-	CreateTables(db)
+	CreateTables(db, slog.Default())
 
 	// Verify tables were created by checking their existence
 	tables := []string{"media", "media_images", "genres", "media_genres"}

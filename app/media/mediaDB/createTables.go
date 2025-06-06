@@ -2,6 +2,7 @@ package mediaDB
 
 import (
 	"database/sql"
+	"fmt"
 	"log/slog"
 )
 
@@ -49,6 +50,18 @@ func CreateTables(db *sql.DB, logger *slog.Logger) error {
 	`)
 
 	logger.Info("media tables created")
+
+	tables := []string{"media", "media_images", "genres", "media_genres"}
+	for _, table := range tables {
+		var count int
+		err := db.QueryRow(`SELECT count(*) FROM sqlite_master WHERE type='table' AND name=?`, table).Scan(&count)
+		if err != nil {
+			return fmt.Errorf("failed to check if table %s exists: %v", table, err)
+		}
+		if count == 0 {
+			return fmt.Errorf("required table %s does not exist", table)
+		}
+	}
 
 	return err
 }

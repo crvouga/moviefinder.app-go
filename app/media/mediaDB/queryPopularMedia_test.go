@@ -1,6 +1,7 @@
 package mediaDB
 
 import (
+	"log/slog"
 	"testing"
 	"time"
 )
@@ -10,14 +11,14 @@ func TestQueryPopularMedia(t *testing.T) {
 	defer f.DB.Close()
 
 	// Create tables before running the test
-	err := CreateTables(f.DB)
+	err := CreateTables(f.DB, slog.Default())
 	if err != nil {
 		t.Fatalf("Failed to create tables: %v", err)
 	}
 
 	// Load one page of movies
 	done := make(chan struct{})
-	err = LoaderTmdbAPIDiscoverMovie(f.DB, f.Client, 1, done)
+	err = LoaderTmdbAPIDiscoverMovie(f.DB, f.Client, 1, done, slog.Default())
 	if err != nil {
 		t.Errorf("Expected no error loading movies, got %v", err)
 	}

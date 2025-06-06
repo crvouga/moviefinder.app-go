@@ -1,6 +1,7 @@
 package mediaDB
 
 import (
+	"log/slog"
 	"testing"
 	"time"
 )
@@ -10,7 +11,7 @@ func TestLoaderTmdbAPIDiscoverMovie(t *testing.T) {
 	defer f.DB.Close()
 
 	done := make(chan struct{})
-	err := LoaderTmdbAPIDiscoverMovie(f.DB, f.Client, 1, done)
+	err := LoaderTmdbAPIDiscoverMovie(f.DB, f.Client, 1, done, slog.Default())
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -50,7 +51,7 @@ func TestLoaderTmdbAPIDiscoverMovieMultiplePages(t *testing.T) {
 
 	// First load just 1 page
 	done1 := make(chan struct{})
-	err := LoaderTmdbAPIDiscoverMovie(f.DB, f.Client, 1, done1)
+	err := LoaderTmdbAPIDiscoverMovie(f.DB, f.Client, 1, done1, slog.Default())
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -71,7 +72,7 @@ func TestLoaderTmdbAPIDiscoverMovieMultiplePages(t *testing.T) {
 	// Now load 2 pages
 	f = NewFixture() // Reset the DB
 	done2 := make(chan struct{})
-	err = LoaderTmdbAPIDiscoverMovie(f.DB, f.Client, 2, done2)
+	err = LoaderTmdbAPIDiscoverMovie(f.DB, f.Client, 2, done2, slog.Default())
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}

@@ -1,6 +1,7 @@
 package mediaDB
 
 import (
+	"log/slog"
 	"testing"
 	"time"
 )
@@ -10,7 +11,7 @@ func TestLoader(t *testing.T) {
 	defer f.DB.Close()
 
 	done := make(chan struct{})
-	err := Loader(f.DB, f.Client, 1, done)
+	err := Loader(f.DB, f.Client, 1, done, slog.Default())
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
