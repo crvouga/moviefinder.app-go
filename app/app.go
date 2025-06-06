@@ -28,14 +28,15 @@ func Handler() http.Handler {
 	ac.Logger.Info("initializing application handler")
 
 	ac.Logger.Info("creating media tables")
-	err := mediaDB.CreateTables(ac.DB)
+	err := mediaDB.CreateTables(ac.DB, ac.Logger)
 	if err != nil {
 		ac.Logger.Error("failed to create media tables", "error", err)
 		panic(err)
 	}
+	ac.Logger.Info("starting tmdb api discover movie loader")
 
 	ac.Logger.Info("starting media loader")
-	err = mediaDB.Loader(ac.DB, ac.TmdbAPIClient, 10000, make(chan struct{}))
+	err = mediaDB.Loader(ac.DB, ac.TmdbAPIClient, 500, make(chan struct{}), ac.Logger)
 	if err != nil {
 		ac.Logger.Error("failed to load media", "error", err)
 		panic(err)

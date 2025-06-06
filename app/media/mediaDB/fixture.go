@@ -2,6 +2,7 @@ package mediaDB
 
 import (
 	"database/sql"
+	"log/slog"
 	"movieFinder/lib/sqlite"
 	"movieFinder/lib/tmdbAPI"
 )
@@ -16,7 +17,7 @@ func NewFixture() *Fixture {
 	if err != nil {
 		panic(err)
 	}
-	err = CreateTables(db)
+	err = CreateTables(db, slog.Default())
 	if err != nil {
 		panic(err)
 	}

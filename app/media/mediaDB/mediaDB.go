@@ -2,10 +2,11 @@ package mediaDB
 
 import (
 	"database/sql"
+	"log/slog"
 )
 
-func CreateTables(db *sql.DB) error {
-
+func CreateTables(db *sql.DB, logger *slog.Logger) error {
+	logger.Info("creating media tables")
 	_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS media (
 			id TEXT PRIMARY KEY,
@@ -46,6 +47,8 @@ func CreateTables(db *sql.DB) error {
 			PRIMARY KEY (media_id, genre_id)
 		)
 	`)
+
+	logger.Info("media tables created")
 
 	return err
 }
