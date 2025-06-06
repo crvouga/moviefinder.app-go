@@ -1,12 +1,14 @@
 package mediaDB
 
 import (
+	"database/sql"
 	"fmt"
-	"math"
 	"movieFinder/lib/tmdbAPI"
 	"strconv"
 	"time"
 )
+
+const HARD_MAX_PAGES = 500
 
 func (w *Worker) processMovie(configuration *tmdbAPI.ConfigurationResponse, movie tmdbAPI.DiscoverMovieResponseResult) error {
 	w.Logger.Debug("Processing movie", "title", movie.Title, "id", movie.ID)
@@ -17,17 +19,43 @@ func (w *Worker) processMovie(configuration *tmdbAPI.ConfigurationResponse, movi
 
 	w.Logger.Debug("Generated URLs", "posterCount", len(posterURLs), "backdropCount", len(backdropURLs))
 
-	// Begin transaction
-	tx, err := w.DB.Begin()
+	tx, err := w.beginTransaction()
 	if err != nil {
-		return fmt.Errorf("failed to begin transaction: %v", err)
+		return err
 	}
 	defer tx.Rollback()
 
-	w.Logger.Debug("Starting database transaction", "movieID", movie.ID)
+	if err := w.insertMovieBase(tx, movie); err != nil {
+		return err
+	}
 
-	// Insert movie
-	_, err = tx.Exec(`
+	if err := w.insertMovieImages(tx, movie.ID, posterURLs, backdropURLs, configuration); err != nil {
+		return err
+	}
+
+	if err := w.insertMovieGenres(tx, movie.ID, movie.GenreIds); err != nil {
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %v", err)
+	}
+
+	w.Logger.Debug("Successfully completed database transaction", "movieID", movie.ID)
+	return nil
+}
+
+func (w *Worker) beginTransaction() (*sql.Tx, error) {
+	tx, err := w.DB.Begin()
+	if err != nil {
+		return nil, fmt.Errorf("failed to begin transaction: %v", err)
+	}
+	w.Logger.Debug("Starting database transaction")
+	return tx, nil
+}
+
+func (w *Worker) insertMovieBase(tx *sql.Tx, movie tmdbAPI.DiscoverMovieResponseResult) error {
+	_, err := tx.Exec(`
 		INSERT OR REPLACE INTO media (
 			id,
 			title,
@@ -52,10 +80,24 @@ func (w *Worker) processMovie(configuration *tmdbAPI.ConfigurationResponse, movi
 	}
 
 	w.Logger.Debug("Inserted base movie data", "movieID", movie.ID)
+	return nil
+}
 
-	// Insert poster images
+func (w *Worker) insertMovieImages(tx *sql.Tx, movieID int, posterURLs []string, backdropURLs []string, configuration *tmdbAPI.ConfigurationResponse) error {
+	if err := w.insertPosterImages(tx, movieID, posterURLs, configuration); err != nil {
+		return err
+	}
+
+	if err := w.insertBackdropImages(tx, movieID, backdropURLs, configuration); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (w *Worker) insertPosterImages(tx *sql.Tx, movieID int, posterURLs []string, configuration *tmdbAPI.ConfigurationResponse) error {
 	for i, posterURL := range posterURLs {
-		_, err = tx.Exec(`
+		_, err := tx.Exec(`
 			INSERT OR REPLACE INTO media_images (
 				id,
 				media_id,
@@ -63,8 +105,8 @@ func (w *Worker) processMovie(configuration *tmdbAPI.ConfigurationResponse, movi
 				resolution,
 				url
 			) VALUES (?, ?, ?, ?, ?)`,
-			fmt.Sprintf("%d_poster_%d", movie.ID, i),
-			strconv.FormatInt(int64(movie.ID), 10),
+			fmt.Sprintf("%d_poster_%d", movieID, i),
+			strconv.FormatInt(int64(movieID), 10),
 			"poster",
 			configuration.Images.PosterSizes[i],
 			posterURL,
@@ -72,12 +114,14 @@ func (w *Worker) processMovie(configuration *tmdbAPI.ConfigurationResponse, movi
 		if err != nil {
 			return fmt.Errorf("failed to insert poster image: %v", err)
 		}
-		w.Logger.Debug("Inserted poster image", "number", i+1, "total", len(posterURLs), "movieID", movie.ID)
+		w.Logger.Debug("Inserted poster image", "number", i+1, "total", len(posterURLs), "movieID", movieID)
 	}
+	return nil
+}
 
-	// Insert backdrop images
+func (w *Worker) insertBackdropImages(tx *sql.Tx, movieID int, backdropURLs []string, configuration *tmdbAPI.ConfigurationResponse) error {
 	for i, backdropURL := range backdropURLs {
-		_, err = tx.Exec(`
+		_, err := tx.Exec(`
 			INSERT OR REPLACE INTO media_images (
 				id,
 				media_id,
@@ -85,8 +129,8 @@ func (w *Worker) processMovie(configuration *tmdbAPI.ConfigurationResponse, movi
 				resolution,
 				url
 			) VALUES (?, ?, ?, ?, ?)`,
-			fmt.Sprintf("%d_backdrop_%d", movie.ID, i),
-			strconv.FormatInt(int64(movie.ID), 10),
+			fmt.Sprintf("%d_backdrop_%d", movieID, i),
+			strconv.FormatInt(int64(movieID), 10),
 			"backdrop",
 			configuration.Images.BackdropSizes[i],
 			backdropURL,
@@ -94,41 +138,49 @@ func (w *Worker) processMovie(configuration *tmdbAPI.ConfigurationResponse, movi
 		if err != nil {
 			return fmt.Errorf("failed to insert backdrop image: %v", err)
 		}
-		w.Logger.Debug("Inserted backdrop image", "number", i+1, "total", len(backdropURLs), "movieID", movie.ID)
+		w.Logger.Debug("Inserted backdrop image", "number", i+1, "total", len(backdropURLs), "movieID", movieID)
 	}
+	return nil
+}
 
-	w.Logger.Debug("Processing genres", "count", len(movie.GenreIds), "movieID", movie.ID)
+func (w *Worker) insertMovieGenres(tx *sql.Tx, movieID int, genreIDs []int) error {
+	w.Logger.Debug("Processing genres", "count", len(genreIDs), "movieID", movieID)
 
-	// Insert genres and media_genres relationships
-	for i, genreID := range movie.GenreIds {
-		// Insert genre if not exists
-		_, err = tx.Exec(`
-			INSERT OR IGNORE INTO genres (id, name) VALUES (?, ?)`,
-			strconv.FormatInt(int64(genreID), 10),
-			"", // Name will be updated later when we have genre details
-		)
-		if err != nil {
-			return fmt.Errorf("failed to insert genre: %v", err)
+	for i, genreID := range genreIDs {
+		if err := w.insertGenre(tx, genreID); err != nil {
+			return err
 		}
 
-		// Create media-genre relationship
-		_, err = tx.Exec(`
-			INSERT OR IGNORE INTO media_genres (media_id, genre_id) VALUES (?, ?)`,
-			strconv.FormatInt(int64(movie.ID), 10),
-			strconv.FormatInt(int64(genreID), 10),
-		)
-		if err != nil {
-			return fmt.Errorf("failed to insert media_genre: %v", err)
+		if err := w.insertMediaGenreRelation(tx, movieID, genreID); err != nil {
+			return err
 		}
-		w.Logger.Debug("Processed genre", "number", i+1, "total", len(movie.GenreIds), "genreID", genreID, "movieID", movie.ID)
-	}
 
-	// Commit transaction
-	if err = tx.Commit(); err != nil {
-		return fmt.Errorf("failed to commit transaction: %v", err)
+		w.Logger.Debug("Processed genre", "number", i+1, "total", len(genreIDs), "genreID", genreID, "movieID", movieID)
 	}
+	return nil
+}
 
-	w.Logger.Debug("Successfully completed database transaction", "movieID", movie.ID)
+func (w *Worker) insertGenre(tx *sql.Tx, genreID int) error {
+	_, err := tx.Exec(`
+		INSERT OR IGNORE INTO genres (id, name) VALUES (?, ?)`,
+		strconv.FormatInt(int64(genreID), 10),
+		"", // Name will be updated later when we have genre details
+	)
+	if err != nil {
+		return fmt.Errorf("failed to insert genre: %v", err)
+	}
+	return nil
+}
+
+func (w *Worker) insertMediaGenreRelation(tx *sql.Tx, movieID int, genreID int) error {
+	_, err := tx.Exec(`
+		INSERT OR IGNORE INTO media_genres (media_id, genre_id) VALUES (?, ?)`,
+		strconv.FormatInt(int64(movieID), 10),
+		strconv.FormatInt(int64(genreID), 10),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to insert media_genre: %v", err)
+	}
 	return nil
 }
 
@@ -156,15 +208,13 @@ func (w *Worker) processMoviePage(configuration *tmdbAPI.ConfigurationResponse, 
 	return page >= response.TotalPages, nil
 }
 
-const HARD_MAX_PAGES = 500
-
 func (w *Worker) RunDiscoverMovie() chan struct{} {
-	maxPages := int(math.Min(float64(w.DiscoverMovieMaxPages), float64(HARD_MAX_PAGES)))
+
 	done := make(chan struct{})
 
 	go func() {
 		w.Logger.Info("Starting TMDB Discover Movie worker")
-		w.Logger.Info("Processing pages", "maxPages", maxPages)
+		w.Logger.Info("Processing pages", "maxPages", w.DiscoverMovieMaxPages)
 
 		configuration, err := w.Client.Configuration()
 		if err != nil {
@@ -177,7 +227,7 @@ func (w *Worker) RunDiscoverMovie() chan struct{} {
 		w.Logger.Debug("Image sizes", "posterSizes", configuration.Images.PosterSizes, "backdropSizes", configuration.Images.BackdropSizes)
 
 		// Process pages sequentially
-		for page := 1; page <= maxPages && page <= HARD_MAX_PAGES; page++ {
+		for page := 1; page <= w.DiscoverMovieMaxPages && page <= HARD_MAX_PAGES; page++ {
 			// Rate limit to 1 request per second
 			time.Sleep(w.DiscoverMovieThrottle)
 
