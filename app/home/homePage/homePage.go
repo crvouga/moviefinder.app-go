@@ -32,11 +32,7 @@ func respondLoadNext(ac *appCtx.AppCtx) http.HandlerFunc {
 
 	baseData := Data{
 		FeedSwiper: feedSwiper.FeedSwiper{
-			Slides: []feedSwiperSlides.FeedSwiperSlide{
-				{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
-				{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
-				{ImageSrc: "https://picsum.photos/200/300", URL: "https://picsum.photos/200/300"},
-			},
+			Slides: []feedSwiperSlides.FeedSwiperSlide{},
 		},
 	}
 
@@ -88,9 +84,23 @@ func respondHomePage(ac *appCtx.AppCtx) http.HandlerFunc {
 		LoadNextURL:   LoadNext,
 	}
 
-	return func(w http.ResponseWriter, r *http.Request) {
+	queryPopularMedia, err := mediaDB.NewQueryPopularMedia(ac.DB)
 
-		templateExt.Respond(templ, document.TemplateName, baseData, w)
+	if err != nil {
+		panic(err)
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		media, err := queryPopularMedia.Query(10, 0)
+		if err != nil {
+			panic(err)
+		}
+		data := baseData
+		data.FeedSwiper.Slides = make([]feedSwiperSlides.FeedSwiperSlide, len(media))
+		for i, m := range media {
+			data.FeedSwiper.Slides[i] = feedSwiperSlides.FromMedia(m)
+		}
+		templateExt.Respond(templ, document.TemplateName, data, w)
 	}
 
 }

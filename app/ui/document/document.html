@@ -13,7 +13,6 @@
   {{range .Document.Preload}}
   <link rel="prerender" href="{{.Href}}?no-cache=true" as="document" crossorigin="anonymous" />
   <link rel="prefetch" href="{{.Href}}?no-cache=true" as="document" crossorigin="anonymous" />
-  <link rel="preload" href="{{.Href}}?no-cache=true" as="document" crossorigin="anonymous" />
   {{end}}
   {{end}}
   {{end}}
