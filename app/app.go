@@ -23,8 +23,8 @@ import (
 )
 
 // Handler is the main handler for the application.
-func Handler() http.Handler {
-	ac := appCtx.New()
+func Handler(dbPath string) http.Handler {
+	ac := appCtx.New(dbPath)
 	ac.Logger.Debug("initializing application handler")
 
 	ac.Logger.Debug("creating media tables")

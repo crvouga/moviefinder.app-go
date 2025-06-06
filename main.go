@@ -17,9 +17,17 @@ var migrationsFs embed.FS
 func main() {
 	tailwindcss.Minify("./public/input.css", "./public/output.css")
 
-	dbMigrations.Run(migrationsFs, "sqlite:db/db.sqlite")
+	dbPath := "db/db.sqlite"
 
-	handler := app.Handler()
+	log.Println("Running migrations for", dbPath)
+
+	dbUrl := "sqlite:" + dbPath
+
+	log.Println("Running migrations for", dbUrl)
+
+	dbMigrations.Run(migrationsFs, dbUrl)
+
+	handler := app.Handler(dbPath)
 
 	addr := ":8080"
 

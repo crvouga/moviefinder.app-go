@@ -11,7 +11,7 @@ import (
 )
 
 func Run(migrationFiles embed.FS, databaseUrl string) {
-	log.Println("Running migrations")
+	log.Println("Running migrations ")
 
 	u, _ := url.Parse(databaseUrl)
 	db := dbmate.New(u)

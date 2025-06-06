@@ -22,3 +22,6 @@ clean:
 
 preview:
 	make build & make run
+
+db-shell:
+	sqlite3 db/db.sqlite

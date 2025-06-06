@@ -34,9 +34,9 @@ func (ac *AppCtx) CleanUp() {
 	ac.DB.Close()
 }
 
-func New() AppCtx {
+func New(dbPath string) AppCtx {
 	db, err := sqlite.New(":memory:")
-	dbDurable, err := sqlite.New("db/db.sqlite")
+	dbDurable, err := sqlite.New(dbPath)
 
 	if err != nil {
 		panic(err)
