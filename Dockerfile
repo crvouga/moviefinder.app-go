@@ -4,6 +4,11 @@ FROM golang:1.24-alpine
 # Set the working directory inside the container
 WORKDIR /app
 
+# Install curl and add dbmate
+RUN apk add --no-cache curl \
+    && curl -fsSL -o /usr/local/bin/dbmate https://github.com/amacneil/dbmate/releases/latest/download/dbmate-linux-amd64 \
+    && chmod +x /usr/local/bin/dbmate
+
 # Copy go.mod and go.sum files
 COPY go.mod go.sum ./
 
@@ -19,5 +24,5 @@ RUN go build -o main .
 # Expose port 8080
 EXPOSE 8080
 
-# Command to run the executable
-CMD ["./main"]
+# Command to run migrations and start the application
+CMD dbmate --url "sqlite:///app/db/database.sqlite3" up && ./main
