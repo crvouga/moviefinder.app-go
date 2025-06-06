@@ -2,6 +2,7 @@ package appDb
 
 import (
 	"database/sql"
+	"fmt"
 	"io"
 	"log/slog"
 	"movieFinder/db"
@@ -44,5 +45,25 @@ func OpenInMemory() *sql.DB {
 		panic(err)
 	}
 
+	err = validateSchema(dbInstance)
+	if err != nil {
+		slog.Error("Failed to validate schema", "error", err)
+		panic(err)
+	}
+
 	return dbInstance
+}
+
+func validateSchema(db *sql.DB) error {
+	rows, err := db.Query("SELECT name FROM sqlite_master WHERE type='table' AND name='media'")
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	if !rows.Next() {
+		return fmt.Errorf("media table does not exist")
+	}
+
+	return nil
 }
