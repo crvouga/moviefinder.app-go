@@ -25,4 +25,4 @@ RUN go build -o main .
 EXPOSE 8080
 
 # Command to run migrations and start the application
-CMD dbmate --url "sqlite:///app/db/database.sqlite3" up && ./main
+CMD dbmate --url "sqlite:///app/db/db.sqlite3" up && ./main

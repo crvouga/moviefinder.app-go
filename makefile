@@ -24,14 +24,22 @@ preview:
 	docker build -t moviefinder . && docker run -p 8080:8080 moviefinder
 
 db-shell:
-	sqlite3 db/db.sqlite
+	sqlite3 db/db.sqlite3
 
-dbmate:
+dbmate-download:
 	curl -fsSL -o dbmate https://github.com/amacneil/dbmate/releases/latest/download/dbmate-macos-amd64
 	chmod +x dbmate
 	./dbmate --help
 
+dbmate-download-cached:
+	if [ ! -f dbmate ]; then \
+		make dbmate-download; \
+	fi
 
+dbmate-up:
+	make dbmate-download-cached
+
+	./dbmate --url "sqlite://db/db.sqlite3" up
 tw-download:
 	curl -fsSL -o tailwindcss https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-macos-arm64
 	chmod +x tailwindcss

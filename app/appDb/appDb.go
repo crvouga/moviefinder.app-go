@@ -8,7 +8,7 @@ import (
 	"movieFinder/lib/sqlite"
 )
 
-const DbPath = "./db/db.sqlite"
+const DbPath = "./db/db.sqlite3"
 const DbUrl = "sqlite:" + DbPath
 
 func OpenDurable() *sql.DB {
