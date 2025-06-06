@@ -1,8 +1,8 @@
 {{define "bottomButtons"}}
-<div class="flex w-full justify-around shrink-0">
+<div class="flex w-full justify-around shrink-0 h-18">
 	{{range .BottomButtons.Items}}
 	<a href="{{.URL}}"
-		class="flex h-18 flex-1 gap-1 cursor-pointer flex-col items-center justify-center {{if .Active}}text-blue-500 {{else}}text-neutral-200{{end}}">
+		class="flex h-full flex-1 gap-1 cursor-pointer flex-col items-center justify-center {{if .Active}}text-blue-500 {{else}}text-neutral-200{{end}}">
 		{{if .IconHTML}}
 		<span class="text-xl">{{.IconHTML | safeHTML}}</span>
 		{{end}}
