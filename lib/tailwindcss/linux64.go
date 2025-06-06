@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"runtime"
 )
 
 func Linux64Download() {
@@ -35,7 +36,7 @@ func Linux64Download() {
 
 func Linux64Invoke(inputPath string, outputPath string) {
 	log.Println("Invoking tailwindcss-linux-x64")
-	err := exec.Command("./tailwindcss-linux-x64", "-i", inputPath, "-o", outputPath, "--watch").Run()
+	err := exec.Command("./tailwindcss-linux-x64", "-i", inputPath, "-o", outputPath, "--minify").Run()
 
 	if err != nil {
 		log.Fatal(err)
@@ -54,4 +55,8 @@ func Linux64Build(inputPath string, outputPath string) {
 	Linux64Download()
 	Linux64Invoke(inputPath, outputPath)
 	Linux64Remove()
+}
+
+func IsLinux64() bool {
+	return runtime.GOOS == "linux" && runtime.GOARCH == "amd64"
 }

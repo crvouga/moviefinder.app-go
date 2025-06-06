@@ -2,6 +2,9 @@
 run:
 	go run main.go
 
+build:
+	make tw-build & go build -o main main.go
+
 dev:
 	air
 
@@ -38,11 +41,4 @@ tw-build:
 	./tailwindcss -i ./public/input.css -o ./public/output.css --minify
 
 preview:
-	docker build -t moviefinder-app .
-	docker run -p 8080:8080 moviefinder-app
-
-preview-clean:
-	docker rm -f moviefinder-app || true
-	docker rmi moviefinder-app || true
-	docker build -t moviefinder-app .
-	docker run -p 8080:8080 moviefinder-app
+	make build & make run
