@@ -3,7 +3,6 @@ package sqlite
 import (
 	"database/sql"
 	"log/slog"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -11,13 +10,19 @@ import (
 )
 
 func New(dbPath string) (*sql.DB, error) {
-	// Convert relative path to absolute from current working directory
-	cwd, err := os.Getwd()
-	if err != nil {
-		slog.Error("Failed to get working directory", "error", err)
-		return nil, err
+	var absPath string
+
+	if dbPath == ":memory:" {
+		absPath = dbPath
+	} else {
+		// Convert to absolute path
+		var err error
+		absPath, err = filepath.Abs(dbPath)
+		if err != nil {
+			slog.Error("Failed to get absolute path", "error", err)
+			return nil, err
+		}
 	}
-	absPath := filepath.Join(cwd, dbPath)
 
 	slog.Info("Opening SQLite database", "path", absPath)
 
@@ -56,42 +61,5 @@ func New(dbPath string) (*sql.DB, error) {
 	db.SetConnMaxLifetime(30 * time.Minute) // Maximum lifetime of a connection
 
 	slog.Info("Successfully opened SQLite database", "path", absPath)
-	return db, nil
-}
-
-func LoadIntoMemory(loadDbPath string) (*sql.DB, error) {
-	slog.Info("Loading SQLite database into memory", "path", loadDbPath)
-
-	// Check if source file exists
-	if _, err := os.Stat(loadDbPath); os.IsNotExist(err) {
-		// Try looking in root directory
-		slog.Error("Source database file does not exist", "path", loadDbPath)
-		return nil, err
-	}
-
-	// Create in-memory database
-	db, err := sql.Open("sqlite", ":memory:")
-	if err != nil {
-		slog.Error("Failed to create in-memory database", "error", err)
-		return nil, err
-	}
-
-	// Open source database
-	sourceDb, err := sql.Open("sqlite", loadDbPath)
-	if err != nil {
-		slog.Error("Failed to open source database", "path", loadDbPath, "error", err)
-		return nil, err
-	}
-	defer sourceDb.Close()
-
-	// Backup source database to memory
-	slog.Debug("Copying database to memory")
-	_, err = db.Exec("VACUUM INTO ?", loadDbPath)
-	if err != nil {
-		slog.Error("Failed to copy database to memory", "error", err)
-		return nil, err
-	}
-
-	slog.Info("Successfully loaded database into memory")
 	return db, nil
 }
