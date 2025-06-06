@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	HomePage    = "Home"
+	FeedPage    = "Home"
 	AccountPage = "Account"
 )
 
@@ -16,9 +16,9 @@ func AppBottomButtons(activePage string) bottomButtons.BottomButtons {
 	return bottomButtons.BottomButtons{
 		Items: []bottomButtons.BottomButtonsItem{
 			{
-				Label:    HomePage,
-				URL:      homeRoutes.HomePage,
-				Active:   activePage == HomePage,
+				Label:    FeedPage,
+				URL:      homeRoutes.FeedPage,
+				Active:   activePage == FeedPage,
 				IconHTML: icons.HomeSolid(bottomButtons.IconSize),
 			},
 			{

@@ -79,7 +79,7 @@ func respondGet(ac *appCtx.AppCtx, w http.ResponseWriter, r *http.Request) {
 	data := Data{
 		Project: project.EnsureComputed(),
 		Breadcrumbs: []breadcrumbs.Breadcrumb{
-			{Label: "Home", Href: homeRoutes.HomePage},
+			{Label: "Home", Href: homeRoutes.FeedPage},
 			{Label: "Projects", Href: projectRoutes.ListProjects},
 			{Label: project.EnsureComputed().Name.String(), Href: project.EnsureComputed().URL},
 			{Label: "Edit"},

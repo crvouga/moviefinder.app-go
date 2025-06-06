@@ -1,7 +1,7 @@
 package verifyCodePage
 
 import (
-	"movieFinder/app/home/homePage"
+	"movieFinder/app/home/feedPage"
 	"movieFinder/app/ui/button"
 	"movieFinder/app/ui/document"
 	"movieFinder/app/ui/templateExt"
@@ -61,7 +61,7 @@ func Respond() http.HandlerFunc {
 			code := r.FormValue(baseData.TextFieldCode.Name)
 			phoneNumber := r.URL.Query().Get("phoneNumber")
 			if code == "123" {
-				homePage.Redirect(w, r)
+				feedPage.Redirect(w, r)
 				return
 			}
 			err := "Invalid code"

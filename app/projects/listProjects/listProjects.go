@@ -54,7 +54,7 @@ func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
 		data := Data{
 			Projects: projects,
 			Breadcrumbs: []breadcrumbs.Breadcrumb{
-				{Label: "Home", Href: homeRoutes.HomePage},
+				{Label: "Home", Href: homeRoutes.FeedPage},
 				{Label: "Projects"},
 			},
 			PageHeader: pageHeader.PageHeader{

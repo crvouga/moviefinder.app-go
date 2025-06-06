@@ -45,7 +45,7 @@ func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
 					Actions: []pageHeader.Action{},
 				},
 				Breadcrumbs: []breadcrumbs.Breadcrumb{
-					{Label: "Home", Href: homeRoutes.HomePage},
+					{Label: "Home", Href: homeRoutes.FeedPage},
 					{Label: PageTitle, Href: apiDocsRoutes.ApiDocsPage},
 					{Label: api.EndpointApiImageResize},
 				},
@@ -67,7 +67,7 @@ func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
 					Actions: []pageHeader.Action{},
 				},
 				Breadcrumbs: []breadcrumbs.Breadcrumb{
-					{Label: "Home", Href: homeRoutes.HomePage},
+					{Label: "Home", Href: homeRoutes.FeedPage},
 					{Label: PageTitle},
 				},
 				MainMenu: mainMenu.MainMenu{
@@ -88,5 +88,5 @@ func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
 }
 
 func Redirect(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, homeRoutes.HomePage, http.StatusSeeOther)
+	http.Redirect(w, r, homeRoutes.FeedPage, http.StatusSeeOther)
 }

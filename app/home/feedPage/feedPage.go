@@ -1,9 +1,9 @@
-package homePage
+package feedPage
 
 import (
 	"movieFinder/app/ctx/appCtx"
-	"movieFinder/app/home/homePage/feedSwiper"
-	"movieFinder/app/home/homePage/feedSwiperSlides"
+	"movieFinder/app/home/feedPage/feedSwiper"
+	"movieFinder/app/home/feedPage/feedSwiperSlides"
 	"movieFinder/app/home/homeRoutes"
 	"movieFinder/app/media/mediaDB"
 	"movieFinder/app/ui/appBottomButtons"
@@ -19,15 +19,18 @@ const LoadNextURL = "/load-next"
 const SlideChangedURL = "/slide-changed"
 
 func Router(mux *http.ServeMux, ac *appCtx.AppCtx) {
-	mux.HandleFunc(homeRoutes.HomePage, respondHomePage(ac))
+	mux.HandleFunc(homeRoutes.FeedPage, respondFeedPage(ac))
 	mux.HandleFunc(LoadNextURL, respondLoadNext(ac))
 	mux.HandleFunc(SlideChangedURL, respondSlideChanged(ac))
 }
 
 func respondSlideChanged(ac *appCtx.AppCtx) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ac.Logger.Info("Slide changed", "index", r.URL.Query().Get("index"))
-		ac.DB.Exec("UPDATE feed SET current_feed_index = ?", r.URL.Query().Get("index"))
+		feedIndexNew := r.URL.Query().Get("feedIndex")
+
+		ac.Logger.Info("Slide changed", "index", feedIndexNew)
+
+		ac.DB.Exec("UPDATE feed SET current_feed_index = ?", feedIndexNew)
 		w.WriteHeader(http.StatusOK)
 	}
 }
@@ -66,9 +69,9 @@ func respondLoadNext(ac *appCtx.AppCtx) http.HandlerFunc {
 	}
 }
 
-func respondHomePage(ac *appCtx.AppCtx) http.HandlerFunc {
+func respondFeedPage(ac *appCtx.AppCtx) http.HandlerFunc {
 	templPaths := []string{
-		static.GetSiblingPath("homePage.html"),
+		static.GetSiblingPath("feedPage.html"),
 		document.TemplatePath,
 		bottomButtons.TemplatePath,
 	}
@@ -91,7 +94,7 @@ func respondHomePage(ac *appCtx.AppCtx) http.HandlerFunc {
 		FeedSwiper: feedSwiper.FeedSwiper{
 			Slides: []feedSwiperSlides.FeedSwiperSlide{},
 		},
-		BottomButtons:   appBottomButtons.AppBottomButtons(appBottomButtons.HomePage),
+		BottomButtons:   appBottomButtons.AppBottomButtons(appBottomButtons.FeedPage),
 		LoadNextURL:     LoadNextURL,
 		SlideChangedURL: SlideChangedURL,
 	}
@@ -112,16 +115,14 @@ func respondHomePage(ac *appCtx.AppCtx) http.HandlerFunc {
 		for i, m := range found {
 			slide := feedSwiperSlides.FromMedia(m)
 			data.FeedSwiper.Slides[i] = slide
-			// data.Document.Preload = append(data.Document.Preload, document.NewPreload(slide.URL))
-			// data.Document.Preload = append(data.Document.Preload, document.NewPreload(m.BackdropURL))
 		}
 		templateExt.Respond(templ, document.TemplateName, data, w)
 	}
 
 }
 
-var templatePath = static.GetSiblingPath("homePage.html")
+var templatePath = static.GetSiblingPath("feedPage.html")
 
 func Redirect(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, homeRoutes.HomePage, http.StatusSeeOther)
+	http.Redirect(w, r, homeRoutes.FeedPage, http.StatusSeeOther)
 }

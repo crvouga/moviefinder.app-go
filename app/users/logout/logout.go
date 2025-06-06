@@ -48,7 +48,7 @@ func respondGet(w http.ResponseWriter, r *http.Request) {
 		CancelURL:   userAccountRoutes.UserAccountPage,
 		CancelText:  "Cancel",
 		Breadcrumbs: []breadcrumbs.Breadcrumb{
-			{Label: "Home", Href: homeRoutes.HomePage},
+			{Label: "Home", Href: homeRoutes.FeedPage},
 			{Label: "Account", Href: userAccountRoutes.UserAccountPage},
 			{Label: "Logout"},
 		},

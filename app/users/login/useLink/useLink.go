@@ -40,7 +40,7 @@ func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
 				Body:        "Use this link to login to your account",
 				ConfirmURL:  loginRoutes.UseLinkPage,
 				ConfirmText: "Use link",
-				CancelURL:   homeRoutes.HomePage,
+				CancelURL:   homeRoutes.FeedPage,
 				CancelText:  "Cancel",
 				HiddenForm: map[string]string{
 					"linkID": r.URL.Query().Get("linkID"),
@@ -68,7 +68,7 @@ func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
 			successPage.SuccessPage{
 				Headline: "Logged in",
 				Body:     "You have been successfully logged in",
-				NextURL:  homeRoutes.HomePage,
+				NextURL:  homeRoutes.FeedPage,
 				NextText: "Home",
 			}.Redirect(w, r)
 			return

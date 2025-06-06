@@ -2,11 +2,11 @@ package home
 
 import (
 	"movieFinder/app/ctx/appCtx"
-	"movieFinder/app/home/homePage"
+	"movieFinder/app/home/feedPage"
 
 	"net/http"
 )
 
 func Router(mux *http.ServeMux, ac *appCtx.AppCtx) {
-	homePage.Router(mux, ac)
+	feedPage.Router(mux, ac)
 }

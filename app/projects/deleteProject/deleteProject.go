@@ -84,7 +84,7 @@ func respondGet(ac *appCtx.AppCtx, w http.ResponseWriter, r *http.Request) {
 			"projectID": projectIDVar.String(),
 		},
 		Breadcrumbs: []breadcrumbs.Breadcrumb{
-			{Label: "Home", Href: homeRoutes.HomePage},
+			{Label: "Home", Href: homeRoutes.FeedPage},
 			{Label: "Projects", Href: projectRoutes.ListProjects},
 			{Label: project.Name.String(), Href: project.EnsureComputed().URL},
 			{Label: "Delete"},

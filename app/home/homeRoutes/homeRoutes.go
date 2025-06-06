@@ -1,5 +1,5 @@
 package homeRoutes
 
 const (
-	HomePage = "/home"
+	FeedPage = "/feed"
 )

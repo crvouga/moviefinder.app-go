@@ -39,7 +39,7 @@ func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
 		Document: document.Data{
 			Preload: []document.Preload{
 				document.NewPreload(loginWithPhoneRoutes.SendCodePage),
-				document.NewPreload(homeRoutes.HomePage),
+				document.NewPreload(homeRoutes.FeedPage),
 			},
 		},
 		BottomButtons: appBottomButtons.AppBottomButtons(appBottomButtons.AccountPage),

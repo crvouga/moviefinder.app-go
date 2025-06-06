@@ -36,10 +36,11 @@
 				await new Promise(r =>
 					swiper.addEventListener("swiperslidechange", r, { once: true })
 				);
-				await fetch(slideChangedURL, {
+				const url = new URL(slideChangedURL, window.location.origin);
+				url.searchParams.set("feedIndex", swiper.swiper.activeIndex.toString());
+				await fetch(url.toString(), {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ index: swiper.swiper.activeIndex })
 				});
 			} catch (err) {
 				console.error("Failed to save feed index", err);

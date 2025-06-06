@@ -41,7 +41,7 @@ func respondMediaPage(ac *appCtx.AppCtx) http.HandlerFunc {
 		},
 		TopBar: topBar.Data{
 			Title:    "",
-			BackHref: homeRoutes.HomePage,
+			BackHref: homeRoutes.FeedPage,
 		},
 		Media: media.Media{},
 	}
@@ -68,8 +68,8 @@ func respondMediaPage(ac *appCtx.AppCtx) http.HandlerFunc {
 
 }
 
-var templatePath = static.GetSiblingPath("homePage.html")
+var templatePath = static.GetSiblingPath("feedPage.html")
 
 func Redirect(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, homeRoutes.HomePage, http.StatusSeeOther)
+	http.Redirect(w, r, homeRoutes.FeedPage, http.StatusSeeOther)
 }

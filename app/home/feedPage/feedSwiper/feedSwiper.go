@@ -2,7 +2,7 @@
 package feedSwiper
 
 import (
-	"movieFinder/app/home/homePage/feedSwiperSlides"
+	"movieFinder/app/home/feedPage/feedSwiperSlides"
 	"movieFinder/lib/static"
 )
 

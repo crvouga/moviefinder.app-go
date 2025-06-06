@@ -30,7 +30,7 @@ func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
 		}
 
 		if len(admins) > 0 {
-			successPage.New("You are already an admin", homeRoutes.HomePage, "Home").Redirect(w, r)
+			successPage.New("You are already an admin", homeRoutes.FeedPage, "Home").Redirect(w, r)
 			return
 		}
 
@@ -69,7 +69,7 @@ func handlePost(ac *appCtx.AppCtx, rc *reqCtx.ReqCtx, w http.ResponseWriter, r *
 		return
 	}
 
-	successPage.New("You are now an admin", homeRoutes.HomePage, "Home").Redirect(w, r)
+	successPage.New("You are now an admin", homeRoutes.FeedPage, "Home").Redirect(w, r)
 }
 
 func handleGet(w http.ResponseWriter, r *http.Request) {
@@ -78,10 +78,10 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 		Body:        "Are you sure you want to claim admin?",
 		ConfirmURL:  adminRoutes.ClaimAdmin,
 		ConfirmText: "Claim",
-		CancelURL:   homeRoutes.HomePage,
+		CancelURL:   homeRoutes.FeedPage,
 		CancelText:  "Cancel",
 		Breadcrumbs: []breadcrumbs.Breadcrumb{
-			{Label: "Home", Href: homeRoutes.HomePage},
+			{Label: "Home", Href: homeRoutes.FeedPage},
 			{Label: "Claim Admin"},
 		},
 	}.Redirect(w, r)

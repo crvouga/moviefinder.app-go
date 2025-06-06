@@ -85,7 +85,7 @@ func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
 
 			successPage.New(
 				"We have sent a login link to "+emailInput+". Please check your email to log in.",
-				homeRoutes.HomePage,
+				homeRoutes.FeedPage,
 				"Home",
 			).Redirect(w, r)
 			return

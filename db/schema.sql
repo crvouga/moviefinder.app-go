@@ -98,8 +98,25 @@ CREATE TABLE videos (
     FOREIGN KEY (media_id) REFERENCES media(id) ON DELETE CASCADE
 );
 CREATE INDEX idx_videos_media ON videos(media_id, type, "order");
+CREATE TABLE feed (
+    id TEXT PRIMARY KEY,
+    current_feed_index BIGINT NOT NULL,
+    created_at_epoch BIGINT NOT NULL,
+    updated_at_epoch BIGINT NOT NULL
+);
+CREATE TABLE feed_session_mapping (
+    id TEXT PRIMARY KEY,
+    feed_id TEXT NOT NULL,
+    session_id TEXT NOT NULL,
+    created_at_epoch BIGINT NOT NULL,
+    updated_at_epoch BIGINT NOT NULL,
+    FOREIGN KEY (feed_id) REFERENCES feed(id)
+);
+CREATE INDEX idx_feed_session_mapping_feed_id ON feed_session_mapping (feed_id);
+CREATE INDEX idx_feed_session_mapping_session_id ON feed_session_mapping (session_id);
 -- Dbmate schema migrations
 INSERT INTO "schema_migrations" (version) VALUES
   ('20250606035631'),
   ('20250606050831'),
-  ('20250606073703');
+  ('20250606073703'),
+  ('20250606082308');

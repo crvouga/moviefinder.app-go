@@ -7,7 +7,7 @@ import (
 	"movieFinder/app/ctx/appCtx"
 	"movieFinder/app/ctx/reqCtx"
 	"movieFinder/app/home"
-	"movieFinder/app/home/homePage"
+	"movieFinder/app/home/feedPage"
 	"movieFinder/app/media/mediaPage"
 	"movieFinder/app/projects"
 	"movieFinder/app/ui/pages"
@@ -103,7 +103,7 @@ func newMuxLoggedIn(ac *appCtx.AppCtx) *http.ServeMux {
 	admin.Router(mux, ac)
 	api.Router(mux, ac)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		homePage.Redirect(w, r)
+		feedPage.Redirect(w, r)
 	})
 	ac.Logger.Debug("logged in router setup complete")
 	return mux
@@ -119,7 +119,7 @@ func newMuxLoggedOut(ac *appCtx.AppCtx) *http.ServeMux {
 	home.Router(mux, ac)
 	pages.Router(mux)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		homePage.Redirect(w, r)
+		feedPage.Redirect(w, r)
 	})
 	ac.Logger.Debug("logged out router setup complete")
 	return mux

@@ -38,7 +38,7 @@ func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
 func respondGet(w http.ResponseWriter, r *http.Request) {
 	data := Data{
 		Breadcrumbs: []breadcrumbs.Breadcrumb{
-			{Label: "Home", Href: homeRoutes.HomePage},
+			{Label: "Home", Href: homeRoutes.FeedPage},
 			{Label: "Projects", Href: projectRoutes.ListProjects},
 			{Label: "Create"},
 		},
