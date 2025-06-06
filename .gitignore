@@ -5,3 +5,6 @@ __*
 imageService
 main
 .env
+
+output.css
+tailwindcss

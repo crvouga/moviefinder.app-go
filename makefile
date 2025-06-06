@@ -16,3 +16,26 @@ clean:
 	rm -rf tmp
 
 .PHONY: run dev test build clean
+
+
+tw-download:
+	curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-macos-arm64
+	chmod +x tailwindcss-macos-arm64
+	mv tailwindcss-macos-arm64 tailwindcss
+
+tw-watch:
+	./tailwindcss -i ./input.css -o ./output.css --watch
+
+tw-build:
+	./tailwindcss -i ./input.css -o ./output.css --minify
+
+
+preview:
+	docker build -t moviefinder-app .
+	docker run -p 8080:8080 moviefinder-app
+
+preview-clean:
+	docker rm -f moviefinder-app || true
+	docker rmi moviefinder-app || true
+	docker build -t moviefinder-app .
+	docker run -p 8080:8080 moviefinder-app
