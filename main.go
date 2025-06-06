@@ -8,8 +8,6 @@ import (
 	"movieFinder/lib/dbMigrations"
 	"movieFinder/lib/tailwindcss"
 	"net/http"
-
-	_ "github.com/amacneil/dbmate/v2/pkg/driver/sqlite"
 )
 
 //go:embed db/migrations/*.sql
