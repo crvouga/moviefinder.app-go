@@ -2,15 +2,25 @@ package mediaDB
 
 import (
 	"testing"
+	"time"
 )
 
 func TestLoaderTmdbAPIDiscoverMovie(t *testing.T) {
 	f := NewFixture()
 	defer f.DB.Close()
 
-	err := LoaderTmdbAPIDiscoverMovie(f.DB, f.Client, 1)
+	done := make(chan struct{})
+	err := LoaderTmdbAPIDiscoverMovie(f.DB, f.Client, 1, done)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
+	}
+
+	// Wait for loading to complete with timeout
+	select {
+	case <-done:
+		// Loading completed successfully
+	case <-time.After(10 * time.Second):
+		t.Fatal("Timeout waiting for movie loading to complete")
 	}
 
 	var count int
@@ -32,5 +42,4 @@ func TestLoaderTmdbAPIDiscoverMovie(t *testing.T) {
 	if imageCount == 0 {
 		t.Error("Expected movie images to be loaded into database, got 0")
 	}
-
 }

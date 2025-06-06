@@ -147,13 +147,14 @@ func processMoviePage(db *sql.DB, client *tmdbAPI.Client, page int, configuratio
 	return page >= response.TotalPages, nil
 }
 
-func LoaderTmdbAPIDiscoverMovie(db *sql.DB, client *tmdbAPI.Client, maxPages int) error {
+func LoaderTmdbAPIDiscoverMovie(db *sql.DB, client *tmdbAPI.Client, maxPages int, done chan struct{}) error {
 	go func() {
 		log.Println("Starting TMDB Discover Movie loader worker...")
 
 		configuration, err := client.Configuration()
 		if err != nil {
 			log.Printf("Failed to get configuration: %v", err)
+			close(done)
 			return
 		}
 		log.Printf("Got TMDB configuration successfully. Base URL: %s", configuration.Images.SecureBaseURL)
@@ -171,6 +172,7 @@ func LoaderTmdbAPIDiscoverMovie(db *sql.DB, client *tmdbAPI.Client, maxPages int
 			}
 			page++
 		}
+		close(done)
 	}()
 
 	return nil

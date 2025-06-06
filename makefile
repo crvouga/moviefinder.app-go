@@ -6,7 +6,7 @@ dev:
 	air
 
 test:
-	go test ./... -v
+	clear && go test ./... -v
 
 build:
 	go build -o main main.go
