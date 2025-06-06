@@ -6,18 +6,48 @@
 		<div class="w-full h-full bg-neutral-800 animate-pulse"></div>
 	</swiper-slide>
 </swiper-container>
-<script type="module">
+
+<script>
 	const loadNextURL = "{{.LoadNextURL}}?no-cache=true";
+	const slideChangedURL = "{{.SlideChangedURL}}?no-cache=true";
 	const swiper = document.getElementById("feed-swiper");
 	const swiperSlideLast = document.getElementById("feed-swiper-slide-last");
-	while (true) {
-		await new Promise(r => swiper.addEventListener("swiperslidechange", r, { once: true }));
-		const shouldLoad = swiper.swiper.activeIndex >= swiper.swiper.slides.length - 4
-		if (!shouldLoad) continue
-		const res = await fetch(loadNextURL)
-		const html = await res.text()
-		await new Promise(resolve => setTimeout(resolve, 150));
-		swiperSlideLast.insertAdjacentHTML("beforebegin", html)
+	const preloadThreshold = 4;
+
+	async function workerLoadNext() {
+		while (true) {
+			try {
+				await new Promise(r =>
+					swiper.addEventListener("swiperslidechange", r, { once: true })
+				);
+				if (swiper.swiper.activeIndex < swiper.swiper.slides.length - preloadThreshold) continue;
+				const res = await fetch(loadNextURL);
+				const html = await res.text();
+				swiperSlideLast.insertAdjacentHTML("beforebegin", html);
+			} catch (err) {
+				console.error("Failed to load next slides", err);
+			}
+		}
 	}
+
+	async function workerSaveFeedIndex() {
+		while (true) {
+			try {
+				await new Promise(r =>
+					swiper.addEventListener("swiperslidechange", r, { once: true })
+				);
+				await fetch(slideChangedURL, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ index: swiper.swiper.activeIndex })
+				});
+			} catch (err) {
+				console.error("Failed to save feed index", err);
+			}
+		}
+	}
+
+	workerLoadNext();
+	workerSaveFeedIndex();
 </script>
 {{end}}

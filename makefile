@@ -41,6 +41,10 @@ dbmate-up:
 
 	mkdir -p db && ./dbmate --url "sqlite:db/db.sqlite3" up
 
+dbmate-new:
+	make dbmate-download-cached
+	mkdir -p db && ./dbmate --url "sqlite:db/db.sqlite3" new "new-migration-rename-me"
+
 dbmate-down:
 	./dbmate --url "sqlite:db/db.sqlite3" down
 

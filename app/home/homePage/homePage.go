@@ -15,11 +15,21 @@ import (
 	"net/http"
 )
 
-const LoadNext = "/load-next"
+const LoadNextURL = "/load-next"
+const SlideChangedURL = "/slide-changed"
 
 func Router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 	mux.HandleFunc(homeRoutes.HomePage, respondHomePage(ac))
-	mux.HandleFunc(LoadNext, respondLoadNext(ac))
+	mux.HandleFunc(LoadNextURL, respondLoadNext(ac))
+	mux.HandleFunc(SlideChangedURL, respondSlideChanged(ac))
+}
+
+func respondSlideChanged(ac *appCtx.AppCtx) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ac.Logger.Info("Slide changed", "index", r.URL.Query().Get("index"))
+		ac.DB.Exec("UPDATE feed SET current_feed_index = ?", r.URL.Query().Get("index"))
+		w.WriteHeader(http.StatusOK)
+	}
 }
 
 func respondLoadNext(ac *appCtx.AppCtx) http.HandlerFunc {
@@ -65,10 +75,11 @@ func respondHomePage(ac *appCtx.AppCtx) http.HandlerFunc {
 	templPaths = append(templPaths, feedSwiper.TemplatePaths...)
 	templ := templateExt.Combine(templPaths)
 	type Data struct {
-		Document      document.Data
-		FeedSwiper    feedSwiper.FeedSwiper
-		BottomButtons bottomButtons.BottomButtons
-		LoadNextURL   string
+		Document        document.Data
+		FeedSwiper      feedSwiper.FeedSwiper
+		BottomButtons   bottomButtons.BottomButtons
+		LoadNextURL     string
+		SlideChangedURL string
 	}
 
 	baseData := Data{
@@ -80,8 +91,9 @@ func respondHomePage(ac *appCtx.AppCtx) http.HandlerFunc {
 		FeedSwiper: feedSwiper.FeedSwiper{
 			Slides: []feedSwiperSlides.FeedSwiperSlide{},
 		},
-		BottomButtons: appBottomButtons.AppBottomButtons(appBottomButtons.HomePage),
-		LoadNextURL:   LoadNext,
+		BottomButtons:   appBottomButtons.AppBottomButtons(appBottomButtons.HomePage),
+		LoadNextURL:     LoadNextURL,
+		SlideChangedURL: SlideChangedURL,
 	}
 
 	queryPopularMedia, err := mediaDB.NewQueryPopularMedia(ac.DB)
