@@ -42,7 +42,11 @@ func New() AppCtx {
 
 	tmdbAPIClient, err := tmdbAPI.NewFromEnv()
 	if err != nil {
-		panic(err)
+		slog.Default().Error("Failed to create TMDB API client", "error", err)
+	}
+
+	if tmdbAPIClient == nil {
+		panic("TMDB API client is required but was not initialized")
 	}
 
 	return AppCtx{
