@@ -2,6 +2,7 @@
 package feedSwiperSlides
 
 import (
+	"movieFinder/app/media"
 	"movieFinder/lib/static"
 )
 
@@ -12,3 +13,10 @@ type FeedSwiperSlide struct {
 
 var TemplateName = "feedSwiperSlides"
 var TemplatePath = static.GetSiblingPath(TemplateName + ".html")
+
+func FromMedia(m media.Media) FeedSwiperSlide {
+	return FeedSwiperSlide{
+		ImageSrc: m.PosterURL,
+		URL:      "",
+	}
+}
