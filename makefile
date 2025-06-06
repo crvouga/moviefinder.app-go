@@ -17,7 +17,6 @@ clean:
 
 .PHONY: run dev test build clean
 
-
 tw-download:
 	curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-macos-arm64
 	chmod +x tailwindcss-macos-arm64
@@ -28,7 +27,6 @@ tw-watch:
 
 tw-build:
 	./tailwindcss -i ./public/input.css -o ./public/output.css --minify
-
 
 preview:
 	docker build -t moviefinder-app .
