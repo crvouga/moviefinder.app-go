@@ -2,25 +2,56 @@ package appDb
 
 import (
 	"database/sql"
+	"io"
+	"log"
 	"log/slog"
+	"movieFinder/db"
+	"movieFinder/lib/dbMigrations"
 	"movieFinder/lib/sqlite"
 )
 
-const DB_PATH = "./db/db.sqlite"
+const dbPath = "./db/db.sqlite"
 
-func OpenInMemory() *sql.DB {
-	db, err := sqlite.LoadIntoMemory(DB_PATH)
+func RunMigrations() {
+	dbUrl := "sqlite:" + dbPath
+
+	log.Println("Running migrations for", dbUrl)
+
+	dbMigrations.Run(db.MigrationsFs, dbUrl)
+}
+
+func OpenDurable() *sql.DB {
+	db, err := sqlite.New(dbPath)
 	if err != nil {
-		slog.Error("Failed to open in memory database", "error", err)
 		panic(err)
 	}
 	return db
 }
 
-func OpenDurable() *sql.DB {
-	db, err := sqlite.New(DB_PATH)
+func OpenInMemory() *sql.DB {
+	dbInstance, err := sqlite.New(":memory:")
 	if err != nil {
+		slog.Error("Failed to open in memory database", "error", err)
 		panic(err)
 	}
-	return db
+
+	schema, err := db.SchemaFs.Open("schema.sql")
+	if err != nil {
+		slog.Error("Failed to read schema file", "error", err)
+		panic(err)
+	}
+
+	schemaBytes, err := io.ReadAll(schema)
+	if err != nil {
+		slog.Error("Failed to read schema file", "error", err)
+		panic(err)
+	}
+
+	_, err = dbInstance.Exec(string(schemaBytes))
+	if err != nil {
+		slog.Error("Failed to execute schema", "error", err)
+		panic(err)
+	}
+
+	return dbInstance
 }
