@@ -24,6 +24,7 @@ func respondFeedPage(ac *appCtx.AppCtx) http.HandlerFunc {
 	templ := templateExt.Combine(templPaths)
 	type Data struct {
 		Document        document.Data
+		Error           *string
 		FeedSwiper      feedSwiper.FeedSwiper
 		BottomButtons   bottomButtons.BottomButtons
 		LoadNextURL     string
@@ -31,6 +32,7 @@ func respondFeedPage(ac *appCtx.AppCtx) http.HandlerFunc {
 	}
 
 	baseData := Data{
+		Error: nil,
 		Document: document.Data{
 			Preload: []document.Preload{
 				document.NewPreload(routes.UserAccountPage),
@@ -52,10 +54,13 @@ func respondFeedPage(ac *appCtx.AppCtx) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		found, err := queryPopularMedia.Query(3, 0)
-		if err != nil {
-			panic(err)
-		}
 		data := baseData
+		if err != nil {
+			errStr := err.Error()
+			data.Error = &errStr
+			templateExt.Respond(templ, document.TemplateName, data, w)
+			return
+		}
 		data.FeedSwiper.Slides = make([]feedSwiperSlides.FeedSwiperSlide, len(found))
 		for i, m := range found {
 			slide := feedSwiperSlides.FromMedia(m)

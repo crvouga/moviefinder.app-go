@@ -14,10 +14,12 @@ func respondLoadNext(ac *appCtx.AppCtx) http.HandlerFunc {
 		feedSwiperSlides.TemplatePath,
 	})
 	type Data struct {
+		Error      *string
 		FeedSwiper feedSwiper.FeedSwiper
 	}
 
 	baseData := Data{
+		Error: nil,
 		FeedSwiper: feedSwiper.FeedSwiper{
 			Slides: []feedSwiperSlides.FeedSwiperSlide{},
 		},
@@ -31,10 +33,13 @@ func respondLoadNext(ac *appCtx.AppCtx) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		media, err := queryPopularMedia.Query(10, 0)
-		if err != nil {
-			panic(err)
-		}
 		data := baseData
+		if err != nil {
+			errStr := err.Error()
+			data.Error = &errStr
+			templateExt.Respond(templ, feedSwiperSlides.TemplateName, data, w)
+			return
+		}
 		data.FeedSwiper.Slides = make([]feedSwiperSlides.FeedSwiperSlide, len(media))
 		for i, m := range media {
 			data.FeedSwiper.Slides[i] = feedSwiperSlides.FromMedia(m)

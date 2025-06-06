@@ -1,4 +1,7 @@
 {{define "page"}}
+{{if .Error}}
+<div class="text-red-500">{{.Error}}</div>
+{{end}}
 {{template "feedSwiper".}}
 {{template "bottomButtons" .}}
 {{end}}
