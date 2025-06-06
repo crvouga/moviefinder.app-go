@@ -6,7 +6,6 @@ import (
 	"log"
 	"movieFinder/lib/tmdbAPI"
 	"strconv"
-	"time"
 )
 
 func processMovie(db *sql.DB, movie tmdbAPI.DiscoverMovieResponseResult, configuration tmdbAPI.ConfigurationResponse, posterSizes []string, backdropSizes []string) error {
@@ -160,7 +159,7 @@ func LoaderTmdbAPIDiscoverMovie(db *sql.DB, client *tmdbAPI.Client, maxPages int
 
 		page := 1
 		for page <= maxPages {
-			time.Sleep(1 * time.Second) // Rate limiting
+			// time.Sleep(500 * time.Millisecond) // Rate limiting
 			isLastPage, err := processMoviePage(db, client, page, configuration)
 			if err != nil {
 				log.Printf("Stopping loader due to error on page %d", page)
