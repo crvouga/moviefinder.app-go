@@ -3,8 +3,7 @@ package mediaDB
 import (
 	"database/sql"
 	"log/slog"
-	appDb "movieFinder/app/db"
-	"movieFinder/lib/sqlite"
+	"movieFinder/app/appDb"
 	"movieFinder/lib/tmdbAPI"
 )
 
@@ -14,11 +13,7 @@ type Fixture struct {
 }
 
 func NewFixture() *Fixture {
-	db, err := sqlite.LoadIntoMemory(appDb.DB_PATH)
-
-	if err != nil {
-		panic(err)
-	}
+	db := appDb.OpenInMemory()
 
 	client, err := tmdbAPI.NewFromEnv(slog.Default())
 	if err != nil {

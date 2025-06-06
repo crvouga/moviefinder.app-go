@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"log/slog"
-	appDb "movieFinder/app/db"
+	"movieFinder/app/appDb"
 	"movieFinder/app/projects/project/projectDB"
 	"movieFinder/app/users/login/link/linkDB"
 	"movieFinder/app/users/userAccount/userAccountDB"
@@ -36,8 +36,7 @@ func (ac *AppCtx) CleanUp() {
 }
 
 func New() AppCtx {
-	dbDurable := appDb.Open()
-
+	dbDurable := appDb.OpenDurable()
 	db := appDb.OpenInMemory()
 
 	keyValueDBFs := keyValueDB.NewImplFs("keyValueDB.json")

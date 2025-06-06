@@ -4,7 +4,7 @@ import (
 	"embed"
 	"log"
 	"movieFinder/app"
-	appDb "movieFinder/app/db"
+	"movieFinder/app/appDb"
 	"movieFinder/lib/dbMigrations"
 	"movieFinder/lib/tailwindcss"
 	"net/http"
