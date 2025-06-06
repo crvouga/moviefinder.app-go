@@ -1,13 +1,21 @@
 package main
 
 import (
-	"movieFinder/app"
-
+	"embed"
 	"log"
+	"movieFinder/app"
+	"movieFinder/lib/dbMigrations"
 	"net/http"
+
+	_ "github.com/amacneil/dbmate/v2/pkg/driver/sqlite"
 )
 
+//go:embed db/migrations/*.sql
+var migrationsFs embed.FS
+
 func main() {
+
+	dbMigrations.Run(migrationsFs)
 
 	handler := app.Handler()
 

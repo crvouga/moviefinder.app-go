@@ -18,6 +18,7 @@ import (
 
 type AppCtx struct {
 	DB            *sql.DB
+	DBDurable     *sql.DB
 	TmdbAPIClient *tmdbAPI.Client
 	Logger        *slog.Logger
 	UowFactory    uow.UowFactory
@@ -35,6 +36,8 @@ func (ac *AppCtx) CleanUp() {
 
 func New() AppCtx {
 	db, err := sqlite.New(":memory:")
+	dbDurable, err := sqlite.New("db/db.sqlite")
+
 	if err != nil {
 		panic(err)
 	}
@@ -57,6 +60,7 @@ func New() AppCtx {
 
 	return AppCtx{
 		DB:            db,
+		DBDurable:     dbDurable,
 		TmdbAPIClient: tmdbAPIClient,
 		UowFactory:    *uow.NewFactory(db),
 		Logger:        logger,
