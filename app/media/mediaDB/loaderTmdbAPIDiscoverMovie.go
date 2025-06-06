@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"math"
 	"movieFinder/lib/tmdbAPI"
 	"strconv"
 )
@@ -161,6 +162,8 @@ func processMoviePage(db *sql.DB, client *tmdbAPI.Client, page int, configuratio
 const HARD_MAX_PAGES = 500
 
 func LoaderTmdbAPIDiscoverMovie(db *sql.DB, client *tmdbAPI.Client, maxPages int, done chan struct{}) error {
+
+	maxPages = int(math.Min(float64(maxPages), float64(HARD_MAX_PAGES)))
 
 	go func() {
 		log.Println("Starting TMDB Discover Movie loader worker...")
