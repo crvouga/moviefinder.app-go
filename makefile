@@ -39,7 +39,13 @@ dbmate-download-cached:
 dbmate-up:
 	make dbmate-download-cached
 
-	./dbmate --url "sqlite://db/db.sqlite3" up
+	mkdir -p db && ./dbmate --url "sqlite:db/db.sqlite3" up
+
+dbmate-down:
+	./dbmate --url "sqlite:db/db.sqlite3" down
+
+	mkdir -p db && ./dbmate --url "sqlite:db/db.sqlite3" down
+
 tw-download:
 	curl -fsSL -o tailwindcss https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-macos-arm64
 	chmod +x tailwindcss
