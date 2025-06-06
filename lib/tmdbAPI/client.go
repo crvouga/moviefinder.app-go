@@ -6,10 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"movieFinder/lib/dotEnv"
 	"net/http"
 	"net/url"
 	"os"
+	"reflect"
+	"strings"
 )
 
 // Client represents the TMDB API client configuration
@@ -55,11 +58,33 @@ func (t *Client) httpGet(path string, params interface{}, response interface{}) 
 					v.Add(key, value)
 				}
 			}
+		default:
+			// Handle struct with url tags
+			val := reflect.ValueOf(p)
+			typ := val.Type()
+			for i := 0; i < val.NumField(); i++ {
+				field := typ.Field(i)
+				tag := field.Tag.Get("url")
+				if tag == "" || tag == "-" {
+					continue
+				}
+				// Split tag on comma to handle omitempty
+				tagParts := strings.Split(tag, ",")
+				tag = tagParts[0]
+
+				value := val.Field(i).Interface()
+				if value == nil || value == "" || value == 0 || value == false {
+					continue
+				}
+				v.Add(tag, fmt.Sprintf("%v", value))
+			}
 		}
 	}
 
 	// Construct full URL
 	fullURL := fmt.Sprintf("%s%s?%s", t.BaseURL, path, v.Encode())
+
+	log.Printf("fullURL: %s", fullURL)
 
 	// Create request
 	req, err := http.NewRequest("GET", fullURL, nil)

@@ -160,7 +160,7 @@ func LoaderTmdbAPIDiscoverMovie(db *sql.DB, client *tmdbAPI.Client, maxPages int
 
 		page := 1
 		for page <= maxPages {
-			time.Sleep(2 * time.Second) // Rate limiting
+			time.Sleep(1 * time.Second) // Rate limiting
 			isLastPage, err := processMoviePage(db, client, page, configuration)
 			if err != nil {
 				log.Printf("Stopping loader due to error on page %d", page)
