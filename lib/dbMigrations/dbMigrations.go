@@ -10,10 +10,10 @@ import (
 	_ "github.com/amacneil/dbmate/v2/pkg/driver/sqlite"
 )
 
-func Run(migrationFiles embed.FS) {
+func Run(migrationFiles embed.FS, databaseUrl string) {
 	log.Println("Running migrations")
 
-	u, _ := url.Parse("sqlite:db/db.sqlite")
+	u, _ := url.Parse(databaseUrl)
 	db := dbmate.New(u)
 	db.FS = migrationFiles
 

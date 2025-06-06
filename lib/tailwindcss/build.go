@@ -35,8 +35,10 @@ func DownloadCached() {
 	}
 }
 
-func Invoke(inputPath string, outputPath string) {
-	log.Println("Invoking tailwindcss")
+func Minify(inputPath string, outputPath string) {
+	DownloadCached()
+
+	log.Println("Minifying tailwindcss")
 	err := exec.Command("./tailwindcss", "-i", inputPath, "-o", outputPath, "--minify").Run()
 
 	if err != nil {
@@ -46,7 +48,13 @@ func Invoke(inputPath string, outputPath string) {
 	}
 }
 
-func Build(inputPath string, outputPath string) {
+func Watch(inputPath string, outputPath string) {
 	DownloadCached()
-	Invoke(inputPath, outputPath)
+
+	log.Println("Watching tailwindcss")
+	err := exec.Command("./tailwindcss", "-i", inputPath, "-o", outputPath, "--watch").Run()
+
+	if err != nil {
+		log.Fatal(err)
+	}
 }

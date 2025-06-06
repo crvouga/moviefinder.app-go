@@ -15,9 +15,9 @@ import (
 var migrationsFs embed.FS
 
 func main() {
-	tailwindcss.Build("./public/input.css", "./public/output.css")
+	tailwindcss.Minify("./public/input.css", "./public/output.css")
 
-	dbMigrations.Run(migrationsFs)
+	dbMigrations.Run(migrationsFs, "sqlite:db/db.sqlite")
 
 	handler := app.Handler()
 
@@ -25,5 +25,7 @@ func main() {
 
 	log.Printf("Server live here http://localhost%s/ \n", addr)
 
-	http.ListenAndServe(addr, handler)
+	if err := http.ListenAndServe(addr, handler); err != nil {
+		log.Fatal(err)
+	}
 }
