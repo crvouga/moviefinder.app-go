@@ -6,7 +6,8 @@ imageService
 main
 .env
 
-output.css
+# output.css
 tailwindcss
 !tailwindcss/
 dbmate
+out

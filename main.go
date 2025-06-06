@@ -3,12 +3,10 @@ package main
 import (
 	"log"
 	"movieFinder/app"
-	"movieFinder/lib/tailwindcss"
 	"net/http"
 )
 
 func main() {
-	tailwindcss.Minify("./public/input.css", "./public/output.css")
 
 	handler := app.Handler()
 

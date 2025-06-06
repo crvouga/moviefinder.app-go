@@ -38,7 +38,7 @@ func DownloadCached() {
 func Minify(inputPath string, outputPath string) {
 	DownloadCached()
 
-	log.Println("Minifying tailwindcss")
+	// log.Println("Minifying tailwindcss")
 	err := exec.Command("./tailwindcss", "-i", inputPath, "-o", outputPath, "--minify").Run()
 
 	if err != nil {
