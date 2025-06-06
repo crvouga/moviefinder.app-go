@@ -25,3 +25,8 @@ preview:
 
 db-shell:
 	sqlite3 db/db.sqlite
+
+dbmate:
+	curl -fsSL -o dbmate https://github.com/amacneil/dbmate/releases/latest/download/dbmate-macos-amd64
+	chmod +x dbmate
+	./dbmate --help
