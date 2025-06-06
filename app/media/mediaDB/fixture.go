@@ -21,7 +21,7 @@ func NewFixture() *Fixture {
 	if err != nil {
 		panic(err)
 	}
-	client, err := tmdbAPI.NewFromEnv()
+	client, err := tmdbAPI.NewFromEnv(slog.Default())
 	if err != nil {
 		panic(err)
 	}

@@ -40,7 +40,7 @@ func New() AppCtx {
 
 	keyValueDBFs := keyValueDB.NewImplFs("keyValueDB.json")
 
-	tmdbAPIClient, err := tmdbAPI.NewFromEnv()
+	tmdbAPIClient, err := tmdbAPI.NewFromEnv(slog.Default())
 	if err != nil {
 		slog.Default().Error("Failed to create TMDB API client", "error", err)
 	}
