@@ -4,9 +4,9 @@ import (
 	"database/sql"
 )
 
-func CreateTables(db *sql.DB) {
+func CreateTables(db *sql.DB) error {
 
-	db.Exec(`
+	_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS media (
 			id TEXT PRIMARY KEY,
 			title TEXT NOT NULL,
@@ -41,4 +41,6 @@ func CreateTables(db *sql.DB) {
 			PRIMARY KEY (media_id, genre_id)
 		)
 	`)
+
+	return err
 }

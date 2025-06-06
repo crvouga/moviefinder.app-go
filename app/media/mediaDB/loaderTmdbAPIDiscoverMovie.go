@@ -123,7 +123,6 @@ func processMovie(db *sql.DB, movie tmdbAPI.DiscoverMovieResponseResult, configu
 
 func processMoviePage(db *sql.DB, client *tmdbAPI.Client, page int, configuration tmdbAPI.ConfigurationResponse) (bool, error) {
 	log.Printf("Fetching page %d of movies...", page)
-	time.Sleep(1 * time.Second) // Rate limiting
 
 	response, err := client.DiscoverMovie(tmdbAPI.DiscoverMovieParams{
 		Page: page,
@@ -161,6 +160,7 @@ func LoaderTmdbAPIDiscoverMovie(db *sql.DB, client *tmdbAPI.Client, maxPages int
 
 		page := 1
 		for page <= maxPages {
+			time.Sleep(2 * time.Second) // Rate limiting
 			isLastPage, err := processMoviePage(db, client, page, configuration)
 			if err != nil {
 				log.Printf("Stopping loader due to error on page %d", page)

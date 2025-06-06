@@ -8,6 +8,7 @@ import (
 	"movieFinder/app/ctx/reqCtx"
 	"movieFinder/app/home"
 	"movieFinder/app/home/homePage"
+	"movieFinder/app/media/mediaDB"
 	"movieFinder/app/projects"
 	"movieFinder/app/ui/pages"
 	"movieFinder/app/users"
@@ -23,19 +24,37 @@ import (
 // Handler is the main handler for the application.
 func Handler() http.Handler {
 	ac := appCtx.New()
+	ac.Logger.Info("initializing application handler")
+
+	ac.Logger.Info("creating media tables")
+	err := mediaDB.CreateTables(ac.DB)
+	if err != nil {
+		ac.Logger.Error("failed to create media tables", "error", err)
+		panic(err)
+	}
+
+	ac.Logger.Info("starting media loader")
+	err = mediaDB.Loader(ac.DB, ac.TmdbAPIClient, 10000, make(chan struct{}))
+	if err != nil {
+		ac.Logger.Error("failed to load media", "error", err)
+		panic(err)
+	}
 
 	mux := http.NewServeMux()
 
+	ac.Logger.Info("setting up router")
 	router(mux, &ac)
 
 	handler := traceID.WithTraceIDHeader(sessionID.WithSessionIDCookie(mux))
 	handler = httpExt.GzipMiddleware(handler)
+	ac.Logger.Info("handler setup complete")
 
 	return handler
 }
 
 // router is the router for the application.
 func router(mux *http.ServeMux, ac *appCtx.AppCtx) {
+	ac.Logger.Info("initializing routers")
 	muxLoggedIn := newMuxLoggedIn(ac)
 	muxLoggedOut := newMuxLoggedOut(ac)
 
@@ -46,17 +65,21 @@ func router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 		setCacheControlHeaders(w, r)
 
 		if err := static.ServeStaticAssets(w, r); err == nil {
+			rc.Logger.Info("served static asset", "path", r.URL.Path)
 			return
 		}
 
 		if auth.IsLoggedIn(ac, r) {
+			rc.Logger.Info("routing to logged in handler", "path", r.URL.Path)
 			muxLoggedIn.ServeHTTP(w, r)
 			return
 		}
 
+		rc.Logger.Info("routing to logged out handler", "path", r.URL.Path)
 		muxLoggedOut.ServeHTTP(w, r)
 	})
 	mux.Handle("/", handler)
+	ac.Logger.Info("router setup complete")
 }
 
 func setCacheControlHeaders(w http.ResponseWriter, r *http.Request) {
@@ -72,6 +95,7 @@ func setCacheControlHeaders(w http.ResponseWriter, r *http.Request) {
 
 // newMuxLoggedIn is the mux for the logged in user.
 func newMuxLoggedIn(ac *appCtx.AppCtx) *http.ServeMux {
+	ac.Logger.Info("setting up logged in router")
 	mux := http.NewServeMux()
 	users.Router(mux, ac)
 	home.Router(mux, ac)
@@ -83,11 +107,13 @@ func newMuxLoggedIn(ac *appCtx.AppCtx) *http.ServeMux {
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		homePage.Redirect(w, r)
 	})
+	ac.Logger.Info("logged in router setup complete")
 	return mux
 }
 
 // newMuxLoggedOut is the mux for the logged out user.
 func newMuxLoggedOut(ac *appCtx.AppCtx) *http.ServeMux {
+	ac.Logger.Info("setting up logged out router")
 	mux := http.NewServeMux()
 	users.RouterLoggedOut(mux, ac)
 	api.Router(mux, ac)
@@ -96,5 +122,6 @@ func newMuxLoggedOut(ac *appCtx.AppCtx) *http.ServeMux {
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		homePage.Redirect(w, r)
 	})
+	ac.Logger.Info("logged out router setup complete")
 	return mux
 }

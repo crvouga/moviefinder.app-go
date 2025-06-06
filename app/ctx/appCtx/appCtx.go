@@ -11,11 +11,13 @@ import (
 	"movieFinder/lib/email/emailOutbox"
 	"movieFinder/lib/keyValueDB"
 	"movieFinder/lib/sqlite"
+	"movieFinder/lib/tmdbAPI"
 	"movieFinder/lib/uow"
 )
 
 type AppCtx struct {
 	DB            *sql.DB
+	TmdbAPIClient *tmdbAPI.Client
 	Logger        *slog.Logger
 	UowFactory    uow.UowFactory
 	LinkDB        linkDB.LinkDB
@@ -38,8 +40,14 @@ func New() AppCtx {
 
 	keyValueDBFs := keyValueDB.NewImplFs("keyValueDB.json")
 
+	tmdbAPIClient, err := tmdbAPI.NewFromEnv()
+	if err != nil {
+		panic(err)
+	}
+
 	return AppCtx{
 		DB:            db,
+		TmdbAPIClient: tmdbAPIClient,
 		UowFactory:    *uow.NewFactory(db),
 		Logger:        slog.Default(),
 		KeyValueDB:    keyValueDB.NewImplNamespaced(keyValueDBFs, "app"),
