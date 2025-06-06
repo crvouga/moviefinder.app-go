@@ -7,27 +7,34 @@ import (
 	"math"
 	"movieFinder/lib/tmdbAPI"
 	"strconv"
-	"sync"
 	"time"
 )
 
-func processMovie(db *sql.DB, movie tmdbAPI.DiscoverMovieResponseResult, configuration tmdbAPI.ConfigurationResponse, posterSizes []string, backdropSizes []string, logger *slog.Logger) error {
-	logger.Debug("Processing movie", "title", movie.Title, "id", movie.ID)
-	logger.Debug("Movie details", "title", movie.Title, "popularity", movie.Popularity, "releaseDate", movie.ReleaseDate)
+type WorkerLoadTmdbDiscoverMovie struct {
+	DB            *sql.DB
+	Client        *tmdbAPI.Client
+	Configuration *tmdbAPI.ConfigurationResponse
+	Logger        *slog.Logger
+	MaxPages      int
+}
 
-	posterURLs := tmdbAPI.ToPosterURLs(movie.PosterPath, configuration, posterSizes)
-	backdropURLs := tmdbAPI.ToBackdropURLs(movie.BackdropPath, configuration, backdropSizes)
+func (w *WorkerLoadTmdbDiscoverMovie) processMovie(movie tmdbAPI.DiscoverMovieResponseResult) error {
+	w.Logger.Debug("Processing movie", "title", movie.Title, "id", movie.ID)
+	w.Logger.Debug("Movie details", "title", movie.Title, "popularity", movie.Popularity, "releaseDate", movie.ReleaseDate)
 
-	logger.Debug("Generated URLs", "posterCount", len(posterURLs), "backdropCount", len(backdropURLs))
+	posterURLs := tmdbAPI.ToPosterURLs(movie.PosterPath, *w.Configuration, w.Configuration.Images.PosterSizes)
+	backdropURLs := tmdbAPI.ToBackdropURLs(movie.BackdropPath, *w.Configuration, w.Configuration.Images.BackdropSizes)
+
+	w.Logger.Debug("Generated URLs", "posterCount", len(posterURLs), "backdropCount", len(backdropURLs))
 
 	// Begin transaction
-	tx, err := db.Begin()
+	tx, err := w.DB.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %v", err)
 	}
 	defer tx.Rollback()
 
-	logger.Debug("Starting database transaction", "movieID", movie.ID)
+	w.Logger.Debug("Starting database transaction", "movieID", movie.ID)
 
 	// Insert movie
 	_, err = tx.Exec(`
@@ -54,7 +61,7 @@ func processMovie(db *sql.DB, movie tmdbAPI.DiscoverMovieResponseResult, configu
 		return fmt.Errorf("failed to insert movie: %v", err)
 	}
 
-	logger.Debug("Inserted base movie data", "movieID", movie.ID)
+	w.Logger.Debug("Inserted base movie data", "movieID", movie.ID)
 
 	// Insert poster images
 	for i, posterURL := range posterURLs {
@@ -69,13 +76,13 @@ func processMovie(db *sql.DB, movie tmdbAPI.DiscoverMovieResponseResult, configu
 			fmt.Sprintf("%d_poster_%d", movie.ID, i),
 			strconv.FormatInt(int64(movie.ID), 10),
 			"poster",
-			posterSizes[i],
+			w.Configuration.Images.PosterSizes[i],
 			posterURL,
 		)
 		if err != nil {
 			return fmt.Errorf("failed to insert poster image: %v", err)
 		}
-		logger.Debug("Inserted poster image", "number", i+1, "total", len(posterURLs), "movieID", movie.ID)
+		w.Logger.Debug("Inserted poster image", "number", i+1, "total", len(posterURLs), "movieID", movie.ID)
 	}
 
 	// Insert backdrop images
@@ -91,16 +98,16 @@ func processMovie(db *sql.DB, movie tmdbAPI.DiscoverMovieResponseResult, configu
 			fmt.Sprintf("%d_backdrop_%d", movie.ID, i),
 			strconv.FormatInt(int64(movie.ID), 10),
 			"backdrop",
-			backdropSizes[i],
+			w.Configuration.Images.BackdropSizes[i],
 			backdropURL,
 		)
 		if err != nil {
 			return fmt.Errorf("failed to insert backdrop image: %v", err)
 		}
-		logger.Debug("Inserted backdrop image", "number", i+1, "total", len(backdropURLs), "movieID", movie.ID)
+		w.Logger.Debug("Inserted backdrop image", "number", i+1, "total", len(backdropURLs), "movieID", movie.ID)
 	}
 
-	logger.Debug("Processing genres", "count", len(movie.GenreIds), "movieID", movie.ID)
+	w.Logger.Debug("Processing genres", "count", len(movie.GenreIds), "movieID", movie.ID)
 
 	// Insert genres and media_genres relationships
 	for i, genreID := range movie.GenreIds {
@@ -123,7 +130,7 @@ func processMovie(db *sql.DB, movie tmdbAPI.DiscoverMovieResponseResult, configu
 		if err != nil {
 			return fmt.Errorf("failed to insert media_genre: %v", err)
 		}
-		logger.Debug("Processed genre", "number", i+1, "total", len(movie.GenreIds), "genreID", genreID, "movieID", movie.ID)
+		w.Logger.Debug("Processed genre", "number", i+1, "total", len(movie.GenreIds), "genreID", genreID, "movieID", movie.ID)
 	}
 
 	// Commit transaction
@@ -131,133 +138,87 @@ func processMovie(db *sql.DB, movie tmdbAPI.DiscoverMovieResponseResult, configu
 		return fmt.Errorf("failed to commit transaction: %v", err)
 	}
 
-	logger.Debug("Successfully completed database transaction", "movieID", movie.ID)
+	w.Logger.Debug("Successfully completed database transaction", "movieID", movie.ID)
 	return nil
 }
 
-func processMoviePage(db *sql.DB, client *tmdbAPI.Client, page int, configuration tmdbAPI.ConfigurationResponse, logger *slog.Logger) (bool, error) {
-	logger.Info("Fetching page of movies from TMDB API", "page", page)
+func (w *WorkerLoadTmdbDiscoverMovie) processMoviePage(page int) (bool, error) {
+	w.Logger.Info("Fetching page of movies from TMDB API", "page", page)
 
-	response, err := client.DiscoverMovie(tmdbAPI.DiscoverMovieParams{
+	response, err := w.Client.DiscoverMovie(tmdbAPI.DiscoverMovieParams{
 		Page: page,
 	})
 	if err != nil {
-		logger.Error("Failed to get page", "page", page, "error", err)
+		w.Logger.Error("Failed to get page", "page", page, "error", err)
 		return false, err
 	}
 
-	logger.Info("Retrieved movies", "count", len(response.Results), "page", page, "totalPages", response.TotalPages)
-	posterSizes := configuration.Images.PosterSizes
-	backdropSizes := configuration.Images.BackdropSizes
+	w.Logger.Info("Retrieved movies", "count", len(response.Results), "page", page, "totalPages", response.TotalPages)
 
 	for i, movie := range response.Results {
-		logger.Debug("Processing movie", "number", i+1, "total", len(response.Results), "page", page)
-		if err := processMovie(db, movie, configuration, posterSizes, backdropSizes, logger); err != nil {
+		w.Logger.Debug("Processing movie", "number", i+1, "total", len(response.Results), "page", page)
+		if err := w.processMovie(movie); err != nil {
 			return false, err // Return error to stop processing
 		}
 	}
 
-	logger.Info("Successfully processed page", "page", page, "movieCount", len(response.Results))
+	w.Logger.Info("Successfully processed page", "page", page, "movieCount", len(response.Results))
 	return page >= response.TotalPages, nil
 }
 
 const HARD_MAX_PAGES = 500
-const WORKERS = 10
-const RATE_LIMIT = 1 * time.Second
 
-func startWorkers(pageQueue chan int, db *sql.DB, client *tmdbAPI.Client, configuration tmdbAPI.ConfigurationResponse, logger *slog.Logger, rateLimiter *time.Ticker, wg *sync.WaitGroup, errChan chan error, pageCompleteChan chan bool) {
-	for w := 0; w < WORKERS; w++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for page := range pageQueue {
-				<-rateLimiter.C // Wait for rate limiter before processing
-				isLastPage, err := processMoviePage(db, client, page, configuration, logger.WithGroup("worker-"+strconv.Itoa(w)))
-				if err != nil {
-					errChan <- err
-					return
-				}
-				pageCompleteChan <- isLastPage
-			}
-		}()
+func NewWorkerLoadTmdbDiscoverMovie(db *sql.DB, client *tmdbAPI.Client, maxPages int, logger *slog.Logger) WorkerLoadTmdbDiscoverMovie {
+	return WorkerLoadTmdbDiscoverMovie{
+		DB:            db,
+		Client:        client,
+		Configuration: nil,
+		Logger:        logger,
+		MaxPages:      maxPages,
 	}
 }
 
-func queuePages(pageQueue chan int, maxPages int) {
-	for page := 1; page <= maxPages && page <= HARD_MAX_PAGES; page++ {
-		pageQueue <- page
-	}
-	close(pageQueue)
-}
-
-func monitorCompletion(errChan chan error, pageCompleteChan chan bool, done chan struct{}, logger *slog.Logger) {
-	for {
-		select {
-		case err, ok := <-errChan:
-			if ok && err != nil {
-				logger.Error("Stopping loader due to error", "error", err)
-				close(done)
-				return
-			}
-		case isLastPage, ok := <-pageCompleteChan:
-			if !ok {
-				// All pages processed successfully
-				logger.Info("TMDB Discover Movie loader completed")
-				close(done)
-				return
-			}
-			if isLastPage {
-				logger.Info("Reached last page, media loader complete")
-				close(done)
-				return
-			}
-		}
-	}
-}
-
-func WorkerLoadTmdbAPIDiscoverMovie(db *sql.DB, client *tmdbAPI.Client, maxPages int, logger *slog.Logger) chan struct{} {
-	maxPages = int(math.Min(float64(maxPages), float64(HARD_MAX_PAGES)))
+func (w *WorkerLoadTmdbDiscoverMovie) Run() chan struct{} {
+	maxPages := int(math.Min(float64(w.MaxPages), float64(HARD_MAX_PAGES)))
 	done := make(chan struct{})
 
 	go func() {
-		logger.Info("Starting TMDB Discover Movie loader worker")
-		logger.Info("Processing pages", "maxPages", maxPages)
+		w.Logger.Info("Starting TMDB Discover Movie loader worker")
+		w.Logger.Info("Processing pages", "maxPages", maxPages)
 
-		configuration, err := client.Configuration()
+		configuration, err := w.Client.Configuration()
 		if err != nil {
-			logger.Error("Failed to get configuration", "error", err)
+			w.Logger.Error("Failed to get configuration", "error", err)
 			close(done)
 			return
 		}
-		logger.Debug("Got TMDB configuration", "baseURL", configuration.Images.SecureBaseURL)
-		logger.Debug("Image sizes", "posterSizes", configuration.Images.PosterSizes, "backdropSizes", configuration.Images.BackdropSizes)
 
-		// Create rate limiter for 40 requests per 10 seconds (TMDB API limit)
-		rateLimiter := time.NewTicker(RATE_LIMIT)
-		defer rateLimiter.Stop()
+		w.Configuration = &configuration
 
-		// Create error channel and page completion channel
-		errChan := make(chan error, maxPages)
-		pageCompleteChan := make(chan bool, maxPages)
+		w.Logger.Debug("Got TMDB configuration", "baseURL", w.Configuration.Images.SecureBaseURL)
+		w.Logger.Debug("Image sizes", "posterSizes", w.Configuration.Images.PosterSizes, "backdropSizes", w.Configuration.Images.BackdropSizes)
 
-		// Create worker pool
-		pageQueue := make(chan int, maxPages)
-		var wg sync.WaitGroup
+		// Process pages sequentially
+		for page := 1; page <= maxPages && page <= HARD_MAX_PAGES; page++ {
+			// Rate limit to 1 request per second
+			time.Sleep(time.Second)
 
-		// Start workers
-		startWorkers(pageQueue, db, client, configuration, logger, rateLimiter, &wg, errChan, pageCompleteChan)
+			isLastPage, err := w.processMoviePage(page)
+			if err != nil {
+				w.Logger.Error("Failed to process page", "page", page, "error", err)
+				close(done)
+				return
+			}
 
-		// Queue up pages
-		queuePages(pageQueue, maxPages)
+			if isLastPage {
+				w.Logger.Info("Reached last page, media loader complete")
+				close(done)
+				return
+			}
+		}
 
-		// Wait for completion or error
-		go func() {
-			wg.Wait()
-			close(errChan)
-			close(pageCompleteChan)
-		}()
-
-		monitorCompletion(errChan, pageCompleteChan, done, logger)
+		w.Logger.Info("TMDB Discover Movie loader completed")
+		close(done)
 	}()
 
 	return done

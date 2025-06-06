@@ -8,7 +8,6 @@ import (
 	"movieFinder/app/ctx/reqCtx"
 	"movieFinder/app/home"
 	"movieFinder/app/home/homePage"
-	"movieFinder/app/media/mediaDB"
 	"movieFinder/app/media/mediaPage"
 	"movieFinder/app/projects"
 	"movieFinder/app/ui/pages"
@@ -27,11 +26,15 @@ func Handler() http.Handler {
 	ac := appCtx.New()
 	ac.Logger.Debug("initializing application handler")
 
-	ac.Logger.Debug("starting media loader")
-	done := mediaDB.Worker(ac.DB, ac.TmdbAPIClient, ac.Logger)
+	worker := Worker{
+		DB:     ac.DB,
+		Client: ac.TmdbAPIClient,
+		Logger: ac.Logger,
+	}
+	done := worker.Run()
 	go func() {
 		<-done
-		ac.Logger.Debug("media loader completed")
+		ac.Logger.Debug("worker completed")
 	}()
 
 	mux := http.NewServeMux()

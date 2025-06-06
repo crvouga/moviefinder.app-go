@@ -3,25 +3,16 @@ package appDb
 import (
 	"database/sql"
 	"io"
-	"log"
 	"log/slog"
 	"movieFinder/db"
-	"movieFinder/lib/dbMigrations"
 	"movieFinder/lib/sqlite"
 )
 
-const dbPath = "./db/db.sqlite"
-
-func RunMigrations() {
-	dbUrl := "sqlite:" + dbPath
-
-	log.Println("Running migrations for", dbUrl)
-
-	dbMigrations.Run(db.MigrationsFs, dbUrl)
-}
+const DbPath = "./db/db.sqlite"
+const DbUrl = "sqlite:" + DbPath
 
 func OpenDurable() *sql.DB {
-	db, err := sqlite.New(dbPath)
+	db, err := sqlite.New(DbPath)
 	if err != nil {
 		panic(err)
 	}

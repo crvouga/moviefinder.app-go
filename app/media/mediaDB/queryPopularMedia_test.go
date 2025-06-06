@@ -11,7 +11,9 @@ func TestQueryPopularMedia(t *testing.T) {
 	defer f.DB.Close()
 
 	// Load one page of movies
-	done := WorkerLoadTmdbAPIDiscoverMovie(f.DB, f.Client, 1, slog.Default())
+	worker := NewWorker(f.DB, f.Client, slog.Default())
+	worker.MaxPagesDiscoverMovie = 1
+	done := worker.Run()
 
 	// Wait for loading to complete
 	select {

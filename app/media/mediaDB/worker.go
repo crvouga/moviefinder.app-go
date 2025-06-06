@@ -6,13 +6,30 @@ import (
 	"movieFinder/lib/tmdbAPI"
 )
 
-func Worker(db *sql.DB, client *tmdbAPI.Client, logger *slog.Logger) chan struct{} {
-	logger.Info("starting media loader")
+type Worker struct {
+	DB                    *sql.DB
+	Client                *tmdbAPI.Client
+	Logger                *slog.Logger
+	MaxPagesDiscoverMovie int
+}
 
-	MAX_DISCOVER_MOVIE_PAGES := 100
+func NewWorker(db *sql.DB, client *tmdbAPI.Client, logger *slog.Logger) Worker {
+	return Worker{
+		DB:                    db,
+		Client:                client,
+		Logger:                logger,
+		MaxPagesDiscoverMovie: 100,
+	}
+}
 
-	done := WorkerLoadTmdbAPIDiscoverMovie(db, client, MAX_DISCOVER_MOVIE_PAGES, logger)
+func (w *Worker) Run() chan struct{} {
+	w.Logger.Info("starting media loader")
 
-	logger.Info("media loader completed successfully")
+	workerDiscoverMovie := NewWorkerLoadTmdbDiscoverMovie(w.DB, w.Client, w.MaxPagesDiscoverMovie, w.Logger)
+
+	done := workerDiscoverMovie.Run()
+
+	w.Logger.Info("media loader completed successfully")
+
 	return done
 }

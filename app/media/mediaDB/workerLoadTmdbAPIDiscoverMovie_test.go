@@ -10,7 +10,8 @@ func TestWorkerLoadTmdbAPIDiscoverMovie(t *testing.T) {
 	f := NewFixture()
 	defer f.DB.Close()
 
-	done := WorkerLoadTmdbAPIDiscoverMovie(f.DB, f.Client, 1, slog.Default())
+	worker := NewWorkerLoadTmdbDiscoverMovie(f.DB, f.Client, 1, slog.Default())
+	done := worker.Run()
 
 	// Wait for loading to complete with timeout
 	select {
@@ -46,11 +47,12 @@ func TestWorkerLoadTmdbAPIDiscoverMovieMultiplePages(t *testing.T) {
 	defer f.DB.Close()
 
 	// First load just 1 page
-	done1 := WorkerLoadTmdbAPIDiscoverMovie(f.DB, f.Client, 1, slog.Default())
+	worker := NewWorkerLoadTmdbDiscoverMovie(f.DB, f.Client, 1, slog.Default())
+	done1 := worker.Run()
 
 	select {
 	case <-done1:
-		// Loading completed successfully
+		t.Log("First page loading completed successfully")
 	case <-time.After(5 * time.Second):
 		t.Fatal("Timeout waiting for first movie loading to complete")
 	}
@@ -62,13 +64,14 @@ func TestWorkerLoadTmdbAPIDiscoverMovieMultiplePages(t *testing.T) {
 	}
 
 	// Now load 2 pages
-	f = NewFixture() // Reset the DB
+	f = NewFixture()
 
-	done2 := WorkerLoadTmdbAPIDiscoverMovie(f.DB, f.Client, 2, slog.Default())
+	worker = NewWorkerLoadTmdbDiscoverMovie(f.DB, f.Client, 2, slog.Default())
+	done2 := worker.Run()
 
 	select {
 	case <-done2:
-		// Loading completed successfully
+		t.Log("Second page loading completed successfully")
 	case <-time.After(5 * time.Second):
 		t.Fatal("Timeout waiting for second movie loading to complete")
 	}

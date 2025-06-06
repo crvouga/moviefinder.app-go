@@ -10,7 +10,9 @@ func TestWorker(t *testing.T) {
 	f := NewFixture()
 	defer f.DB.Close()
 
-	done := Worker(f.DB, f.Client, slog.Default())
+	worker := NewWorker(f.DB, f.Client, slog.Default())
+	worker.MaxPagesDiscoverMovie = 1
+	done := worker.Run()
 
 	// Wait for loading to complete with timeout
 	select {
