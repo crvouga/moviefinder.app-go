@@ -9,6 +9,7 @@ import (
 	"movieFinder/app/home"
 	"movieFinder/app/home/homePage"
 	"movieFinder/app/media/mediaDB"
+	"movieFinder/app/media/mediaPage"
 	"movieFinder/app/projects"
 	"movieFinder/app/ui/pages"
 	"movieFinder/app/users"
@@ -97,6 +98,7 @@ func setCacheControlHeaders(w http.ResponseWriter, r *http.Request) {
 func newMuxLoggedIn(ac *appCtx.AppCtx) *http.ServeMux {
 	ac.Logger.Info("setting up logged in router")
 	mux := http.NewServeMux()
+	mediaPage.Router(mux, ac)
 	users.Router(mux, ac)
 	home.Router(mux, ac)
 	projects.Router(mux, ac)
@@ -116,6 +118,7 @@ func newMuxLoggedOut(ac *appCtx.AppCtx) *http.ServeMux {
 	ac.Logger.Info("setting up logged out router")
 	mux := http.NewServeMux()
 	users.RouterLoggedOut(mux, ac)
+	mediaPage.Router(mux, ac)
 	api.Router(mux, ac)
 	home.Router(mux, ac)
 	pages.Router(mux)

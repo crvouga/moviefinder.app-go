@@ -1,7 +1,7 @@
 package media
 
 type Media struct {
-	ID          int
+	ID          string
 	Title       string
 	Description string
 	PosterURL   string

@@ -57,8 +57,8 @@ func TestQueryPopularMedia(t *testing.T) {
 
 	// Check that we got the expected fields
 	for _, m := range results {
-		if m.ID == 0 {
-			t.Error("Expected non-zero ID")
+		if m.ID == "" {
+			t.Error("Expected non-empty ID")
 		}
 		if m.Title == "" {
 			t.Error("Expected non-empty title")
