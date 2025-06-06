@@ -5,6 +5,7 @@ import (
 	"log"
 	"movieFinder/app"
 	"movieFinder/lib/dbMigrations"
+	"movieFinder/lib/tailwindcss"
 	"net/http"
 
 	_ "github.com/amacneil/dbmate/v2/pkg/driver/sqlite"
@@ -14,6 +15,7 @@ import (
 var migrationsFs embed.FS
 
 func main() {
+	tailwindcss.Build("./public/input.css", "./public/output.css")
 
 	dbMigrations.Run(migrationsFs)
 

@@ -8,4 +8,5 @@ main
 
 output.css
 tailwindcss
+!tailwindcss/
 dbmate
