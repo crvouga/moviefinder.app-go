@@ -14,39 +14,26 @@
 	const swiperSlideLast = document.getElementById("feed-swiper-slide-last");
 	const preloadThreshold = 4;
 
+	const take = (o, e) => new Promise(r => o.addEventListener(e, r, { once: true }))
+
 	async function workerLoadNext() {
 		while (true) {
-			try {
-				await new Promise(r =>
-					swiper.addEventListener("swiperslidechange", r, { once: true })
-				);
-				if (swiper.swiper.activeIndex < swiper.swiper.slides.length - preloadThreshold) continue;
-				const [html, _] = await Promise.all([
-					fetch(loadNextURL).then(r => r.text()),
-					new Promise(r => swiper.addEventListener("swiperslidechangetransitionend", r, { once: true }))
-				])
-				swiperSlideLast.insertAdjacentHTML("beforebegin", html);
-			} catch (err) {
-				console.error("Failed to load next slides", err);
-			}
+			await take(swiper, "swiperslidechange");
+			if (swiper.swiper.activeIndex < swiper.swiper.slides.length - preloadThreshold) continue;
+			const [html, _] = await Promise.all([
+				fetch(loadNextURL).then(r => r.text()),
+				take(swiper, "swiperslidechangetransitionend")
+			])
+			swiperSlideLast.insertAdjacentHTML("beforebegin", html);
 		}
 	}
 
 	async function workerSaveFeedIndex() {
 		while (true) {
-			try {
-				await new Promise(r =>
-					swiper.addEventListener("swiperSlideChange", r, { once: true })
-				);
-				const url = new URL(slideChangedURL, window.location.origin);
-				url.searchParams.set("feedIndex", swiper.swiper.activeIndex.toString());
-				await fetch(url.toString(), {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-				});
-			} catch (err) {
-				console.error("Failed to save feed index", err);
-			}
+			await take(swiper, "swiperslidechange");
+			const url = new URL(slideChangedURL, window.location.origin);
+			url.searchParams.set("feedIndex", swiper.swiper.activeIndex.toString());
+			await fetch(url, { method: "POST" });
 		}
 	}
 
