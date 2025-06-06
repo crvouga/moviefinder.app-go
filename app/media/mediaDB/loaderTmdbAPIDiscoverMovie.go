@@ -10,9 +10,12 @@ import (
 
 func processMovie(db *sql.DB, movie tmdbAPI.DiscoverMovieResponseResult, configuration tmdbAPI.ConfigurationResponse, posterSizes []string, backdropSizes []string) error {
 	log.Printf("Processing movie: %s (ID: %d)", movie.Title, movie.ID)
+	log.Printf("Movie details - Title: %s, Popularity: %f, Release Date: %s", movie.Title, movie.Popularity, movie.ReleaseDate)
 
 	posterURLs := tmdbAPI.ToPosterURLs(movie.PosterPath, configuration, posterSizes)
 	backdropURLs := tmdbAPI.ToBackdropURLs(movie.BackdropPath, configuration, backdropSizes)
+
+	log.Printf("Generated %d poster URLs and %d backdrop URLs", len(posterURLs), len(backdropURLs))
 
 	// Begin transaction
 	tx, err := db.Begin()
@@ -20,6 +23,8 @@ func processMovie(db *sql.DB, movie tmdbAPI.DiscoverMovieResponseResult, configu
 		return fmt.Errorf("failed to begin transaction: %v", err)
 	}
 	defer tx.Rollback()
+
+	log.Printf("Starting database transaction for movie %d", movie.ID)
 
 	// Insert movie
 	_, err = tx.Exec(`
@@ -46,6 +51,8 @@ func processMovie(db *sql.DB, movie tmdbAPI.DiscoverMovieResponseResult, configu
 		return fmt.Errorf("failed to insert movie: %v", err)
 	}
 
+	log.Printf("Inserted base movie data for ID %d", movie.ID)
+
 	// Insert poster images
 	for i, posterURL := range posterURLs {
 		_, err = tx.Exec(`
@@ -65,6 +72,7 @@ func processMovie(db *sql.DB, movie tmdbAPI.DiscoverMovieResponseResult, configu
 		if err != nil {
 			return fmt.Errorf("failed to insert poster image: %v", err)
 		}
+		log.Printf("Inserted poster image %d/%d for movie %d", i+1, len(posterURLs), movie.ID)
 	}
 
 	// Insert backdrop images
@@ -86,10 +94,13 @@ func processMovie(db *sql.DB, movie tmdbAPI.DiscoverMovieResponseResult, configu
 		if err != nil {
 			return fmt.Errorf("failed to insert backdrop image: %v", err)
 		}
+		log.Printf("Inserted backdrop image %d/%d for movie %d", i+1, len(backdropURLs), movie.ID)
 	}
 
+	log.Printf("Processing %d genres for movie %d", len(movie.GenreIds), movie.ID)
+
 	// Insert genres and media_genres relationships
-	for _, genreID := range movie.GenreIds {
+	for i, genreID := range movie.GenreIds {
 		// Insert genre if not exists
 		_, err = tx.Exec(`
 			INSERT OR IGNORE INTO genres (id, name) VALUES (?, ?)`,
@@ -109,6 +120,7 @@ func processMovie(db *sql.DB, movie tmdbAPI.DiscoverMovieResponseResult, configu
 		if err != nil {
 			return fmt.Errorf("failed to insert media_genre: %v", err)
 		}
+		log.Printf("Processed genre %d/%d (ID: %d) for movie %d", i+1, len(movie.GenreIds), genreID, movie.ID)
 	}
 
 	// Commit transaction
@@ -116,12 +128,12 @@ func processMovie(db *sql.DB, movie tmdbAPI.DiscoverMovieResponseResult, configu
 		return fmt.Errorf("failed to commit transaction: %v", err)
 	}
 
-	log.Printf("Successfully inserted movie %d into database", movie.ID)
+	log.Printf("Successfully completed database transaction for movie %d", movie.ID)
 	return nil
 }
 
 func processMoviePage(db *sql.DB, client *tmdbAPI.Client, page int, configuration tmdbAPI.ConfigurationResponse) (bool, error) {
-	log.Printf("Fetching page %d of movies...", page)
+	log.Printf("Fetching page %d of movies from TMDB API...", page)
 
 	response, err := client.DiscoverMovie(tmdbAPI.DiscoverMovieParams{
 		Page: page,
@@ -131,11 +143,12 @@ func processMoviePage(db *sql.DB, client *tmdbAPI.Client, page int, configuratio
 		return false, err
 	}
 
-	log.Printf("Retrieved %d movies from page %d", len(response.Results), page)
+	log.Printf("Retrieved %d movies from page %d (Total pages: %d)", len(response.Results), page, response.TotalPages)
 	posterSizes := configuration.Images.PosterSizes
 	backdropSizes := configuration.Images.BackdropSizes
 
-	for _, movie := range response.Results {
+	for i, movie := range response.Results {
+		log.Printf("Processing movie %d/%d on page %d", i+1, len(response.Results), page)
 		if err := processMovie(db, movie, configuration, posterSizes, backdropSizes); err != nil {
 			log.Printf("Error processing movie %d: %v", movie.ID, err)
 		}
@@ -145,9 +158,13 @@ func processMoviePage(db *sql.DB, client *tmdbAPI.Client, page int, configuratio
 	return page >= response.TotalPages, nil
 }
 
+const HARD_MAX_PAGES = 500
+
 func LoaderTmdbAPIDiscoverMovie(db *sql.DB, client *tmdbAPI.Client, maxPages int, done chan struct{}) error {
+
 	go func() {
 		log.Println("Starting TMDB Discover Movie loader worker...")
+		log.Printf("Will process up to %d pages", maxPages)
 
 		configuration, err := client.Configuration()
 		if err != nil {
@@ -156,13 +173,15 @@ func LoaderTmdbAPIDiscoverMovie(db *sql.DB, client *tmdbAPI.Client, maxPages int
 			return
 		}
 		log.Printf("Got TMDB configuration successfully. Base URL: %s", configuration.Images.SecureBaseURL)
+		log.Printf("Available poster sizes: %v", configuration.Images.PosterSizes)
+		log.Printf("Available backdrop sizes: %v", configuration.Images.BackdropSizes)
 
 		page := 1
-		for page <= maxPages {
-			// time.Sleep(500 * time.Millisecond) // Rate limiting
+
+		for page <= maxPages && page <= HARD_MAX_PAGES {
 			isLastPage, err := processMoviePage(db, client, page, configuration)
 			if err != nil {
-				log.Printf("Stopping loader due to error on page %d", page)
+				log.Printf("Stopping loader due to error on page %d: %v", page, err)
 				break
 			}
 			if isLastPage {
@@ -171,6 +190,8 @@ func LoaderTmdbAPIDiscoverMovie(db *sql.DB, client *tmdbAPI.Client, maxPages int
 			}
 			page++
 		}
+
+		log.Printf("TMDB Discover Movie loader completed after processing %d pages", page)
 		close(done)
 	}()
 
