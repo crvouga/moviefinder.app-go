@@ -15,11 +15,11 @@ import (
 )
 
 type AppCtx struct {
-	DB            *sql.DB
-	DBDurable     *sql.DB
-	TmdbAPIClient *tmdbAPI.Client
-	Logger        *slog.Logger
-	UowFactory    uow.UowFactory
+	DB         *sql.DB
+	DBDurable  *sql.DB
+	TmdbClient *tmdbAPI.Client
+	Logger     *slog.Logger
+	UowFactory uow.UowFactory
 
 	EmailOutbox   emailOutbox.EmailOutbox
 	KeyValueDB    keyValueDB.KeyValueDB
@@ -52,12 +52,12 @@ func New() AppCtx {
 	}
 
 	return AppCtx{
-		DB:            db,
-		DBDurable:     dbDurable,
-		TmdbAPIClient: tmdbAPIClient,
-		UowFactory:    *uow.NewFactory(db),
-		Logger:        logger,
-		KeyValueDB:    keyValueDB.NewImplNamespaced(keyValueDBFs, "app"),
+		DB:         db,
+		DBDurable:  dbDurable,
+		TmdbClient: tmdbAPIClient,
+		UowFactory: *uow.NewFactory(db),
+		Logger:     logger,
+		KeyValueDB: keyValueDB.NewImplNamespaced(keyValueDBFs, "app"),
 
 		EmailOutbox:   emailOutbox.NewImplKeyValueDB(keyValueDBFs),
 		UserSessionDB: userSessionDB.NewImplKeyValueDB(keyValueDBFs),

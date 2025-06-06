@@ -1,7 +1,7 @@
 package verifyCodePage
 
 import (
-	"movieFinder/app/home/feedPage"
+	"movieFinder/app/feed/feedPage"
 	"movieFinder/app/routes"
 	"movieFinder/app/ui/button"
 	"movieFinder/app/ui/document"

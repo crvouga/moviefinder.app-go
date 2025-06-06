@@ -3,8 +3,8 @@ package app
 import (
 	"movieFinder/app/ctx/appCtx"
 	"movieFinder/app/ctx/reqCtx"
-	"movieFinder/app/home"
-	"movieFinder/app/home/feedPage"
+	"movieFinder/app/feed"
+	"movieFinder/app/feed/feedPage"
 	"movieFinder/app/media/mediaPage"
 	"movieFinder/app/ui/pages"
 	"movieFinder/app/users"
@@ -23,9 +23,9 @@ func Handler() http.Handler {
 	ac.Logger.Debug("initializing application handler")
 
 	worker := Worker{
-		DB:     ac.DB,
-		Client: ac.TmdbAPIClient,
-		Logger: ac.Logger,
+		DB:         ac.DB,
+		TmdbClient: ac.TmdbClient,
+		Logger:     ac.Logger,
 	}
 	done := worker.Run()
 	go func() {
@@ -92,7 +92,7 @@ func newMuxLoggedIn(ac *appCtx.AppCtx) *http.ServeMux {
 	mux := http.NewServeMux()
 	mediaPage.Router(mux, ac)
 	users.Router(mux, ac)
-	home.Router(mux, ac)
+	feed.Router(mux, ac)
 	pages.Router(mux)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		feedPage.Redirect(w, r)
@@ -107,7 +107,7 @@ func newMuxLoggedOut(ac *appCtx.AppCtx) *http.ServeMux {
 	mux := http.NewServeMux()
 	users.RouterLoggedOut(mux, ac)
 	mediaPage.Router(mux, ac)
-	home.Router(mux, ac)
+	feed.Router(mux, ac)
 	pages.Router(mux)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		feedPage.Redirect(w, r)

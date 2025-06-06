@@ -1,8 +1,8 @@
-package home
+package feed
 
 import (
 	"movieFinder/app/ctx/appCtx"
-	"movieFinder/app/home/feedPage"
+	"movieFinder/app/feed/feedPage"
 
 	"net/http"
 )

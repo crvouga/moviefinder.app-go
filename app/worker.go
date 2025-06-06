@@ -8,15 +8,15 @@ import (
 )
 
 type Worker struct {
-	DB     *sql.DB
-	Client *tmdbAPI.Client
-	Logger *slog.Logger
+	DB         *sql.DB
+	TmdbClient *tmdbAPI.Client
+	Logger     *slog.Logger
 }
 
 func (w *Worker) Run() chan struct{} {
 	w.Logger.Debug("starting worker")
 
-	mediaDbWorker := mediaDB.NewWorker(w.DB, w.Client, w.Logger)
+	mediaDbWorker := mediaDB.NewWorker(w.DB, w.TmdbClient, w.Logger)
 
 	done := mediaDbWorker.Run()
 

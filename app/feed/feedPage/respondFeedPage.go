@@ -2,8 +2,8 @@ package feedPage
 
 import (
 	"movieFinder/app/ctx/appCtx"
-	"movieFinder/app/home/feedPage/feedSwiper"
-	"movieFinder/app/home/feedPage/feedSwiperSlides"
+	"movieFinder/app/feed/feedPage/feedSwiper"
+	"movieFinder/app/feed/feedPage/feedSwiperSlides"
 	"movieFinder/app/media/mediaDB"
 	"movieFinder/app/routes"
 	"movieFinder/app/ui/appBottomButtons"
