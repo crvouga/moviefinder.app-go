@@ -1,29 +1,19 @@
 package mediaDB
 
 import (
-	"database/sql"
 	"fmt"
-	"log/slog"
 	"math"
 	"movieFinder/lib/tmdbAPI"
 	"strconv"
 	"time"
 )
 
-type WorkerLoadTmdbDiscoverMovie struct {
-	DB            *sql.DB
-	Client        *tmdbAPI.Client
-	Configuration *tmdbAPI.ConfigurationResponse
-	Logger        *slog.Logger
-	MaxPages      int
-}
-
-func (w *WorkerLoadTmdbDiscoverMovie) processMovie(movie tmdbAPI.DiscoverMovieResponseResult) error {
+func (w *Worker) processMovie(configuration *tmdbAPI.ConfigurationResponse, movie tmdbAPI.DiscoverMovieResponseResult) error {
 	w.Logger.Debug("Processing movie", "title", movie.Title, "id", movie.ID)
 	w.Logger.Debug("Movie details", "title", movie.Title, "popularity", movie.Popularity, "releaseDate", movie.ReleaseDate)
 
-	posterURLs := tmdbAPI.ToPosterURLs(movie.PosterPath, *w.Configuration, w.Configuration.Images.PosterSizes)
-	backdropURLs := tmdbAPI.ToBackdropURLs(movie.BackdropPath, *w.Configuration, w.Configuration.Images.BackdropSizes)
+	posterURLs := tmdbAPI.ToPosterURLs(movie.PosterPath, *configuration, configuration.Images.PosterSizes)
+	backdropURLs := tmdbAPI.ToBackdropURLs(movie.BackdropPath, *configuration, configuration.Images.BackdropSizes)
 
 	w.Logger.Debug("Generated URLs", "posterCount", len(posterURLs), "backdropCount", len(backdropURLs))
 
@@ -76,7 +66,7 @@ func (w *WorkerLoadTmdbDiscoverMovie) processMovie(movie tmdbAPI.DiscoverMovieRe
 			fmt.Sprintf("%d_poster_%d", movie.ID, i),
 			strconv.FormatInt(int64(movie.ID), 10),
 			"poster",
-			w.Configuration.Images.PosterSizes[i],
+			configuration.Images.PosterSizes[i],
 			posterURL,
 		)
 		if err != nil {
@@ -98,7 +88,7 @@ func (w *WorkerLoadTmdbDiscoverMovie) processMovie(movie tmdbAPI.DiscoverMovieRe
 			fmt.Sprintf("%d_backdrop_%d", movie.ID, i),
 			strconv.FormatInt(int64(movie.ID), 10),
 			"backdrop",
-			w.Configuration.Images.BackdropSizes[i],
+			configuration.Images.BackdropSizes[i],
 			backdropURL,
 		)
 		if err != nil {
@@ -142,7 +132,7 @@ func (w *WorkerLoadTmdbDiscoverMovie) processMovie(movie tmdbAPI.DiscoverMovieRe
 	return nil
 }
 
-func (w *WorkerLoadTmdbDiscoverMovie) processMoviePage(page int) (bool, error) {
+func (w *Worker) processMoviePage(configuration *tmdbAPI.ConfigurationResponse, page int) (bool, error) {
 	w.Logger.Info("Fetching page of movies from TMDB API", "page", page)
 
 	response, err := w.Client.DiscoverMovie(tmdbAPI.DiscoverMovieParams{
@@ -157,7 +147,7 @@ func (w *WorkerLoadTmdbDiscoverMovie) processMoviePage(page int) (bool, error) {
 
 	for i, movie := range response.Results {
 		w.Logger.Debug("Processing movie", "number", i+1, "total", len(response.Results), "page", page)
-		if err := w.processMovie(movie); err != nil {
+		if err := w.processMovie(configuration, movie); err != nil {
 			return false, err // Return error to stop processing
 		}
 	}
@@ -168,22 +158,12 @@ func (w *WorkerLoadTmdbDiscoverMovie) processMoviePage(page int) (bool, error) {
 
 const HARD_MAX_PAGES = 500
 
-func NewWorkerLoadTmdbDiscoverMovie(db *sql.DB, client *tmdbAPI.Client, maxPages int, logger *slog.Logger) WorkerLoadTmdbDiscoverMovie {
-	return WorkerLoadTmdbDiscoverMovie{
-		DB:            db,
-		Client:        client,
-		Configuration: nil,
-		Logger:        logger,
-		MaxPages:      maxPages,
-	}
-}
-
-func (w *WorkerLoadTmdbDiscoverMovie) Run() chan struct{} {
-	maxPages := int(math.Min(float64(w.MaxPages), float64(HARD_MAX_PAGES)))
+func (w *Worker) RunDiscoverMovie() chan struct{} {
+	maxPages := int(math.Min(float64(w.DiscoverMovieMaxPages), float64(HARD_MAX_PAGES)))
 	done := make(chan struct{})
 
 	go func() {
-		w.Logger.Info("Starting TMDB Discover Movie loader worker")
+		w.Logger.Info("Starting TMDB Discover Movie worker")
 		w.Logger.Info("Processing pages", "maxPages", maxPages)
 
 		configuration, err := w.Client.Configuration()
@@ -193,17 +173,15 @@ func (w *WorkerLoadTmdbDiscoverMovie) Run() chan struct{} {
 			return
 		}
 
-		w.Configuration = &configuration
-
-		w.Logger.Debug("Got TMDB configuration", "baseURL", w.Configuration.Images.SecureBaseURL)
-		w.Logger.Debug("Image sizes", "posterSizes", w.Configuration.Images.PosterSizes, "backdropSizes", w.Configuration.Images.BackdropSizes)
+		w.Logger.Debug("Got TMDB configuration", "baseURL", configuration.Images.SecureBaseURL)
+		w.Logger.Debug("Image sizes", "posterSizes", configuration.Images.PosterSizes, "backdropSizes", configuration.Images.BackdropSizes)
 
 		// Process pages sequentially
 		for page := 1; page <= maxPages && page <= HARD_MAX_PAGES; page++ {
 			// Rate limit to 1 request per second
-			time.Sleep(time.Second)
+			time.Sleep(w.DiscoverMovieThrottle)
 
-			isLastPage, err := w.processMoviePage(page)
+			isLastPage, err := w.processMoviePage(&configuration, page)
 			if err != nil {
 				w.Logger.Error("Failed to process page", "page", page, "error", err)
 				close(done)
@@ -211,13 +189,13 @@ func (w *WorkerLoadTmdbDiscoverMovie) Run() chan struct{} {
 			}
 
 			if isLastPage {
-				w.Logger.Info("Reached last page, media loader complete")
+				w.Logger.Info("Reached last page, media worker complete")
 				close(done)
 				return
 			}
 		}
 
-		w.Logger.Info("TMDB Discover Movie loader completed")
+		w.Logger.Info("TMDB Discover Movie worker completed")
 		close(done)
 	}()
 

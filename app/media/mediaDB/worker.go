@@ -4,13 +4,15 @@ import (
 	"database/sql"
 	"log/slog"
 	"movieFinder/lib/tmdbAPI"
+	"time"
 )
 
 type Worker struct {
 	DB                    *sql.DB
 	Client                *tmdbAPI.Client
 	Logger                *slog.Logger
-	MaxPagesDiscoverMovie int
+	DiscoverMovieMaxPages int
+	DiscoverMovieThrottle time.Duration
 }
 
 func NewWorker(db *sql.DB, client *tmdbAPI.Client, logger *slog.Logger) Worker {
@@ -18,18 +20,17 @@ func NewWorker(db *sql.DB, client *tmdbAPI.Client, logger *slog.Logger) Worker {
 		DB:                    db,
 		Client:                client,
 		Logger:                logger,
-		MaxPagesDiscoverMovie: 100,
+		DiscoverMovieMaxPages: 100,
+		DiscoverMovieThrottle: 1 * time.Second,
 	}
 }
 
 func (w *Worker) Run() chan struct{} {
-	w.Logger.Info("starting media loader")
+	w.Logger.Info("starting media worker")
 
-	workerDiscoverMovie := NewWorkerLoadTmdbDiscoverMovie(w.DB, w.Client, w.MaxPagesDiscoverMovie, w.Logger)
+	done := w.RunDiscoverMovie()
 
-	done := workerDiscoverMovie.Run()
-
-	w.Logger.Info("media loader completed successfully")
+	w.Logger.Info("media worker completed successfully")
 
 	return done
 }

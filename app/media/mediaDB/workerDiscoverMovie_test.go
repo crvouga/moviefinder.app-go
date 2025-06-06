@@ -6,12 +6,12 @@ import (
 	"time"
 )
 
-func TestWorkerLoadTmdbAPIDiscoverMovie(t *testing.T) {
+func TestWorkerDiscoverMovie(t *testing.T) {
 	f := NewFixture()
 	defer f.DB.Close()
 
-	worker := NewWorkerLoadTmdbDiscoverMovie(f.DB, f.Client, 1, slog.Default())
-	done := worker.Run()
+	worker := NewWorker(f.DB, f.Client, slog.Default())
+	done := worker.RunDiscoverMovie()
 
 	// Wait for loading to complete with timeout
 	select {
@@ -42,13 +42,13 @@ func TestWorkerLoadTmdbAPIDiscoverMovie(t *testing.T) {
 	}
 }
 
-func TestWorkerLoadTmdbAPIDiscoverMovieMultiplePages(t *testing.T) {
+func TestWorkerDiscoverMovieMultiplePages(t *testing.T) {
 	f := NewFixture()
 	defer f.DB.Close()
 
 	// First load just 1 page
-	worker := NewWorkerLoadTmdbDiscoverMovie(f.DB, f.Client, 1, slog.Default())
-	done1 := worker.Run()
+	worker := NewWorker(f.DB, f.Client, slog.Default())
+	done1 := worker.RunDiscoverMovie()
 
 	select {
 	case <-done1:
@@ -66,8 +66,8 @@ func TestWorkerLoadTmdbAPIDiscoverMovieMultiplePages(t *testing.T) {
 	// Now load 2 pages
 	f = NewFixture()
 
-	worker = NewWorkerLoadTmdbDiscoverMovie(f.DB, f.Client, 2, slog.Default())
-	done2 := worker.Run()
+	worker = NewWorker(f.DB, f.Client, slog.Default())
+	done2 := worker.RunDiscoverMovie()
 
 	select {
 	case <-done2:

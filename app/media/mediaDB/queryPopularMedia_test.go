@@ -12,7 +12,7 @@ func TestQueryPopularMedia(t *testing.T) {
 
 	// Load one page of movies
 	worker := NewWorker(f.DB, f.Client, slog.Default())
-	worker.MaxPagesDiscoverMovie = 1
+	worker.DiscoverMovieMaxPages = 1
 	done := worker.Run()
 
 	// Wait for loading to complete

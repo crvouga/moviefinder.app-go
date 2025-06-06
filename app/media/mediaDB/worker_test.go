@@ -11,7 +11,7 @@ func TestWorker(t *testing.T) {
 	defer f.DB.Close()
 
 	worker := NewWorker(f.DB, f.Client, slog.Default())
-	worker.MaxPagesDiscoverMovie = 1
+	worker.DiscoverMovieMaxPages = 1
 	done := worker.Run()
 
 	// Wait for loading to complete with timeout
