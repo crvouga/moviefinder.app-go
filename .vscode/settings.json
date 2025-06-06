@@ -4,6 +4,7 @@
     "bigfft",
     "dbmate",
     "failfast",
+    "IDSQL",
     "imageService",
     "isatty",
     "isset",
