@@ -17,6 +17,8 @@ func CreateTables(db *sql.DB) error {
 			vote_count INTEGER NOT NULL,
 			runtime INTEGER NOT NULL
 		);
+		
+		CREATE INDEX IF NOT EXISTS idx_media_popularity ON media(popularity DESC);
 
 		CREATE TABLE IF NOT EXISTS media_images (
 			id TEXT PRIMARY KEY,
@@ -27,6 +29,9 @@ func CreateTables(db *sql.DB) error {
 			FOREIGN KEY (media_id) REFERENCES media(id) ON DELETE CASCADE,
 			UNIQUE(media_id, image_type, resolution)
 		);
+
+		CREATE INDEX IF NOT EXISTS idx_media_images_lookup 
+		ON media_images(media_id, image_type, url);
 
 		CREATE TABLE IF NOT EXISTS genres (
 			id TEXT PRIMARY KEY,

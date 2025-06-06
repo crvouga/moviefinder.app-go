@@ -16,7 +16,10 @@ func NewFixture() *Fixture {
 	if err != nil {
 		panic(err)
 	}
-	CreateTables(db)
+	err = CreateTables(db)
+	if err != nil {
+		panic(err)
+	}
 	client, err := tmdbAPI.NewFromEnv()
 	if err != nil {
 		panic(err)
