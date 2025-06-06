@@ -21,8 +21,10 @@
 					swiper.addEventListener("swiperslidechange", r, { once: true })
 				);
 				if (swiper.swiper.activeIndex < swiper.swiper.slides.length - preloadThreshold) continue;
-				const res = await fetch(loadNextURL);
-				const html = await res.text();
+				const [html, _] = await Promise.all([
+					fetch(loadNextURL).then(r => r.text()),
+					new Promise(r => swiper.addEventListener("swiperslidechangetransitionend", r, { once: true }))
+				])
 				swiperSlideLast.insertAdjacentHTML("beforebegin", html);
 			} catch (err) {
 				console.error("Failed to load next slides", err);
@@ -34,7 +36,7 @@
 		while (true) {
 			try {
 				await new Promise(r =>
-					swiper.addEventListener("swiperslidechange", r, { once: true })
+					swiper.addEventListener("swiperSlideChange", r, { once: true })
 				);
 				const url = new URL(slideChangedURL, window.location.origin);
 				url.searchParams.set("feedIndex", swiper.swiper.activeIndex.toString());
