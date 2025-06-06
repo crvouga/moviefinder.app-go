@@ -1,5 +1,5 @@
 {{define "bottomButtons"}}
-<div class="flex w-full justify-around shrink-0 h-18">
+<div style="display: flex; height: 72px; flex-shrink: 0; width: 100%;">
 	{{range .BottomButtons.Items}}
 	<a href="{{.URL}}"
 		class="flex h-full flex-1 gap-1 cursor-pointer flex-col items-center justify-center {{if .Active}}text-blue-500 {{else}}text-neutral-200{{end}}">

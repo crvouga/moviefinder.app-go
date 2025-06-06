@@ -1,13 +1,11 @@
 {{define "feedSwiper"}}
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-element-bundle.min.js"></script>
-<div class="flex w-full flex-1 flex-col items-center justify-start overflow-x-hidden overflow-y-auto">
-	<swiper-container slides-per-view="1" class="w-full h-full overflow-hidden" direction="vertical" id="feed-swiper">
-		{{template "feedSwiperSlides" .}}
-		<swiper-slide id="feed-swiper-last-slide" class="w-full h-full overflow-hidden">
-			<div class="w-full h-full bg-neutral-800 animate-pulse"></div>
-		</swiper-slide>
-	</swiper-container>
-</div>
+<swiper-container class="w-full flex-1 overflow-hidden" slides-per-view="1" direction="vertical" id="feed-swiper">
+	{{template "feedSwiperSlides" .}}
+	<swiper-slide id="feed-swiper-last-slide">
+		<div class="w-full h-full bg-neutral-800 animate-pulse"></div>
+	</swiper-slide>
+</swiper-container>
 <script>
 	const loadNextURL = "{{.LoadNextURL}}?no-cache=true";
 	const feedSwiper = document.getElementById("feed-swiper");
