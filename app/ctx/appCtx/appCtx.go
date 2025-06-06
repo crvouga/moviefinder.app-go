@@ -35,8 +35,8 @@ func (ac *AppCtx) CleanUp() {
 }
 
 func New(dbPath string) AppCtx {
-	db, err := sqlite.New(":memory:")
 	dbDurable, err := sqlite.New(dbPath)
+	db, err := sqlite.LoadIntoMemory(dbPath)
 
 	if err != nil {
 		panic(err)
