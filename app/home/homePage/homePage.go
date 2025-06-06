@@ -91,14 +91,17 @@ func respondHomePage(ac *appCtx.AppCtx) http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		media, err := queryPopularMedia.Query(10, 0)
+		found, err := queryPopularMedia.Query(3, 0)
 		if err != nil {
 			panic(err)
 		}
 		data := baseData
-		data.FeedSwiper.Slides = make([]feedSwiperSlides.FeedSwiperSlide, len(media))
-		for i, m := range media {
-			data.FeedSwiper.Slides[i] = feedSwiperSlides.FromMedia(m)
+		data.FeedSwiper.Slides = make([]feedSwiperSlides.FeedSwiperSlide, len(found))
+		for i, m := range found {
+			slide := feedSwiperSlides.FromMedia(m)
+			data.FeedSwiper.Slides[i] = slide
+			// data.Document.Preload = append(data.Document.Preload, document.NewPreload(slide.URL))
+			// data.Document.Preload = append(data.Document.Preload, document.NewPreload(m.BackdropURL))
 		}
 		templateExt.Respond(templ, document.TemplateName, data, w)
 	}

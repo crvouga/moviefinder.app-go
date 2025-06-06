@@ -1,8 +1,8 @@
 {{define "page"}}
 {{template "topBar" .TopBar}}
-<div class="flex flex-col items-center justify-center">
-	<img src="{{.Media.BackdropURL}}" alt="{{.Media.Title}}" class="w-full object-cover aspect-video">
-	<h1 class="text-2xl font-bold text-center">{{.Media.Title}}</h1>
-	<p class="text-center">{{.Media.Description}}</p>
+<img src="{{.Media.BackdropURL}}" alt="{{.Media.Title}}" class="w-full object-cover aspect-video">
+<div class="flex flex-col items-center justify-center gap-4 p-6">
+	<h1 class="text-4xl font-bold text-center">{{.Media.Title}}</h1>
+	<p class="text-center text-neutral-400">{{.Media.Description}}</p>
 </div>
 {{end}}
