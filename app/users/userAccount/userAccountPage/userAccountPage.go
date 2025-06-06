@@ -3,11 +3,11 @@ package userAccountPage
 import (
 	"movieFinder/app/ctx/appCtx"
 	"movieFinder/app/routes"
-	icons "movieFinder/app/ui"
 	"movieFinder/app/ui/appBottomButtons"
 	"movieFinder/app/ui/bottomButtons"
 	"movieFinder/app/ui/button"
 	"movieFinder/app/ui/document"
+	"movieFinder/app/ui/icons"
 	"movieFinder/app/ui/templateExt"
 	"movieFinder/app/users/loginWithPhone/loginWithPhoneRoutes"
 	"movieFinder/app/users/userAccount/userAccountPage/loginCTA"

@@ -2,8 +2,8 @@ package appBottomButtons
 
 import (
 	"movieFinder/app/routes"
-	icons "movieFinder/app/ui"
 	"movieFinder/app/ui/bottomButtons"
+	"movieFinder/app/ui/icons"
 )
 
 const (
