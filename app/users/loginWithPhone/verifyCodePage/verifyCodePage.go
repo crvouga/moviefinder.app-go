@@ -2,13 +2,13 @@ package verifyCodePage
 
 import (
 	"movieFinder/app/home/feedPage"
+	"movieFinder/app/routes"
 	"movieFinder/app/ui/button"
 	"movieFinder/app/ui/document"
 	"movieFinder/app/ui/templateExt"
 	"movieFinder/app/ui/textField"
 	"movieFinder/app/ui/topBar"
 	"movieFinder/app/users/loginWithPhone/loginWithPhoneRoutes"
-	"movieFinder/app/users/userAccount/userAccountRoutes"
 	"movieFinder/lib/static"
 	"net/http"
 	"net/url"
@@ -38,7 +38,7 @@ func Respond() http.HandlerFunc {
 	baseData := Data{
 		Document: document.Data{
 			Preload: []document.Preload{
-				document.NewPreload(userAccountRoutes.UserAccountPage),
+				document.NewPreload(routes.UserAccountPage),
 				document.NewPreload(loginWithPhoneRoutes.SendCodePage),
 			},
 		},

@@ -1,15 +1,11 @@
 package app
 
 import (
-	"movieFinder/app/admin"
-	"movieFinder/app/api"
-	"movieFinder/app/apiDocs"
 	"movieFinder/app/ctx/appCtx"
 	"movieFinder/app/ctx/reqCtx"
 	"movieFinder/app/home"
 	"movieFinder/app/home/feedPage"
 	"movieFinder/app/media/mediaPage"
-	"movieFinder/app/projects"
 	"movieFinder/app/ui/pages"
 	"movieFinder/app/users"
 	"movieFinder/app/users/auth"
@@ -97,11 +93,7 @@ func newMuxLoggedIn(ac *appCtx.AppCtx) *http.ServeMux {
 	mediaPage.Router(mux, ac)
 	users.Router(mux, ac)
 	home.Router(mux, ac)
-	projects.Router(mux, ac)
-	apiDocs.Router(mux, ac)
 	pages.Router(mux)
-	admin.Router(mux, ac)
-	api.Router(mux, ac)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		feedPage.Redirect(w, r)
 	})
@@ -115,7 +107,6 @@ func newMuxLoggedOut(ac *appCtx.AppCtx) *http.ServeMux {
 	mux := http.NewServeMux()
 	users.RouterLoggedOut(mux, ac)
 	mediaPage.Router(mux, ac)
-	api.Router(mux, ac)
 	home.Router(mux, ac)
 	pages.Router(mux)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

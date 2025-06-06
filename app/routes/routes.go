@@ -1,7 +1,9 @@
 package routes
 
 const (
-	MediaPagePath = "/media"
+	MediaPagePath   = "/media"
+	FeedPage        = "/feed"
+	UserAccountPage = "/user-account-page"
 )
 
 func MediaPage(mediaID string) string {

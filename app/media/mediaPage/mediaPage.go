@@ -2,14 +2,12 @@ package mediaPage
 
 import (
 	"movieFinder/app/ctx/appCtx"
-	"movieFinder/app/home/homeRoutes"
 	"movieFinder/app/media"
 	"movieFinder/app/media/mediaDB"
 	"movieFinder/app/routes"
 	"movieFinder/app/ui/document"
 	"movieFinder/app/ui/templateExt"
 	"movieFinder/app/ui/topBar"
-	"movieFinder/app/users/userAccount/userAccountRoutes"
 	"movieFinder/lib/static"
 	"net/http"
 )
@@ -36,12 +34,12 @@ func respondMediaPage(ac *appCtx.AppCtx) http.HandlerFunc {
 	baseData := Data{
 		Document: document.Data{
 			Preload: []document.Preload{
-				document.NewPreload(userAccountRoutes.UserAccountPage),
+				document.NewPreload(routes.UserAccountPage),
 			},
 		},
 		TopBar: topBar.Data{
 			Title:    "",
-			BackHref: homeRoutes.FeedPage,
+			BackHref: routes.FeedPage,
 		},
 		Media: media.Media{},
 	}
@@ -66,10 +64,4 @@ func respondMediaPage(ac *appCtx.AppCtx) http.HandlerFunc {
 		templateExt.Respond(templ, document.TemplateName, data, w)
 	}
 
-}
-
-var templatePath = static.GetSiblingPath("feedPage.html")
-
-func Redirect(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, homeRoutes.FeedPage, http.StatusSeeOther)
 }

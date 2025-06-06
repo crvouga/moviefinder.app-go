@@ -1,6 +1,7 @@
 package sendCodePage
 
 import (
+	"movieFinder/app/routes"
 	"movieFinder/app/ui/button"
 	"movieFinder/app/ui/document"
 	"movieFinder/app/ui/templateExt"
@@ -8,7 +9,6 @@ import (
 	"movieFinder/app/ui/topBar"
 	"movieFinder/app/users/loginWithPhone/loginWithPhoneRoutes"
 	"movieFinder/app/users/loginWithPhone/verifyCodePage"
-	"movieFinder/app/users/userAccount/userAccountRoutes"
 	"movieFinder/lib/static"
 	"net/http"
 	"net/url"
@@ -38,13 +38,13 @@ func Respond() http.HandlerFunc {
 	data := Data{
 		Document: document.Data{
 			Preload: []document.Preload{
-				document.NewPreload(userAccountRoutes.UserAccountPage),
+				document.NewPreload(routes.UserAccountPage),
 				document.NewPreload(loginWithPhoneRoutes.VerifyCodePage),
 			},
 		},
 		TopBar: topBar.Data{
 			Title:    "Send Code",
-			BackHref: userAccountRoutes.UserAccountPage,
+			BackHref: routes.UserAccountPage,
 		},
 		TextFieldPhoneNumber: textField.Data{
 			Label: "Phone Number",

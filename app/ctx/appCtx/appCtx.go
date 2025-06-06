@@ -2,12 +2,8 @@ package appCtx
 
 import (
 	"database/sql"
-	"os"
-
 	"log/slog"
 	"movieFinder/app/appDb"
-	"movieFinder/app/projects/project/projectDB"
-	"movieFinder/app/users/login/link/linkDB"
 	"movieFinder/app/users/userAccount/userAccountDB"
 	"movieFinder/app/users/userSession/userSessionDB"
 	"movieFinder/lib/email/emailOutbox"
@@ -15,6 +11,7 @@ import (
 	"movieFinder/lib/sqlite"
 	"movieFinder/lib/tmdbAPI"
 	"movieFinder/lib/uow"
+	"os"
 )
 
 type AppCtx struct {
@@ -23,12 +20,11 @@ type AppCtx struct {
 	TmdbAPIClient *tmdbAPI.Client
 	Logger        *slog.Logger
 	UowFactory    uow.UowFactory
-	LinkDB        linkDB.LinkDB
+
 	EmailOutbox   emailOutbox.EmailOutbox
 	KeyValueDB    keyValueDB.KeyValueDB
 	UserSessionDB userSessionDB.UserSessionDB
 	UserAccountDB userAccountDB.UserAccountDB
-	ProjectDB     projectDB.ProjectDB
 }
 
 func (ac *AppCtx) CleanUp() {
@@ -62,11 +58,10 @@ func New() AppCtx {
 		UowFactory:    *uow.NewFactory(db),
 		Logger:        logger,
 		KeyValueDB:    keyValueDB.NewImplNamespaced(keyValueDBFs, "app"),
-		LinkDB:        linkDB.NewImplKeyValueDB(keyValueDBFs),
+
 		EmailOutbox:   emailOutbox.NewImplKeyValueDB(keyValueDBFs),
 		UserSessionDB: userSessionDB.NewImplKeyValueDB(keyValueDBFs),
 		UserAccountDB: userAccountDB.NewImplKeyValueDB(keyValueDBFs),
-		ProjectDB:     projectDB.NewImplKeyValueDB(keyValueDBFs),
 	}
 }
 
@@ -83,10 +78,8 @@ func NewTest() AppCtx {
 		UowFactory:    *uow.NewFactory(db),
 		Logger:        slog.Default(),
 		KeyValueDB:    &keyValueDBHashMap,
-		LinkDB:        linkDB.NewImplKeyValueDB(&keyValueDBHashMap),
 		EmailOutbox:   emailOutbox.NewImplKeyValueDB(&keyValueDBHashMap),
 		UserSessionDB: userSessionDB.NewImplKeyValueDB(&keyValueDBHashMap),
 		UserAccountDB: userAccountDB.NewImplKeyValueDB(&keyValueDBHashMap),
-		ProjectDB:     projectDB.NewImplKeyValueDB(&keyValueDBHashMap),
 	}
 }

@@ -2,7 +2,7 @@ package userAccountPage
 
 import (
 	"movieFinder/app/ctx/appCtx"
-	"movieFinder/app/home/homeRoutes"
+	"movieFinder/app/routes"
 	icons "movieFinder/app/ui"
 	"movieFinder/app/ui/appBottomButtons"
 	"movieFinder/app/ui/bottomButtons"
@@ -11,13 +11,12 @@ import (
 	"movieFinder/app/ui/templateExt"
 	"movieFinder/app/users/loginWithPhone/loginWithPhoneRoutes"
 	"movieFinder/app/users/userAccount/userAccountPage/loginCTA"
-	"movieFinder/app/users/userAccount/userAccountRoutes"
 	"movieFinder/lib/static"
 	"net/http"
 )
 
 func Router(mux *http.ServeMux, ac *appCtx.AppCtx) {
-	mux.HandleFunc(userAccountRoutes.UserAccountPage, Respond(ac))
+	mux.HandleFunc(routes.UserAccountPage, Respond(ac))
 }
 
 func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
@@ -39,7 +38,7 @@ func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
 		Document: document.Data{
 			Preload: []document.Preload{
 				document.NewPreload(loginWithPhoneRoutes.SendCodePage),
-				document.NewPreload(homeRoutes.FeedPage),
+				document.NewPreload(routes.FeedPage),
 			},
 		},
 		BottomButtons: appBottomButtons.AppBottomButtons(appBottomButtons.AccountPage),
