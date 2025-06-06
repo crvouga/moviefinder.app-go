@@ -21,7 +21,7 @@ clean:
 .PHONY: run dev test build clean
 
 preview:
-	make build & make run
+	docker build -t moviefinder . && docker run -p 8080:8080 moviefinder
 
 db-shell:
 	sqlite3 db/db.sqlite
