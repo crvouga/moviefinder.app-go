@@ -2,26 +2,22 @@
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-element-bundle.min.js"></script>
 <swiper-container class="w-full flex-1 overflow-hidden" slides-per-view="1" direction="vertical" id="feed-swiper">
 	{{template "feedSwiperSlides" .}}
-	<swiper-slide id="feed-swiper-last-slide">
+	<swiper-slide id="feed-swiper-slide-last">
 		<div class="w-full h-full bg-neutral-800 animate-pulse"></div>
 	</swiper-slide>
 </swiper-container>
-<script>
+<script type="module">
 	const loadNextURL = "{{.LoadNextURL}}?no-cache=true";
-	const feedSwiper = document.getElementById("feed-swiper");
-	const feedSwiperLastSlide = document.getElementById("feed-swiper-last-slide");
-	let isLoading = false;
-	const loadNext = async () => {
-		if (isLoading) return
-		const shouldLoad = feedSwiper.swiper.activeIndex >= feedSwiper.swiper.slides.length - 4
-		if (!shouldLoad) return
-		isLoading = true;
+	const swiper = document.getElementById("feed-swiper");
+	const swiperSlideLast = document.getElementById("feed-swiper-slide-last");
+	while (true) {
+		await new Promise(r => swiper.addEventListener("swiperslidechange", r, { once: true }));
+		const shouldLoad = swiper.swiper.activeIndex >= swiper.swiper.slides.length - 4
+		if (!shouldLoad) continue
 		const res = await fetch(loadNextURL)
 		const html = await res.text()
-		await new Promise(resolve => setTimeout(resolve, 100));
-		feedSwiperLastSlide.insertAdjacentHTML("beforebegin", html)
-		isLoading = false;
+		await new Promise(resolve => setTimeout(resolve, 150));
+		swiperSlideLast.insertAdjacentHTML("beforebegin", html)
 	}
-	feedSwiper.addEventListener("swiperslidechange", loadNext);
 </script>
 {{end}}
