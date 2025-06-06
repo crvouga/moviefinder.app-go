@@ -208,7 +208,7 @@ func (w *Worker) processMoviePage(configuration *tmdbAPI.ConfigurationResponse, 
 	return page >= response.TotalPages, nil
 }
 
-func (w *Worker) RunDiscoverMovie() chan struct{} {
+func (w *Worker) RunDiscoverMovieLoader() chan struct{} {
 
 	done := make(chan struct{})
 

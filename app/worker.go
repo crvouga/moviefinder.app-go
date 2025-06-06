@@ -14,12 +14,15 @@ type Worker struct {
 }
 
 func (w *Worker) Run() chan struct{} {
-	w.Logger.Debug("starting media loader")
-	worker := mediaDB.NewWorker(w.DB, w.Client, w.Logger)
-	done := worker.Run()
+	w.Logger.Debug("starting worker")
+
+	mediaDbWorker := mediaDB.NewWorker(w.DB, w.Client, w.Logger)
+
+	done := mediaDbWorker.Run()
+
 	go func() {
 		<-done
-		w.Logger.Debug("media loader completed")
+		w.Logger.Debug("worker completed")
 	}()
 
 	return done
