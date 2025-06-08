@@ -23,7 +23,7 @@ clean:
 preview:
 	docker build -t moviefinder . && docker run -p 8080:8080 moviefinder
 
-db-shell:
+db:
 	sqlite3 db/db.sqlite3
 
 dbmate-download:
