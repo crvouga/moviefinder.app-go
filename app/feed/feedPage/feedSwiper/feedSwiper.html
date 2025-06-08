@@ -1,8 +1,8 @@
 {{define "feedSwiper"}}
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-element-bundle.min.js"></script>
-<swiper-container class="w-full flex-1 overflow-hidden" slides-per-view="1" direction="vertical" id="feed-swiper">
+<swiper-container class="w-full flex-1 overflow-hidden" slides-per-view="1" direction="vertical">
 	{{template "feedSwiperSlides" .}}
-	<swiper-slide id="feed-swiper-slide-last">
+	<swiper-slide>
 		<div class="w-full h-full bg-neutral-800 animate-pulse"></div>
 	</swiper-slide>
 </swiper-container>
@@ -29,7 +29,7 @@
 
 	loop(async () => {
 		await take(swiper, "swiperslidechange");
-		const url = `${slideChangedURL}?feedIndex=${swiper.swiper.activeIndex}`;
+		const url = `${slideChangedURL}&feedIndex=${swiper.swiper.activeIndex}`;
 		await fetch(url, { method: "POST" });
 	})
 </script>

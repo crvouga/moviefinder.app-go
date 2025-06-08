@@ -5,10 +5,10 @@ WITH mapping AS (
     LIMIT 1
 )
 SELECT 
-    feed.id,
-    feed.current_feed_index,
-    feed.created_at_epoch,
-    feed.updated_at_epoch
+    feed.id as feed_id,
+    feed.current_feed_index as current_feed_index,
+    feed.created_at_epoch as created_at_epoch,
+    feed.updated_at_epoch as updated_at_epoch
 FROM feed
 JOIN mapping ON feed.id = mapping.feed_id
 ORDER BY created_at_epoch ASC

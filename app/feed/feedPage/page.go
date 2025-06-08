@@ -12,7 +12,7 @@ const routeLoadNext = "/load-next"
 const routeSlideChanged = "/slide-changed"
 
 func Router(mux *http.ServeMux, ac *appCtx.AppCtx) {
-	mux.HandleFunc(routes.FeedPage, respondFeedPage(ac))
+	mux.HandleFunc(routes.FeedPage, respondPage(ac))
 	mux.HandleFunc(routeLoadNext, respondLoadNext(ac))
 	mux.HandleFunc(routeSlideChanged, respondSlideChanged(ac))
 }

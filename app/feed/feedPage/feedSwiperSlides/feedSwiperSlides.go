@@ -8,16 +8,18 @@ import (
 )
 
 type FeedSwiperSlide struct {
-	ImageSrc string
-	URL      string
+	ImageSrc  string
+	URL       string
+	FeedIndex int64
 }
 
 var TemplateName = "feedSwiperSlides"
 var TemplatePath = static.GetSiblingPath(TemplateName + ".html")
 
-func FromMedia(m media.Media) FeedSwiperSlide {
+func FromMedia(m media.Media, feedIndex int64) FeedSwiperSlide {
 	return FeedSwiperSlide{
-		ImageSrc: m.PosterURL,
-		URL:      routes.MediaPage(m.ID),
+		ImageSrc:  m.PosterURL,
+		URL:       routes.MediaPage(m.ID),
+		FeedIndex: feedIndex,
 	}
 }

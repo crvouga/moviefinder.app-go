@@ -6,6 +6,7 @@ import (
 )
 
 func TestQueryFeedBySessionID(t *testing.T) {
+
 	ctx := appCtx.NewTest()
 	defer ctx.DB.Close()
 
@@ -31,7 +32,7 @@ func TestQueryFeedBySessionID(t *testing.T) {
 	}
 
 	// Test querying for the feed by session ID
-	retrievedFeed, err := QueryFeedBySessionID(ctx.DB, testSessionID)
+	retrievedFeed, err := QueryFeedBySessionID(ctx.DB, testSessionID, ctx.Logger)
 	if err != nil {
 		t.Errorf("Expected no error querying feed by session ID, got %v", err)
 	}
@@ -51,7 +52,7 @@ func TestQueryFeedBySessionID(t *testing.T) {
 	}
 
 	// Test querying for non-existent session ID
-	_, err = QueryFeedBySessionID(ctx.DB, "non-existent-session")
+	_, err = QueryFeedBySessionID(ctx.DB, "non-existent-session", ctx.Logger)
 	if err == nil {
 		t.Error("Expected error querying non-existent session ID, got nil")
 	}
