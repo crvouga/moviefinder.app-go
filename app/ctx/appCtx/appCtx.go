@@ -8,7 +8,6 @@ import (
 	"movieFinder/app/users/userSession/userSessionDB"
 	"movieFinder/lib/email/emailOutbox"
 	"movieFinder/lib/keyValueDB"
-	"movieFinder/lib/sqlite"
 	"movieFinder/lib/tmdbAPI"
 	"movieFinder/lib/uow"
 	"os"
@@ -67,13 +66,8 @@ func New() AppCtx {
 }
 
 func NewTest() AppCtx {
-	db, err := sqlite.New(":memory:")
-	if err != nil {
-		panic(err)
-	}
-
+	db := appDb.OpenInMemory()
 	keyValueDBHashMap := keyValueDB.ImplHashMap{}
-
 	return AppCtx{
 		DB:            db,
 		UowFactory:    *uow.NewFactory(db),

@@ -1,0 +1,14 @@
+package feed
+
+import (
+	"database/sql"
+	_ "embed"
+)
+
+//go:embed upsertFeedSessionMapping.sql
+var upsertFeedSessionMappingSQL string
+
+func UpsertFeedSessionMapping(db *sql.DB, feedID string, sessionID string) error {
+	_, err := db.Exec(upsertFeedSessionMappingSQL, feedID, sessionID)
+	return err
+}
