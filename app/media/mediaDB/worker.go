@@ -20,8 +20,8 @@ func NewWorker(db *sql.DB, client *tmdbAPI.Client, logger *slog.Logger) Worker {
 		DB:                    db,
 		Client:                client,
 		Logger:                logger,
-		DiscoverMovieMaxPages: 100,
-		DiscoverMovieThrottle: 1 * time.Second,
+		DiscoverMovieMaxPages: 500,
+		DiscoverMovieThrottle: 500 * time.Millisecond,
 	}
 }
 
