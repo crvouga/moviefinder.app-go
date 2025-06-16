@@ -1,8 +1,8 @@
 {{define "feedSwiper"}}
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-element-bundle.min.js"></script>
-<swiper-container class="w-full flex-1 overflow-hidden" slides-per-view="1" direction="vertical">
+<swiper-container id="feed-swiper" class="w-full flex-1 overflow-hidden" slides-per-view="1" direction="vertical">
 	{{template "feedSwiperSlides" .}}
-	<swiper-slide>
+	<swiper-slide id="feed-swiper-slide-last">
 		<div class="w-full h-full bg-neutral-800 animate-pulse"></div>
 	</swiper-slide>
 </swiper-container>
@@ -14,23 +14,18 @@
 	const swiperSlideLast = document.getElementById("feed-swiper-slide-last");
 	const preloadThreshold = 4;
 
-	const take = (o, e) => new Promise(r => o.addEventListener(e, r, { once: true }))
-	const loop = (f) => f().finally(() => loop(f))
-
-	loop(async () => {
-		await take(swiper, "swiperslidechange");
-		if (swiper.swiper.activeIndex < swiper.swiper.slides.length - preloadThreshold) return;
-		const [html, _] = await Promise.all([
-			fetch(loadNextURL).then(r => r.text()),
-			take(swiper, "swiperslidechangetransitionend")
-		])
+	document.addEventListener("DOMContentLoaded", async () => {
+		const html = await fetch(loadNextURL).then(r => r.text());
 		swiperSlideLast.insertAdjacentHTML("beforebegin", html);
-	})
 
-	loop(async () => {
-		await take(swiper, "swiperslidechange");
-		const url = `${slideChangedURL}&feedIndex=${swiper.swiper.activeIndex}`;
-		await fetch(url, { method: "POST" });
+		swiper.addEventListener("swiperslidechange", async () => {
+			if (swiper.swiper.activeIndex >= swiper.swiper.slides.length - preloadThreshold) {
+				const html = await fetch(loadNextURL).then(r => r.text());
+				swiperSlideLast.insertAdjacentHTML("beforebegin", html);
+			}
+			const url = `${slideChangedURL}&feedIndex=${swiper.swiper.activeIndex}`;
+			await fetch(url, { method: "POST" });
+		});
 	})
 </script>
 {{end}}
