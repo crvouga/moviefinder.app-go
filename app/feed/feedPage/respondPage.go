@@ -20,7 +20,7 @@ func respondPage(ac *appCtx.AppCtx) http.HandlerFunc {
 	ac.Logger.Debug("initializing respondFeedPage handler")
 
 	templPaths := []string{
-		static.GetSiblingPath("feedPage.html"),
+		static.GetSiblingPath("page.html"),
 		document.TemplatePath,
 		bottomButtons.TemplatePath,
 	}
