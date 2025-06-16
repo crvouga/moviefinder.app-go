@@ -31,9 +31,10 @@ func (ac *AppCtx) CleanUp() {
 }
 
 func New() AppCtx {
-	dbDurable := appDb.OpenDurable()
+	// dbDurable := appDb.OpenDurable()
+	dbDurable := appDb.OpenInMemory()
 	db := appDb.OpenInMemory()
-	db = appDb.OpenDurable() // We're getting errors with in memory db
+	// db = appDb.OpenDurable() // We're getting errors with in memory db
 
 	keyValueDBFs := keyValueDB.NewImplFs("keyValueDB.json")
 
