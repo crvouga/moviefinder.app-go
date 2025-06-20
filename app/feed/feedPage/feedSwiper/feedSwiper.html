@@ -13,11 +13,9 @@
 	const swiper = document.getElementById("feed-swiper");
 	const swiperSlideLast = document.getElementById("feed-swiper-slide-last");
 	const preloadThreshold = 4;
-
 	document.addEventListener("DOMContentLoaded", async () => {
 		const html = await fetch(loadNextURL).then(r => r.text());
 		swiperSlideLast.insertAdjacentHTML("beforebegin", html);
-
 		swiper.addEventListener("swiperslidechange", async () => {
 			if (swiper.swiper.activeIndex >= swiper.swiper.slides.length - preloadThreshold) {
 				const html = await fetch(loadNextURL).then(r => r.text());

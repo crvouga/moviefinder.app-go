@@ -56,6 +56,7 @@ func respondSlideChanged(ac *appCtx.AppCtx) http.HandlerFunc {
 		}
 
 		ac.Logger.Debug("slide changed request completed successfully")
+		w.Header().Set("Content-Type", "text/plain")
 		w.Write([]byte("ok"))
 	}
 }

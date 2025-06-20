@@ -13,8 +13,11 @@ func QueryFeedBySessionID(db *sql.DB, sessionID string, logger *slog.Logger) (fe
 	logger.Debug("querying feed by session ID", "sessionID", sessionID)
 
 	row := db.QueryRow(queryFeedBySessionIDSQL, sessionID)
+
 	var createdAt, updatedAt int64
+
 	err = row.Scan(&feed.ID, &feed.CurrentFeedIndex, &createdAt, &updatedAt)
+
 	if err != nil {
 		logger.Debug("error querying feed", "error", err)
 		return Feed{}, err

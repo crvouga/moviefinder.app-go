@@ -32,31 +32,40 @@ func respondLoadNext(ac *appCtx.AppCtx) http.HandlerFunc {
 	}
 
 	queryPopularMedia, err := mediaDB.NewQueryPopularMedia(ac.DB)
+
 	if err != nil {
 		ac.Logger.Error("failed to create popular media query", "error", err)
 		panic(err)
 	}
+
 	ac.Logger.Debug("created popular media query")
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		ac.Logger.Debug("handling load next request")
 		rc := reqCtx.FromHttpRequest(ac, r)
 
-		feedInst, err := feed.GetElseInsertBySessionID(ac.DB, rc.SessionID.String(), ac.Logger)
-		if err != nil {
-			ac.Logger.Error("failed to get/insert feed", "error", err, "sessionID", rc.SessionID.String())
-		}
-		ac.Logger.Debug("got feed instance", "feedID", feedInst.ID, "currentIndex", feedInst.CurrentFeedIndex)
+		rc.Logger.Debug("handling load next request")
 
-		media, err := queryPopularMedia.Query(10, int(feedInst.CurrentFeedIndex))
-		ac.Logger.Debug("queried popular media", "count", len(media), "startIndex", feedInst.CurrentFeedIndex)
+		feed_, err := feed.GetElseInsertBySessionID(ac.DB, rc.SessionID.String(), rc.Logger)
+
+		if err != nil {
+			rc.Logger.Error("failed to get/insert feed", "error", err, "sessionID", rc.SessionID.String())
+		}
+
+		rc.Logger.Debug("got feed instance", "feedID", feed_.ID, "currentIndex", feed_.CurrentFeedIndex)
+
+		media, err := queryPopularMedia.Query(10, int(feed_.CurrentFeedIndex))
+
+		rc.Logger.Debug("queried popular media", "count", len(media), "startIndex", feed_.CurrentFeedIndex)
 
 		data := baseData
 
 		if err != nil {
-			ac.Logger.Error("failed to query popular media", "error", err)
+			rc.Logger.Error("failed to query popular media", "error", err)
+
 			errStr := err.Error()
+
 			data.Error = &errStr
+
 			templateExt.Respond(templ, feedSwiperSlides.TemplateName, data, w)
 			return
 		}
@@ -64,7 +73,7 @@ func respondLoadNext(ac *appCtx.AppCtx) http.HandlerFunc {
 		data.FeedSwiper.Slides = make([]feedSwiperSlides.FeedSwiperSlide, len(media))
 
 		for i, m := range media {
-			data.FeedSwiper.Slides[i] = feedSwiperSlides.FromMedia(m, feedInst.CurrentFeedIndex+int64(i))
+			data.FeedSwiper.Slides[i] = feedSwiperSlides.FromMedia(m, feed_.CurrentFeedIndex+int64(i))
 		}
 
 		templateExt.Respond(templ, feedSwiperSlides.TemplateName, data, w)
