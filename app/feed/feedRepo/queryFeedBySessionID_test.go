@@ -1,4 +1,4 @@
-package feedDB
+package feedRepo
 
 import (
 	"movieFinder/app/ctx/appCtx"

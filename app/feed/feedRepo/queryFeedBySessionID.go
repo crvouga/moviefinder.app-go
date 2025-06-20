@@ -1,4 +1,4 @@
-package feedDB
+package feedRepo
 
 import (
 	"database/sql"
