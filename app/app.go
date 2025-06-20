@@ -59,12 +59,13 @@ func router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 		rc := reqCtx.FromHttpRequest(ac, r)
 		rc.Logger.Debug("request received", "path", r.URL.Path)
 
-		setCacheControlHeaders(w, r)
-
 		if err := static.ServeStaticAssets(w, r, "public"); err == nil {
+
 			rc.Logger.Debug("served static asset", "path", r.URL.Path)
 			return
 		}
+
+		setCacheControlHeaders(w, r)
 
 		if auth.IsLoggedIn(ac, r) {
 			rc.Logger.Debug("routing to logged in handler", "path", r.URL.Path)
