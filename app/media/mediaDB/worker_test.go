@@ -10,7 +10,12 @@ func TestWorker(t *testing.T) {
 	f := NewFixture()
 	defer f.DB.Close()
 
-	worker := NewWorker(f.DB, f.Client, slog.Default())
+	worker, err := NewWorker(f.DB, f.Client, slog.Default())
+	if err != nil {
+		t.Fatalf("Expected no error creating worker, got %v", err)
+	}
+	defer worker.Close()
+
 	worker.DiscoverMovieMaxPages = 1
 	worker.DiscoverMovieThrottle = 0 * time.Second
 	done := worker.Run()
@@ -20,7 +25,7 @@ func TestWorker(t *testing.T) {
 	t.Log("worker completed")
 
 	var count int
-	err := f.DB.QueryRow("SELECT COUNT(*) FROM media").Scan(&count)
+	err = f.DB.QueryRow("SELECT COUNT(*) FROM media").Scan(&count)
 	if err != nil {
 		t.Errorf("Error counting media rows: %v", err)
 	}

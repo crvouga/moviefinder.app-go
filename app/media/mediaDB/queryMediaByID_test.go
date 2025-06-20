@@ -11,7 +11,12 @@ func TestQueryMediaByID(t *testing.T) {
 	defer f.DB.Close()
 
 	// Load one page of movies
-	worker := NewWorker(f.DB, f.Client, slog.Default())
+	worker, err := NewWorker(f.DB, f.Client, slog.Default())
+	if err != nil {
+		t.Fatalf("Expected no error creating worker, got %v", err)
+	}
+	defer worker.Close()
+
 	worker.DiscoverMovieMaxPages = 1
 	done := worker.Run()
 

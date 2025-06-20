@@ -25,7 +25,7 @@ func (w *Worker) processMovie(configuration *tmdbAPI.ConfigurationResponse, movi
 	}
 	defer tx.Rollback()
 
-	if err := w.insertMovieBase(tx, movie); err != nil {
+	if err := w.insertMedia(tx, movie); err != nil {
 		return err
 	}
 
@@ -54,31 +54,20 @@ func (w *Worker) beginTransaction() (*sql.Tx, error) {
 	return tx, nil
 }
 
-func (w *Worker) insertMovieBase(tx *sql.Tx, movie tmdbAPI.DiscoverMovieResponseResult) error {
-	_, err := tx.Exec(`
-		INSERT OR REPLACE INTO media (
-			id,
-			title,
-			description,
-			popularity,
-			release_date,
-			vote_average,
-			vote_count,
-			runtime,
-			is_adult
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		strconv.FormatInt(int64(movie.ID), 10),
-		movie.Title,
-		movie.Overview,
-		movie.Popularity,
-		movie.ReleaseDate,
-		movie.VoteAverage,
-		movie.VoteCount,
-		0, // Runtime not available in discover response
-		movie.Adult,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to insert movie: %v", err)
+func (w *Worker) insertMedia(tx *sql.Tx, movie tmdbAPI.DiscoverMovieResponseResult) error {
+	mediaData := MediaData{
+		ID:          movie.ID,
+		Title:       movie.Title,
+		Overview:    movie.Overview,
+		Popularity:  movie.Popularity,
+		ReleaseDate: movie.ReleaseDate,
+		VoteAverage: movie.VoteAverage,
+		VoteCount:   movie.VoteCount,
+		Runtime:     0, // TODO: add this
+		Adult:       movie.Adult,
+	}
+	if err := w.insertMediaStmt.Execute(tx, mediaData); err != nil {
+		return err
 	}
 
 	w.Logger.Debug("Inserted base movie data", "movieID", movie.ID)
@@ -99,23 +88,15 @@ func (w *Worker) insertMovieImages(tx *sql.Tx, movieID int, posterURLs []string,
 
 func (w *Worker) insertPosterImages(tx *sql.Tx, movieID int, posterURLs []string, configuration *tmdbAPI.ConfigurationResponse) error {
 	for i, posterURL := range posterURLs {
-		_, err := tx.Exec(`
-			INSERT OR REPLACE INTO media_images (
-				id,
-				media_id,
-				image_type,
-				resolution,
-				url
-			) VALUES (?, ?, ?, ?, ?)`,
-			fmt.Sprintf("%d_poster_%d", movieID, i),
-			strconv.FormatInt(int64(movieID), 10),
-			"poster",
-			configuration.Images.PosterSizes[i],
-			posterURL,
-		)
-		if err != nil {
-			return fmt.Errorf("failed to insert poster image: %v", err)
+		id := fmt.Sprintf("%d_poster_%d", movieID, i)
+		mediaID := strconv.FormatInt(int64(movieID), 10)
+		imageType := "poster"
+		resolution := configuration.Images.PosterSizes[i]
+
+		if err := w.insertMediaImageStmt.Execute(tx, id, mediaID, imageType, resolution, posterURL); err != nil {
+			return err
 		}
+
 		w.Logger.Debug("Inserted poster image", "number", i+1, "total", len(posterURLs), "movieID", movieID)
 	}
 	return nil
@@ -123,23 +104,15 @@ func (w *Worker) insertPosterImages(tx *sql.Tx, movieID int, posterURLs []string
 
 func (w *Worker) insertBackdropImages(tx *sql.Tx, movieID int, backdropURLs []string, configuration *tmdbAPI.ConfigurationResponse) error {
 	for i, backdropURL := range backdropURLs {
-		_, err := tx.Exec(`
-			INSERT OR REPLACE INTO media_images (
-				id,
-				media_id,
-				image_type,
-				resolution,
-				url
-			) VALUES (?, ?, ?, ?, ?)`,
-			fmt.Sprintf("%d_backdrop_%d", movieID, i),
-			strconv.FormatInt(int64(movieID), 10),
-			"backdrop",
-			configuration.Images.BackdropSizes[i],
-			backdropURL,
-		)
-		if err != nil {
-			return fmt.Errorf("failed to insert backdrop image: %v", err)
+		id := fmt.Sprintf("%d_backdrop_%d", movieID, i)
+		mediaID := strconv.FormatInt(int64(movieID), 10)
+		imageType := "backdrop"
+		resolution := configuration.Images.BackdropSizes[i]
+
+		if err := w.insertMediaImageStmt.Execute(tx, id, mediaID, imageType, resolution, backdropURL); err != nil {
+			return err
 		}
+
 		w.Logger.Debug("Inserted backdrop image", "number", i+1, "total", len(backdropURLs), "movieID", movieID)
 	}
 	return nil
@@ -163,27 +136,11 @@ func (w *Worker) insertMovieGenres(tx *sql.Tx, movieID int, genreIDs []int) erro
 }
 
 func (w *Worker) insertGenre(tx *sql.Tx, genreID int) error {
-	_, err := tx.Exec(`
-		INSERT OR IGNORE INTO genres (id, name) VALUES (?, ?)`,
-		strconv.FormatInt(int64(genreID), 10),
-		"", // Name will be updated later when we have genre details
-	)
-	if err != nil {
-		return fmt.Errorf("failed to insert genre: %v", err)
-	}
-	return nil
+	return w.insertGenreStmt.Execute(tx, genreID)
 }
 
 func (w *Worker) insertMediaGenreRelation(tx *sql.Tx, movieID int, genreID int) error {
-	_, err := tx.Exec(`
-		INSERT OR IGNORE INTO media_genres (media_id, genre_id) VALUES (?, ?)`,
-		strconv.FormatInt(int64(movieID), 10),
-		strconv.FormatInt(int64(genreID), 10),
-	)
-	if err != nil {
-		return fmt.Errorf("failed to insert media_genre: %v", err)
-	}
-	return nil
+	return w.insertMediaGenreStmt.Execute(tx, movieID, genreID)
 }
 
 func (w *Worker) processMoviePage(configuration *tmdbAPI.ConfigurationResponse, page int) (bool, error) {

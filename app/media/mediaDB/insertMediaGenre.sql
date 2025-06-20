@@ -1,0 +1,1 @@
+INSERT OR IGNORE INTO media_genres (media_id, genre_id) VALUES (?, ?) 

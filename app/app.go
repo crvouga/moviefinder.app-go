@@ -26,11 +26,16 @@ func Handler() http.Handler {
 		TmdbClient: ac.TmdbClient,
 		Logger:     ac.Logger,
 	}
-	done := worker.Run()
-	go func() {
-		<-done
-		ac.Logger.Debug("worker completed")
-	}()
+	done, err := worker.Run()
+	if err != nil {
+		ac.Logger.Error("Failed to start worker", "error", err)
+		// Continue without worker - the application can still serve requests
+	} else {
+		go func() {
+			<-done
+			ac.Logger.Debug("worker completed")
+		}()
+	}
 
 	mux := http.NewServeMux()
 

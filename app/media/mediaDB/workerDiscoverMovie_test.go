@@ -10,7 +10,10 @@ func TestWorkerDiscoverMovie(t *testing.T) {
 	f := NewFixture()
 	defer f.DB.Close()
 
-	worker := NewWorker(f.DB, f.Client, slog.Default())
+	worker, err := NewWorker(f.DB, f.Client, slog.Default())
+	if err != nil {
+		t.Fatalf("Expected no error creating worker, got %v", err)
+	}
 	worker.DiscoverMovieMaxPages = 1
 	done := worker.WorkerDiscoverMovieLoader()
 
@@ -23,7 +26,7 @@ func TestWorkerDiscoverMovie(t *testing.T) {
 	}
 
 	var count int
-	err := f.DB.QueryRow("SELECT COUNT(*) FROM media").Scan(&count)
+	err = f.DB.QueryRow("SELECT COUNT(*) FROM media").Scan(&count)
 	if err != nil {
 		t.Errorf("Error counting media rows: %v", err)
 	}
@@ -48,7 +51,10 @@ func TestWorkerDiscoverMovieMultiplePages(t *testing.T) {
 	defer f.DB.Close()
 
 	// First load just 1 page
-	worker := NewWorker(f.DB, f.Client, slog.Default())
+	worker, err := NewWorker(f.DB, f.Client, slog.Default())
+	if err != nil {
+		t.Fatalf("Expected no error creating worker, got %v", err)
+	}
 	worker.DiscoverMovieMaxPages = 1
 	done1 := worker.WorkerDiscoverMovieLoader()
 
@@ -60,7 +66,7 @@ func TestWorkerDiscoverMovieMultiplePages(t *testing.T) {
 	}
 
 	var countPage1 int
-	err := f.DB.QueryRow("SELECT COUNT(*) FROM media").Scan(&countPage1)
+	err = f.DB.QueryRow("SELECT COUNT(*) FROM media").Scan(&countPage1)
 	if err != nil {
 		t.Errorf("Error counting media rows: %v", err)
 	}
@@ -68,7 +74,10 @@ func TestWorkerDiscoverMovieMultiplePages(t *testing.T) {
 	// Now load 2 pages
 	f = NewFixture()
 
-	worker = NewWorker(f.DB, f.Client, slog.Default())
+	worker, err = NewWorker(f.DB, f.Client, slog.Default())
+	if err != nil {
+		t.Fatalf("Expected no error creating worker, got %v", err)
+	}
 	worker.DiscoverMovieMaxPages = 2
 	done2 := worker.WorkerDiscoverMovieLoader()
 

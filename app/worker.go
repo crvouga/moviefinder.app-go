@@ -13,17 +13,24 @@ type Worker struct {
 	Logger     *slog.Logger
 }
 
-func (w *Worker) Run() chan struct{} {
+func (w *Worker) Run() (chan struct{}, error) {
 	w.Logger.Debug("starting worker")
 
-	mediaDbWorker := mediaDB.NewWorker(w.DB, w.TmdbClient, w.Logger)
+	mediaDBWorker, err := mediaDB.NewWorker(w.DB, w.TmdbClient, w.Logger)
+	if err != nil {
+		return nil, err
+	}
 
-	done := mediaDbWorker.Run()
+	done := mediaDBWorker.Run()
 
 	go func() {
 		<-done
+		// Clean up prepared statements when done
+		if closeErr := mediaDBWorker.Close(); closeErr != nil {
+			w.Logger.Error("Failed to close mediaDB worker", "error", closeErr)
+		}
 		w.Logger.Debug("worker completed")
 	}()
 
-	return done
+	return done, nil
 }

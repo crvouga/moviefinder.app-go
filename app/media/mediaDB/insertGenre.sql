@@ -1,0 +1,1 @@
+INSERT OR IGNORE INTO genres (id, name) VALUES (?, ?) 
