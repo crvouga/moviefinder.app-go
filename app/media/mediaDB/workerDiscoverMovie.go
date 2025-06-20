@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"movieFinder/lib/tmdbAPI"
 	"strconv"
-	"time"
 )
 
 const HARD_MAX_PAGES = 500
@@ -226,10 +225,8 @@ func (w *Worker) WorkerDiscoverMovieLoader() chan struct{} {
 		w.Logger.Debug("Got TMDB configuration", "baseURL", configuration.Images.SecureBaseURL)
 		w.Logger.Debug("Image sizes", "posterSizes", configuration.Images.PosterSizes, "backdropSizes", configuration.Images.BackdropSizes)
 
-		// Process pages sequentially
 		for page := 1; page <= w.DiscoverMovieMaxPages && page <= HARD_MAX_PAGES; page++ {
-			// Rate limit to 1 request per second
-			time.Sleep(w.DiscoverMovieThrottle)
+			// time.Sleep(w.DiscoverMovieThrottle)
 
 			isLastPage, err := w.processMoviePage(&configuration, page)
 			if err != nil {

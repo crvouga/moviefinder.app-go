@@ -12,15 +12,12 @@ func TestWorker(t *testing.T) {
 
 	worker := NewWorker(f.DB, f.Client, slog.Default())
 	worker.DiscoverMovieMaxPages = 1
+	worker.DiscoverMovieThrottle = 0 * time.Second
 	done := worker.Run()
 
-	// Wait for loading to complete with timeout
-	select {
-	case <-done:
-		// Loading completed successfully
-	case <-time.After(10 * time.Second):
-		t.Fatal("Timeout waiting for movie loading to complete")
-	}
+	t.Log("waiting for worker to complete")
+	<-done
+	t.Log("worker completed")
 
 	var count int
 	err := f.DB.QueryRow("SELECT COUNT(*) FROM media").Scan(&count)

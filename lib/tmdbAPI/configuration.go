@@ -14,8 +14,11 @@ type ConfigurationResponse struct {
 
 func (t *Client) Configuration() (ConfigurationResponse, error) {
 	var response ConfigurationResponse
+	t.logger.Debug("getting TMDB configuration")
 	err := t.httpGet("/configuration", nil, &response)
+	t.logger.Debug("got TMDB configuration", "response", response)
 	if err != nil {
+		t.logger.Error("failed to get TMDB configuration", "error", err)
 		return ConfigurationResponse{}, err
 	}
 	return response, nil
