@@ -3,7 +3,7 @@ package feedPage
 import (
 	"movieFinder/app/ctx/appCtx"
 	"movieFinder/app/ctx/reqCtx"
-	"movieFinder/app/feed/feedDb"
+	"movieFinder/app/feed/feedDB"
 	"net/http"
 	"strconv"
 )
@@ -32,7 +32,7 @@ func respondSlideChanged(ac *appCtx.AppCtx) http.HandlerFunc {
 		}
 
 		rc.Logger.Debug("getting feed for session", "sessionID", rc.SessionID.String())
-		feed_, err := feedDb.GetElseInsertBySessionID(ac.DB, rc.SessionID.String(), rc.Logger)
+		feed_, err := feedDB.GetElseInsertBySessionID(ac.DB, rc.SessionID.String(), rc.Logger)
 
 		if err != nil {
 			rc.Logger.Error("Error getting feed", "error", err)
@@ -49,7 +49,7 @@ func respondSlideChanged(ac *appCtx.AppCtx) http.HandlerFunc {
 
 		rc.Logger.Debug("upserting feed", "feedID", feed_.ID)
 
-		err = feedDb.UpsertFeed(ac.DB, *feed_)
+		err = feedDB.UpsertFeed(ac.DB, *feed_)
 
 		if err != nil {
 			rc.Logger.Error("Error updating feed", "error", err)
