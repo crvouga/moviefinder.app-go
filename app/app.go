@@ -13,6 +13,7 @@ import (
 	"movieFinder/lib/static"
 	"movieFinder/lib/traceID"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -81,12 +82,21 @@ func router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 }
 
 func setCacheControlHeaders(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Query().Has("no-cache") {
-		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-		w.Header().Set("Pragma", "no-cache")
-		w.Header().Set("Expires", "0")
+	if strings.HasSuffix(r.URL.Path, ".css") {
+		setCacheHeaders(w)
 		return
 	}
+
+	setNoCacheHeaders(w)
+}
+
+func setNoCacheHeaders(w http.ResponseWriter) {
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
+}
+
+func setCacheHeaders(w http.ResponseWriter) {
 	w.Header().Set("Cache-Control", "public, max-age=31919000")
 	w.Header().Set("Expires", time.Now().Add(24*time.Hour).Format(time.RFC1123))
 }
