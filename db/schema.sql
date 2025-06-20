@@ -24,7 +24,7 @@ CREATE TABLE media (
     vote_average REAL NOT NULL,
     vote_count INTEGER NOT NULL,
     runtime INTEGER NOT NULL
-);
+, is_adult BOOLEAN NOT NULL DEFAULT FALSE);
 CREATE INDEX idx_media_popularity ON media(popularity DESC);
 CREATE TABLE media_images (
     id TEXT PRIMARY KEY,
@@ -114,9 +114,11 @@ CREATE TABLE feed_session_mapping (
 );
 CREATE INDEX idx_feed_session_mapping_feed_id ON feed_session_mapping (feed_id);
 CREATE INDEX idx_feed_session_mapping_session_id ON feed_session_mapping (session_id);
+CREATE INDEX idx_media_is_adult ON media(is_adult) WHERE is_adult = FALSE;
 -- Dbmate schema migrations
 INSERT INTO "schema_migrations" (version) VALUES
   ('20250606035631'),
   ('20250606050831'),
   ('20250606073703'),
-  ('20250606082308');
+  ('20250606082308'),
+  ('20250620011605');

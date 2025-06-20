@@ -12,6 +12,7 @@ SELECT
 		''
 	) AS backdrop_url
 FROM media
+WHERE is_adult = 0
 ORDER BY popularity DESC
 LIMIT ? 
 OFFSET ?

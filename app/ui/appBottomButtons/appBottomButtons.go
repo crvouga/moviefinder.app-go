@@ -16,13 +16,13 @@ func AppBottomButtons(activePage string) bottomButtons.BottomButtons {
 		Items: []bottomButtons.BottomButtonsItem{
 			{
 				Label:    FeedPage,
-				URL:      routes.FeedPage,
+				URL:      routes.FEED_PAGE,
 				Active:   activePage == FeedPage,
 				IconHTML: icons.HomeSolid(bottomButtons.IconSize),
 			},
 			{
 				Label:    AccountPage,
-				URL:      routes.UserAccountPage,
+				URL:      routes.USER_ACCOUNT,
 				Active:   activePage == AccountPage,
 				IconHTML: icons.UserSolid(bottomButtons.IconSize),
 			},

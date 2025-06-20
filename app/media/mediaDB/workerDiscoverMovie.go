@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"movieFinder/lib/tmdbAPI"
 	"strconv"
+	"time"
 )
 
 const HARD_MAX_PAGES = 500
@@ -63,8 +64,9 @@ func (w *Worker) insertMovieBase(tx *sql.Tx, movie tmdbAPI.DiscoverMovieResponse
 			release_date,
 			vote_average,
 			vote_count,
-			runtime
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+			runtime,
+			is_adult
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		strconv.FormatInt(int64(movie.ID), 10),
 		movie.Title,
 		movie.Overview,
@@ -73,6 +75,7 @@ func (w *Worker) insertMovieBase(tx *sql.Tx, movie tmdbAPI.DiscoverMovieResponse
 		movie.VoteAverage,
 		movie.VoteCount,
 		0, // Runtime not available in discover response
+		movie.Adult,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to insert movie: %v", err)
@@ -184,7 +187,7 @@ func (w *Worker) insertMediaGenreRelation(tx *sql.Tx, movieID int, genreID int) 
 }
 
 func (w *Worker) processMoviePage(configuration *tmdbAPI.ConfigurationResponse, page int) (bool, error) {
-	w.Logger.Info("Fetching page of movies from TMDB API", "page", page)
+	w.Logger.Debug("Fetching page of movies from TMDB API", "page", page)
 
 	response, err := w.Client.DiscoverMovie(tmdbAPI.DiscoverMovieParams{
 		Page: page,
@@ -194,7 +197,7 @@ func (w *Worker) processMoviePage(configuration *tmdbAPI.ConfigurationResponse, 
 		return false, err
 	}
 
-	w.Logger.Info("Retrieved movies", "count", len(response.Results), "page", page, "totalPages", response.TotalPages)
+	w.Logger.Debug("Retrieved movies", "count", len(response.Results), "page", page, "totalPages", response.TotalPages)
 
 	for i, movie := range response.Results {
 		w.Logger.Debug("Processing movie", "number", i+1, "total", len(response.Results), "page", page)
@@ -203,47 +206,63 @@ func (w *Worker) processMoviePage(configuration *tmdbAPI.ConfigurationResponse, 
 		}
 	}
 
-	w.Logger.Info("Successfully processed page", "page", page, "movieCount", len(response.Results))
+	w.Logger.Debug("Successfully processed page", "page", page, "movieCount", len(response.Results))
 	return page >= response.TotalPages, nil
 }
 
 func (w *Worker) WorkerDiscoverMovieLoader() chan struct{} {
+	logger := w.Logger.WithGroup("workerDiscoverMovie")
 
 	done := make(chan struct{})
+	page := 0
 
 	go func() {
-		w.Logger.Info("Starting TMDB Discover Movie worker")
-		w.Logger.Info("Processing pages", "maxPages", w.DiscoverMovieMaxPages)
+		logger.Info("Starting TMDB Discover Movie worker")
+		logger.Info("Processing pages", "maxPages", w.DiscoverMovieMaxPages)
 
 		configuration, err := w.Client.Configuration()
 		if err != nil {
-			w.Logger.Error("Failed to get configuration", "error", err)
+			logger.Error("Failed to get configuration", "error", err)
 			close(done)
 			return
 		}
 
-		w.Logger.Debug("Got TMDB configuration", "baseURL", configuration.Images.SecureBaseURL)
-		w.Logger.Debug("Image sizes", "posterSizes", configuration.Images.PosterSizes, "backdropSizes", configuration.Images.BackdropSizes)
+		logger.Debug("Got TMDB configuration", "baseURL", configuration.Images.SecureBaseURL)
+		logger.Debug("Image sizes", "posterSizes", configuration.Images.PosterSizes, "backdropSizes", configuration.Images.BackdropSizes)
 
-		for page := 1; page <= w.DiscoverMovieMaxPages && page <= HARD_MAX_PAGES; page++ {
+		for page = 1; page <= w.DiscoverMovieMaxPages && page <= HARD_MAX_PAGES; page++ {
 			// time.Sleep(w.DiscoverMovieThrottle)
 
 			isLastPage, err := w.processMoviePage(&configuration, page)
 			if err != nil {
-				w.Logger.Error("Failed to process page", "page", page, "error", err)
+				logger.Error("Failed to process page", "page", page, "error", err)
 				close(done)
 				return
 			}
 
 			if isLastPage {
-				w.Logger.Info("Reached last page, media worker complete")
+				logger.Debug("Reached last page, media worker complete")
 				close(done)
 				return
 			}
 		}
 
-		w.Logger.Info("TMDB Discover Movie worker completed")
+		logger.Debug("TMDB Discover Movie worker completed")
 		close(done)
+	}()
+
+	statusTicker := time.NewTicker(1 * time.Second)
+	go func() {
+		logger.Info("Worker status", "currentPage", page)
+		for {
+			select {
+			case <-statusTicker.C:
+				logger.Info("Worker status", "currentPage", page)
+			case <-done:
+				statusTicker.Stop()
+				return
+			}
+		}
 	}()
 
 	return done

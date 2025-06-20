@@ -43,15 +43,15 @@ func respondPage(ac *appCtx.AppCtx) http.HandlerFunc {
 		Error: nil,
 		Document: document.Data{
 			Preload: []document.Preload{
-				document.NewPreload(routes.UserAccountPage),
+				document.NewPreload(routes.USER_ACCOUNT),
 			},
 		},
 		FeedSwiper: feedSwiper.FeedSwiper{
 			Slides: []feedSwiperSlides.FeedSwiperSlide{},
 		},
 		BottomButtons:   appBottomButtons.AppBottomButtons(appBottomButtons.FeedPage),
-		LoadNextURL:     routeLoadNext,
-		SlideChangedURL: routeSlideChanged,
+		LoadNextURL:     ROUTE_LOAD_NEXT,
+		SlideChangedURL: ROUTE_SLIDE_CHANGED,
 	}
 	ac.Logger.Debug("initialized base data")
 
@@ -72,7 +72,7 @@ func respondPage(ac *appCtx.AppCtx) http.HandlerFunc {
 		}
 		rc.Logger.Debug("got feed instance", "feedID", feed_.ID, "currentIndex", feed_.CurrentFeedIndex)
 
-		found, err := queryPopularMedia.Query(2, int(feed_.CurrentFeedIndex))
+		found, err := queryPopularMedia.Query(FEED_SLIDE_BATCH_SIZE, int(feed_.CurrentFeedIndex))
 		rc.Logger.Debug("queried popular media", "count", len(found), "startIndex", feed_.CurrentFeedIndex)
 
 		data := baseData

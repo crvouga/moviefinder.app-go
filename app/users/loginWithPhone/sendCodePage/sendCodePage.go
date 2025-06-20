@@ -7,7 +7,6 @@ import (
 	"movieFinder/app/ui/templateExt"
 	"movieFinder/app/ui/textField"
 	"movieFinder/app/ui/topBar"
-	"movieFinder/app/users/loginWithPhone/loginWithPhoneRoutes"
 	"movieFinder/app/users/loginWithPhone/verifyCodePage"
 	"movieFinder/lib/static"
 	"net/http"
@@ -17,7 +16,7 @@ import (
 )
 
 func Router(mux *http.ServeMux) {
-	mux.HandleFunc(loginWithPhoneRoutes.SendCodePage, Respond())
+	mux.HandleFunc(routes.SEND_CODE, Respond())
 }
 
 func Respond() http.HandlerFunc {
@@ -38,13 +37,13 @@ func Respond() http.HandlerFunc {
 	data := Data{
 		Document: document.Data{
 			Preload: []document.Preload{
-				document.NewPreload(routes.UserAccountPage),
-				document.NewPreload(loginWithPhoneRoutes.VerifyCodePage),
+				document.NewPreload(routes.USER_ACCOUNT),
+				document.NewPreload(routes.VERIFY_CODE),
 			},
 		},
 		TopBar: topBar.Data{
 			Title:    "Send Code",
-			BackHref: routes.UserAccountPage,
+			BackHref: routes.USER_ACCOUNT,
 		},
 		TextFieldPhoneNumber: textField.Data{
 			Label: "Phone Number",
@@ -81,5 +80,5 @@ func Redirect(w http.ResponseWriter, r *http.Request, phoneNumber string, err *s
 	if err != nil {
 		query.Set("error", *err)
 	}
-	http.Redirect(w, r, loginWithPhoneRoutes.VerifyCodePage+"?"+query.Encode(), http.StatusFound)
+	http.Redirect(w, r, routes.SEND_CODE+"?"+query.Encode(), http.StatusFound)
 }

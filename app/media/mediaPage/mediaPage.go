@@ -13,7 +13,7 @@ import (
 )
 
 func Router(mux *http.ServeMux, ac *appCtx.AppCtx) {
-	mux.HandleFunc(routes.MediaPagePath, respondMediaPage(ac))
+	mux.HandleFunc(routes.MEDIA_PAGE, respondMediaPage(ac))
 }
 
 func respondMediaPage(ac *appCtx.AppCtx) http.HandlerFunc {
@@ -34,12 +34,12 @@ func respondMediaPage(ac *appCtx.AppCtx) http.HandlerFunc {
 	baseData := Data{
 		Document: document.Data{
 			Preload: []document.Preload{
-				document.NewPreload(routes.UserAccountPage),
+				document.NewPreload(routes.USER_ACCOUNT),
 			},
 		},
 		TopBar: topBar.Data{
 			Title:    "",
-			BackHref: routes.FeedPage,
+			BackHref: routes.FEED_PAGE,
 		},
 		Media: media.Media{},
 	}

@@ -53,7 +53,7 @@ func respondLoadNext(ac *appCtx.AppCtx) http.HandlerFunc {
 
 		rc.Logger.Debug("got feed instance", "feedID", feed_.ID, "currentIndex", feed_.CurrentFeedIndex)
 
-		media, err := queryPopularMedia.Query(10, int(feed_.CurrentFeedIndex))
+		media, err := queryPopularMedia.Query(FEED_SLIDE_BATCH_SIZE, int(feed_.CurrentFeedIndex))
 
 		rc.Logger.Debug("queried popular media", "count", len(media), "startIndex", feed_.CurrentFeedIndex)
 

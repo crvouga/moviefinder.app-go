@@ -9,14 +9,14 @@ import (
 	"movieFinder/app/ui/document"
 	"movieFinder/app/ui/icons"
 	"movieFinder/app/ui/templateExt"
-	"movieFinder/app/users/loginWithPhone/loginWithPhoneRoutes"
+
 	"movieFinder/app/users/userAccount/userAccountPage/loginCTA"
 	"movieFinder/lib/static"
 	"net/http"
 )
 
 func Router(mux *http.ServeMux, ac *appCtx.AppCtx) {
-	mux.HandleFunc(routes.UserAccountPage, Respond(ac))
+	mux.HandleFunc(routes.USER_ACCOUNT, Respond(ac))
 }
 
 func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
@@ -37,8 +37,8 @@ func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
 	data := Data{
 		Document: document.Data{
 			Preload: []document.Preload{
-				document.NewPreload(loginWithPhoneRoutes.SendCodePage),
-				document.NewPreload(routes.FeedPage),
+				document.NewPreload(routes.SEND_CODE),
+				document.NewPreload(routes.FEED_PAGE),
 			},
 		},
 		BottomButtons: appBottomButtons.AppBottomButtons(appBottomButtons.AccountPage),
@@ -46,7 +46,7 @@ func Respond(ac *appCtx.AppCtx) http.HandlerFunc {
 			IconHTML: icons.DoorOpen(loginCTA.IconSize),
 			LoginButton: button.Data{
 				Text: "Login",
-				Href: loginWithPhoneRoutes.SendCodePage,
+				Href: routes.SEND_CODE,
 			},
 		},
 	}
