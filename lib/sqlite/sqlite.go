@@ -24,5 +24,23 @@ func New(dbPath string) (*sql.DB, error) {
 		return nil, err
 	}
 
+	// Set locking mode to EXCLUSIVE to prevent "database is locked" errors
+	_, err = db.Exec("PRAGMA locking_mode=EXCLUSIVE;")
+	if err != nil {
+		return nil, err
+	}
+
+	// Enable foreign keys
+	_, err = db.Exec("PRAGMA foreign_keys=ON;")
+	if err != nil {
+		return nil, err
+	}
+
+	// Set synchronous mode to NORMAL for better performance while maintaining safety
+	_, err = db.Exec("PRAGMA synchronous=NORMAL;")
+	if err != nil {
+		return nil, err
+	}
+
 	return db, nil
 }
