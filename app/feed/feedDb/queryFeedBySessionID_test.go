@@ -1,7 +1,8 @@
-package feed
+package feedDb
 
 import (
 	"movieFinder/app/ctx/appCtx"
+	"movieFinder/app/feed"
 	"testing"
 )
 
@@ -11,7 +12,7 @@ func TestQueryFeedBySessionID(t *testing.T) {
 	defer ctx.DB.Close()
 
 	// Create a test feed and session mapping
-	feed := Feed{
+	feed := feed.Feed{
 		ID:               "test-feed-123",
 		CurrentFeedIndex: 0,
 		CreatedAtEpoch:   1234567890,

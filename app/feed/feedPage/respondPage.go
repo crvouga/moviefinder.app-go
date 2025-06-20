@@ -3,7 +3,7 @@ package feedPage
 import (
 	"movieFinder/app/ctx/appCtx"
 	"movieFinder/app/ctx/reqCtx"
-	"movieFinder/app/feed"
+	"movieFinder/app/feed/feedDb"
 	"movieFinder/app/feed/feedPage/feedSwiper"
 	"movieFinder/app/feed/feedPage/feedSwiperSlides"
 	"movieFinder/app/media/mediaDB"
@@ -63,22 +63,22 @@ func respondPage(ac *appCtx.AppCtx) http.HandlerFunc {
 	ac.Logger.Debug("created popular media query")
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		ac.Logger.Debug("handling feed page request")
 		rc := reqCtx.FromHttpRequest(ac, r)
+		rc.Logger.Debug("handling feed page request")
 
-		feedInst, err := feed.GetElseInsertBySessionID(ac.DB, rc.SessionID.String(), ac.Logger)
+		feed_, err := feedDb.GetElseInsertBySessionID(ac.DB, rc.SessionID.String(), rc.Logger)
 		if err != nil {
-			ac.Logger.Error("failed to get/insert feed", "error", err, "sessionID", rc.SessionID.String())
+			rc.Logger.Error("failed to get/insert feed", "error", err, "sessionID", rc.SessionID.String())
 		}
-		ac.Logger.Debug("got feed instance", "feedID", feedInst.ID, "currentIndex", feedInst.CurrentFeedIndex)
+		rc.Logger.Debug("got feed instance", "feedID", feed_.ID, "currentIndex", feed_.CurrentFeedIndex)
 
-		found, err := queryPopularMedia.Query(2, int(feedInst.CurrentFeedIndex))
-		ac.Logger.Debug("queried popular media", "count", len(found), "startIndex", feedInst.CurrentFeedIndex)
+		found, err := queryPopularMedia.Query(2, int(feed_.CurrentFeedIndex))
+		rc.Logger.Debug("queried popular media", "count", len(found), "startIndex", feed_.CurrentFeedIndex)
 
 		data := baseData
 
 		if err != nil {
-			ac.Logger.Error("failed to query popular media", "error", err)
+			rc.Logger.Error("failed to query popular media", "error", err)
 			errStr := err.Error()
 			data.Error = &errStr
 			templateExt.Respond(templ, document.TemplateName, data, w)
@@ -86,15 +86,15 @@ func respondPage(ac *appCtx.AppCtx) http.HandlerFunc {
 		}
 
 		data.FeedSwiper.Slides = make([]feedSwiperSlides.FeedSwiperSlide, len(found))
-		ac.Logger.Debug("allocated slides array", "length", len(found))
+		rc.Logger.Debug("allocated slides array", "length", len(found))
 
 		for i, m := range found {
-			slide := feedSwiperSlides.FromMedia(m, feedInst.CurrentFeedIndex+int64(i))
+			slide := feedSwiperSlides.FromMedia(m, feed_.CurrentFeedIndex+int64(i))
 			data.FeedSwiper.Slides[i] = slide
 		}
-		ac.Logger.Debug("populated slides")
+		rc.Logger.Debug("populated slides")
 
 		templateExt.Respond(templ, document.TemplateName, data, w)
-		ac.Logger.Debug("responded with template")
+		rc.Logger.Debug("responded with template")
 	}
 }

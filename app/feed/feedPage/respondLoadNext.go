@@ -3,7 +3,7 @@ package feedPage
 import (
 	"movieFinder/app/ctx/appCtx"
 	"movieFinder/app/ctx/reqCtx"
-	"movieFinder/app/feed"
+	"movieFinder/app/feed/feedDb"
 	"movieFinder/app/feed/feedPage/feedSwiper"
 	"movieFinder/app/feed/feedPage/feedSwiperSlides"
 	"movieFinder/app/media/mediaDB"
@@ -45,7 +45,7 @@ func respondLoadNext(ac *appCtx.AppCtx) http.HandlerFunc {
 
 		rc.Logger.Debug("handling load next request")
 
-		feed_, err := feed.GetElseInsertBySessionID(ac.DB, rc.SessionID.String(), rc.Logger)
+		feed_, err := feedDb.GetElseInsertBySessionID(ac.DB, rc.SessionID.String(), rc.Logger)
 
 		if err != nil {
 			rc.Logger.Error("failed to get/insert feed", "error", err, "sessionID", rc.SessionID.String())

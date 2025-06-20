@@ -3,59 +3,61 @@ package feedPage
 import (
 	"movieFinder/app/ctx/appCtx"
 	"movieFinder/app/ctx/reqCtx"
-	"movieFinder/app/feed"
+	"movieFinder/app/feed/feedDb"
 	"net/http"
 	"strconv"
 )
 
 func respondSlideChanged(ac *appCtx.AppCtx) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ac.Logger.Debug("handling slide changed request")
 		rc := reqCtx.FromHttpRequest(ac, r)
+		rc.Logger.Debug("handling slide changed request")
 
 		feedIndex := r.URL.Query().Get("feedIndex")
-		ac.Logger.Debug("got feedIndex from query", "feedIndex", feedIndex)
+		rc.Logger.Debug("got feedIndex from query", "feedIndex", feedIndex)
 
 		if feedIndex == "" {
-			ac.Logger.Error("Missing feedIndex parameter")
+			rc.Logger.Error("Missing feedIndex parameter")
 			http.Error(w, "feedIndex parameter is required", http.StatusBadRequest)
 			return
 		}
 
 		feedIndexNew, err := strconv.ParseInt(feedIndex, 10, 64)
-		ac.Logger.Debug("parsed feedIndex", "feedIndexNew", feedIndexNew)
+		rc.Logger.Debug("parsed feedIndex", "feedIndexNew", feedIndexNew)
 
 		if err != nil {
-			ac.Logger.Error("Error parsing feedIndex", "error", err)
+			rc.Logger.Error("Error parsing feedIndex", "error", err)
 			http.Error(w, "feedIndex must be a valid integer", http.StatusBadRequest)
 			return
 		}
 
-		ac.Logger.Debug("getting feed for session", "sessionID", rc.SessionID.String())
-		feedInst, err := feed.GetElseInsertBySessionID(ac.DB, rc.SessionID.String(), ac.Logger)
+		rc.Logger.Debug("getting feed for session", "sessionID", rc.SessionID.String())
+		feed_, err := feedDb.GetElseInsertBySessionID(ac.DB, rc.SessionID.String(), rc.Logger)
 
 		if err != nil {
-			ac.Logger.Error("Error getting feed", "error", err)
+			rc.Logger.Error("Error getting feed", "error", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		ac.Logger.Debug("updating feed index",
-			"feedID", feedInst.ID,
-			"oldIndex", feedInst.CurrentFeedIndex,
+		rc.Logger.Debug("updating feed index",
+			"feedID", feed_.ID,
+			"oldIndex", feed_.CurrentFeedIndex,
 			"newIndex", feedIndexNew)
-		feedInst.CurrentFeedIndex = feedIndexNew
 
-		ac.Logger.Debug("upserting feed", "feedID", feedInst.ID)
-		err = feed.UpsertFeed(ac.DB, *feedInst)
+		feed_.CurrentFeedIndex = feedIndexNew
+
+		rc.Logger.Debug("upserting feed", "feedID", feed_.ID)
+
+		err = feedDb.UpsertFeed(ac.DB, *feed_)
 
 		if err != nil {
-			ac.Logger.Error("Error updating feed", "error", err)
+			rc.Logger.Error("Error updating feed", "error", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		ac.Logger.Debug("slide changed request completed successfully")
+		rc.Logger.Debug("slide changed request completed successfully")
 		w.Header().Set("Content-Type", "text/plain")
 		w.Write([]byte("ok"))
 	}

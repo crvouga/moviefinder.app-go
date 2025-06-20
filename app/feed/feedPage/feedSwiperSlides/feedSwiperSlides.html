@@ -1,6 +1,6 @@
 {{define "feedSwiperSlides"}}
 {{range .FeedSwiper.Slides}}
-<swiper-slide>
+<swiper-slide data-feed-index="{{.FeedIndex}}">
 	<a class="w-full h-full" href="{{.URL}}">
 		<img src="{{.ImageSrc}}" alt=" " class="w-full bg-neutral-900" />
 	</a>

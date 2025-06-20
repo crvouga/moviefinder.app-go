@@ -1,4 +1,4 @@
-package feed
+package feedDb
 
 import (
 	"database/sql"
