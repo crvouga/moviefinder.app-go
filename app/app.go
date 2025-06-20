@@ -81,14 +81,14 @@ func router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 }
 
 func setCacheControlHeaders(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Query().Has("no-cache") || true {
+	if r.URL.Query().Has("no-cache") {
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 		w.Header().Set("Pragma", "no-cache")
 		w.Header().Set("Expires", "0")
 		return
 	}
-	w.Header().Set("Cache-Control", "public, max-age=0, must-revalidate, stale-while-revalidate=86400")
-	w.Header().Set("Expires", time.Now().Format(time.RFC1123))
+	w.Header().Set("Cache-Control", "public, max-age=31919000")
+	w.Header().Set("Expires", time.Now().Add(24*time.Hour).Format(time.RFC1123))
 }
 
 // newMuxLoggedIn is the mux for the logged in user.

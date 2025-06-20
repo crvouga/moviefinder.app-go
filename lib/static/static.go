@@ -43,8 +43,15 @@ func ServeStaticAssets(w http.ResponseWriter, r *http.Request, directory string)
 		return ErrFileNotFound
 	}
 
-	w.Header().Set("Cache-Control", "public, max-age=0, must-revalidate, stale-while-revalidate=86400")
-	w.Header().Set("Expires", time.Now().Add(24*time.Hour).Format(time.RFC1123))
+	// Set more aggressive caching for CSS and JS files
+	if strings.HasSuffix(requestPath, ".css") || strings.HasSuffix(requestPath, ".js") {
+		w.Header().Set("Cache-Control", "public, max-age=3600, must-revalidate, stale-while-revalidate=86400")
+		w.Header().Set("Expires", time.Now().Add(1*time.Hour).Format(time.RFC1123))
+	} else {
+		w.Header().Set("Cache-Control", "public, max-age=0, must-revalidate, stale-while-revalidate=86400")
+		w.Header().Set("Expires", time.Now().Add(24*time.Hour).Format(time.RFC1123))
+	}
+
 	http.ServeFile(w, r, filePath)
 	return nil
 }
