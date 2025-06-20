@@ -38,7 +38,7 @@ func New() AppCtx {
 
 	keyValueDBFs := keyValueDB.NewImplFs("keyValueDB.json")
 
-	MAX_LOG_LEVEL := slog.LevelDebug
+	MAX_LOG_LEVEL := slog.LevelInfo
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: MAX_LOG_LEVEL})).WithGroup("app")
 
