@@ -43,7 +43,7 @@ func respondLoadNext(ac *appCtx.AppCtx) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		rc := reqCtx.FromHttpRequest(ac, r)
 
-		rc.Logger.Debug("handling load next request")
+		rc.Logger.Info("handling load next request")
 
 		feed_, err := feedRepo.GetElseInsertBySessionID(ac.DB, rc.SessionID.String(), rc.Logger)
 
