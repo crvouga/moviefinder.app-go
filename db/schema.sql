@@ -41,6 +41,18 @@ END) STORED,
 
 
 --
+-- Name: external_data; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.external_data (
+    id text NOT NULL,
+    type text NOT NULL,
+    data jsonb NOT NULL,
+    updated_at_epoch bigint NOT NULL
+);
+
+
+--
 -- Name: feed; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -203,6 +215,14 @@ ALTER TABLE ONLY public.credits
 
 
 --
+-- Name: external_data external_data_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.external_data
+    ADD CONSTRAINT external_data_pkey PRIMARY KEY (id, type);
+
+
+--
 -- Name: feed feed_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -332,6 +352,27 @@ CREATE INDEX idx_credits_media ON public.credits USING btree (media_id, type, "o
 --
 
 CREATE INDEX idx_credits_person ON public.credits USING btree (person_id, type);
+
+
+--
+-- Name: idx_external_data_data; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_external_data_data ON public.external_data USING gin (data);
+
+
+--
+-- Name: idx_external_data_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_external_data_type ON public.external_data USING btree (type);
+
+
+--
+-- Name: idx_external_data_updated_at_epoch; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_external_data_updated_at_epoch ON public.external_data USING btree (updated_at_epoch);
 
 
 --
@@ -504,4 +545,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20250606050831'),
     ('20250606073703'),
     ('20250606082308'),
-    ('20250620011605');
+    ('20250620011605'),
+    ('20250621052321');

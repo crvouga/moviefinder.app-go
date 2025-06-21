@@ -158,9 +158,9 @@ func (w *Worker) processMoviePage(configuration *tmdbAPI.ConfigurationResponse, 
 
 	w.Logger.Debug("Retrieved movies", "count", len(response.Results), "page", page, "totalPages", response.TotalPages)
 
-	for i, movie := range response.Results {
+	for i, movieResult := range response.Results {
 		w.Logger.Debug("Processing movie", "number", i+1, "total", len(response.Results), "page", page)
-		if err := w.processMovie(configuration, movie); err != nil {
+		if err := w.processMovie(configuration, movieResult); err != nil {
 			return false, err // Return error to stop processing
 		}
 	}
