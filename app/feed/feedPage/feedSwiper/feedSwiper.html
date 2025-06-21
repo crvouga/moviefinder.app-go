@@ -11,7 +11,8 @@
 	const LOAD_NEXT_URL = "{{.LoadNextURL}}?no-cache=true";
 	const SLIDE_CHANGED_URL = "{{.SlideChangedURL}}?no-cache=true";
 	const PRELOAD_THRESHOLD = 3;
-	document.addEventListener("DOMContentLoaded", async () => {
+
+	const mount = () => {
 		const swiper = document.getElementById("feed-swiper");
 		const swiperSlideLast = document.getElementById("feed-swiper-slide-last");
 		swiper.addEventListener("swiperslidechange", async (event) => {
@@ -23,6 +24,8 @@
 			const feedIndex = parseInt(event?.detail?.[0]?.slides?.[event?.detail?.[0]?.activeIndex]?.getAttribute?.('data-feed-index'), 10)
 			await fetch(`${SLIDE_CHANGED_URL}&feedIndex=${feedIndex}`, { method: "POST" });
 		});
-	})
+	}
+
+	document.addEventListener("DOMContentLoaded", mount);
 </script>
 {{end}}
