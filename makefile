@@ -53,9 +53,9 @@ dbmate-up:
 	make dbmate-download-cached
 	mkdir -p db && ./dbmate up
 
-dbmate-new:
+db-mate:
 	make dbmate-download-cached
-	mkdir -p db && ./dbmate new "$(name)"
+	mkdir -p db && ./dbmate new "$(filter-out $@,$(MAKECMDGOALS))"
 
 dbmate-down:
 	./dbmate down

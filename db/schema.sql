@@ -88,16 +88,6 @@ CREATE TABLE public.feed_session_mapping (
 
 
 --
--- Name: genres; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.genres (
-    id text NOT NULL,
-    name text NOT NULL
-);
-
-
---
 -- Name: genres_mv; Type: MATERIALIZED VIEW; Schema: public; Owner: -
 --
 
@@ -262,14 +252,6 @@ ALTER TABLE ONLY public.feed
 
 ALTER TABLE ONLY public.feed_session_mapping
     ADD CONSTRAINT feed_session_mapping_pkey PRIMARY KEY (id);
-
-
---
--- Name: genres genres_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.genres
-    ADD CONSTRAINT genres_pkey PRIMARY KEY (id);
 
 
 --
@@ -440,4 +422,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20250620011605'),
     ('20250621052321'),
     ('20250621073938'),
-    ('20250621074526');
+    ('20250621074526'),
+    ('20250621210214');

@@ -1,9 +1,9 @@
 {{define "feedSwiperSlides"}}
 {{range .FeedSwiper.Slides}}
 <swiper-slide data-feed-index="{{.FeedIndex}}">
-	<a class="w-full h-full" href="{{.URL}}">
-		<img src="{{.ImageSrc}}" alt=" " class="w-full bg-neutral-900" />
-		<img src="{{.PreloadImageSrc}}" alt=" " class="hidden" />
+	<a class="flex w-full h-full bg-neutral-900" href="{{.URL}}">
+		{{if .ImageSrc}}<img src="{{.ImageSrc}}" alt=" " class="w-full h-full object-cover" />{{end}}
+		{{if .PreloadImageSrc}}<img src="{{.PreloadImageSrc}}" alt=" " class="hidden" />{{end}}
 	</a>
 </swiper-slide>
 {{end}}
