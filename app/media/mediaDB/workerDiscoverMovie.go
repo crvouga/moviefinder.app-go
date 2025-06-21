@@ -3,6 +3,7 @@ package mediaDB
 import (
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"movieFinder/lib/tmdbAPI"
 	"strconv"
 	"time"
@@ -167,9 +168,58 @@ func (w *Worker) processMoviePage(configuration *tmdbAPI.ConfigurationResponse, 
 	return page >= response.TotalPages, nil
 }
 
+func (w *Worker) startStatusTracker(logger *slog.Logger, page *int, done chan struct{}) {
+	statusTicker := time.NewTicker(5 * time.Second)
+	go func() {
+		logger.Info("Worker status", "currentPage", *page)
+		for {
+			select {
+			case <-statusTicker.C:
+				logger.Info("Worker status", "currentPage", *page)
+			case <-done:
+				statusTicker.Stop()
+				return
+			}
+		}
+	}()
+}
+
+func (w *Worker) processPages(logger *slog.Logger, configuration *tmdbAPI.ConfigurationResponse, page *int, done chan struct{}) {
+	for *page = 1; *page <= w.DiscoverMovieMaxPages && *page <= HARD_MAX_PAGES; *page++ {
+		time.Sleep(0 * time.Second)
+
+		isLastPage, err := w.processMoviePage(configuration, *page)
+		if err != nil {
+			logger.Error("Failed to process page", "page", *page, "error", err)
+			close(done)
+			return
+		}
+
+		if isLastPage {
+			logger.Debug("Reached last page, media worker complete")
+			close(done)
+			return
+		}
+	}
+
+	logger.Debug("TMDB Discover Movie worker completed")
+	close(done)
+}
+
+func (w *Worker) getConfiguration(logger *slog.Logger) (*tmdbAPI.ConfigurationResponse, error) {
+	configuration, err := w.Client.Configuration()
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Debug("Got TMDB configuration", "baseURL", configuration.Images.SecureBaseURL)
+	logger.Debug("Image sizes", "posterSizes", configuration.Images.PosterSizes, "backdropSizes", configuration.Images.BackdropSizes)
+
+	return &configuration, nil
+}
+
 func (w *Worker) WorkerDiscoverMovieLoader() chan struct{} {
 	logger := w.Logger.WithGroup("workerDiscoverMovie")
-
 	done := make(chan struct{})
 	page := 0
 
@@ -177,50 +227,17 @@ func (w *Worker) WorkerDiscoverMovieLoader() chan struct{} {
 		logger.Info("Starting TMDB Discover Movie worker")
 		logger.Info("Processing pages", "maxPages", w.DiscoverMovieMaxPages)
 
-		configuration, err := w.Client.Configuration()
+		configuration, err := w.getConfiguration(logger)
 		if err != nil {
 			logger.Error("Failed to get configuration", "error", err)
 			close(done)
 			return
 		}
 
-		logger.Debug("Got TMDB configuration", "baseURL", configuration.Images.SecureBaseURL)
-		logger.Debug("Image sizes", "posterSizes", configuration.Images.PosterSizes, "backdropSizes", configuration.Images.BackdropSizes)
-
-		for page = 1; page <= w.DiscoverMovieMaxPages && page <= HARD_MAX_PAGES; page++ {
-			time.Sleep(0 * time.Second)
-
-			isLastPage, err := w.processMoviePage(&configuration, page)
-			if err != nil {
-				logger.Error("Failed to process page", "page", page, "error", err)
-				close(done)
-				return
-			}
-
-			if isLastPage {
-				logger.Debug("Reached last page, media worker complete")
-				close(done)
-				return
-			}
-		}
-
-		logger.Debug("TMDB Discover Movie worker completed")
-		close(done)
+		w.processPages(logger, configuration, &page, done)
 	}()
 
-	statusTicker := time.NewTicker(5 * time.Second)
-	go func() {
-		logger.Info("Worker status", "currentPage", page)
-		for {
-			select {
-			case <-statusTicker.C:
-				logger.Info("Worker status", "currentPage", page)
-			case <-done:
-				statusTicker.Stop()
-				return
-			}
-		}
-	}()
+	w.startStatusTracker(logger, &page, done)
 
 	return done
 }
