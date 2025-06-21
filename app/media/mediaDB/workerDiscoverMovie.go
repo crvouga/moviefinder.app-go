@@ -188,7 +188,7 @@ func (w *Worker) WorkerDiscoverMovieLoader() chan struct{} {
 		logger.Debug("Image sizes", "posterSizes", configuration.Images.PosterSizes, "backdropSizes", configuration.Images.BackdropSizes)
 
 		for page = 1; page <= w.DiscoverMovieMaxPages && page <= HARD_MAX_PAGES; page++ {
-			time.Sleep(1 * time.Second)
+			time.Sleep(0 * time.Second)
 
 			isLastPage, err := w.processMoviePage(&configuration, page)
 			if err != nil {
@@ -208,7 +208,7 @@ func (w *Worker) WorkerDiscoverMovieLoader() chan struct{} {
 		close(done)
 	}()
 
-	statusTicker := time.NewTicker(1 * time.Second)
+	statusTicker := time.NewTicker(5 * time.Second)
 	go func() {
 		logger.Info("Worker status", "currentPage", page)
 		for {
