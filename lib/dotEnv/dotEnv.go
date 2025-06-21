@@ -23,7 +23,8 @@ func Load() error {
 		}
 		parentDir := filepath.Dir(rootDir)
 		if parentDir == rootDir {
-			return fmt.Errorf(".env file not found in any parent directory")
+			// .env file not found, but that's ok - return without error
+			return nil
 		}
 		rootDir = parentDir
 	}
@@ -31,7 +32,8 @@ func Load() error {
 	// Open .env file from root directory
 	file, err := os.Open(filepath.Join(rootDir, ".env"))
 	if err != nil {
-		return fmt.Errorf("error opening .env file: %w", err)
+		// Failed to open .env file, but that's ok - return without error
+		return nil
 	}
 	defer file.Close()
 
