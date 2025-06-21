@@ -3,15 +3,15 @@
 -- Media materialized view from TMDB data
 CREATE MATERIALIZED VIEW media_mv AS
 SELECT 
-    (data->>'id')::text as id,
-    data->>'title' as title,
+    COALESCE((data->>'id')::text, md5(random()::text)::text) as id,
+    COALESCE(data->>'title', '') as title,
     COALESCE(data->>'overview', '') as description,
-    (data->>'popularity')::double precision as popularity,
+    COALESCE((data->>'popularity')::double precision, 0) as popularity,
     COALESCE(data->>'release_date', '') as release_date,
-    (data->>'vote_average')::double precision as vote_average,
-    (data->>'vote_count')::integer as vote_count,
-    0 as runtime, -- Not available in discover API
-    (data->>'adult')::boolean as is_adult
+    COALESCE((data->>'vote_average')::double precision, 0) as vote_average,
+    COALESCE((data->>'vote_count')::integer, 0) as vote_count,
+    COALESCE(NULLIF((data->>'runtime')::integer, 0), 0) as runtime,
+    COALESCE((data->>'adult')::boolean, false) as is_adult
 FROM entities 
 WHERE type = 'tmdb/movie'
 AND data ? 'id';

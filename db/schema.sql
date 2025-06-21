@@ -92,12 +92,10 @@ CREATE TABLE public.feed_session_mapping (
 --
 
 CREATE MATERIALIZED VIEW public.genres_mv AS
- SELECT DISTINCT genres.genre_id AS id,
-    genres.genre_name AS name
-   FROM (public.entities ed
-     CROSS JOIN LATERAL ( SELECT (jsonb_array_elements((ed.data -> 'genre_ids'::text)))::text AS genre_id,
-            ('Genre '::text || (jsonb_array_elements((ed.data -> 'genre_ids'::text)))::text) AS genre_name) genres)
-  WHERE ((ed.type = 'tmdb/movie'::text) AND (ed.data ? 'genre_ids'::text) AND (jsonb_typeof((ed.data -> 'genre_ids'::text)) = 'array'::text))
+ SELECT DISTINCT id,
+    (data ->> 'name'::text) AS name
+   FROM public.entities ed
+  WHERE (type = 'tmdb/genres/movie'::text)
   WITH NO DATA;
 
 

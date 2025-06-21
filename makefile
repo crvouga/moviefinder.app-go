@@ -26,6 +26,9 @@ preview:
 q:
 	psql postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable
 
+qw:
+	psql -P pager=off postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable < query.sql
+
 db-up:
 	docker compose -f db/docker-compose.yml up -d
 
