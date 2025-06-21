@@ -9,6 +9,7 @@ import (
 var upsertFeedSessionMappingSQL string
 
 func UpsertFeedSessionMapping(db *sql.DB, feedID string, sessionID string) error {
-	_, err := db.Exec(upsertFeedSessionMappingSQL, feedID, sessionID)
+	id := feedID + sessionID
+	_, err := db.Exec(upsertFeedSessionMappingSQL, id, feedID, sessionID)
 	return err
 }
