@@ -1,36 +1,16 @@
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker
-    .register("/instant-navigation-sw.js")
-    .then((registration) => {
-      console.log("Service worker registered", registration);
-    })
-    .catch((error) => {
-      console.error("Service worker registration failed", error);
-    });
-}
+navigator.serviceWorker?.register("/instant-navigation-sw.js");
 
-// Send message to service worker to update cache
 const requestCacheUpdate = (url) => {
-  if (navigator.serviceWorker.controller) {
-    navigator.serviceWorker.controller.postMessage({
-      type: "UPDATE_CACHE",
-      url: url,
-    });
-  }
-};
-
-const updatePage = async (url) => {
-  // Tell service worker to update cache in background
-  requestCacheUpdate(url);
+  navigator.serviceWorker.controller?.postMessage({
+    type: "UPDATE_CACHE",
+    url: url,
+  });
 };
 
 const preload = (link) => {
   const href = link.getAttribute("href");
   if (!href) return;
-
-  // Tell service worker to fetch and cache this URL
   requestCacheUpdate(href);
-  console.log("Requested cache update for:", href);
 };
 
 const bindLinkHandlers = () => {
@@ -40,18 +20,20 @@ const bindLinkHandlers = () => {
   });
 };
 
-window.addEventListener("popstate", () => {
-  updatePage(window.location.pathname);
-});
-window.addEventListener("pushstate", () => {
-  updatePage(window.location.pathname);
-});
-window.addEventListener("replacestate", () => {
-  updatePage(window.location.pathname);
-});
-window.addEventListener("hashchange", () => {
-  updatePage(window.location.pathname);
-});
 document.addEventListener("DOMContentLoaded", () => {
   bindLinkHandlers();
 });
+
+let previousHref =
+  sessionStorage.getItem("previousHref") || window.location.href;
+const onNavigation = () => {
+  const currentHref = window.location.href;
+  requestCacheUpdate(previousHref);
+  requestCacheUpdate(currentHref);
+  sessionStorage.setItem("previousHref", currentHref);
+  previousHref = currentHref;
+};
+window.addEventListener("popstate", onNavigation);
+window.addEventListener("pushstate", onNavigation);
+window.addEventListener("replacestate", onNavigation);
+window.addEventListener("hashchange", onNavigation);
