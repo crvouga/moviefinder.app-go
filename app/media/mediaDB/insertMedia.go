@@ -26,7 +26,7 @@ func (i *InsertMedia) Close() error {
 	return i.stmt.Close()
 }
 
-type MediaData struct {
+type InsertMediaDTO struct {
 	ID          int
 	Title       string
 	Overview    string
@@ -38,7 +38,7 @@ type MediaData struct {
 	Adult       bool
 }
 
-func (i *InsertMedia) Execute(tx *sql.Tx, media MediaData) error {
+func (i *InsertMedia) Execute(tx *sql.Tx, media InsertMediaDTO) error {
 	_, err := tx.Stmt(i.stmt).Exec(
 		strconv.FormatInt(int64(media.ID), 10),
 		media.Title,

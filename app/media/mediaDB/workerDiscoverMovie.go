@@ -56,7 +56,7 @@ func (w *Worker) beginTransaction() (*sql.Tx, error) {
 }
 
 func (w *Worker) insertMedia(tx *sql.Tx, movie tmdbAPI.DiscoverMovieResponseResult) error {
-	mediaData := MediaData{
+	dto := InsertMediaDTO{
 		ID:          movie.ID,
 		Title:       movie.Title,
 		Overview:    movie.Overview,
@@ -67,7 +67,8 @@ func (w *Worker) insertMedia(tx *sql.Tx, movie tmdbAPI.DiscoverMovieResponseResu
 		Runtime:     0, // TODO: add this
 		Adult:       movie.Adult,
 	}
-	if err := w.insertMediaStmt.Execute(tx, mediaData); err != nil {
+
+	if err := w.insertMediaStmt.Execute(tx, dto); err != nil {
 		return err
 	}
 
