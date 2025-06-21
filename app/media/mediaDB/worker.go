@@ -3,7 +3,7 @@ package mediaDB
 import (
 	"database/sql"
 	"log/slog"
-	"movieFinder/app/externalDataDB"
+	"movieFinder/app/entityDB"
 	"movieFinder/lib/tmdbAPI"
 	"time"
 )
@@ -15,12 +15,12 @@ type Worker struct {
 	DiscoverMovieMaxPages int
 	DiscoverMovieThrottle time.Duration
 	//
-	upsertExternalData *externalDataDB.UpsertExternalData
-	matViews           *MediaDbMatViews
+	upsertEntity *entityDB.UpsertEntity
+	matViews     *MediaDbMatViews
 }
 
 func NewWorker(db *sql.DB, client *tmdbAPI.Client, logger *slog.Logger) (*Worker, error) {
-	upsertExternalData, err := externalDataDB.NewUpsertExternalData(db)
+	upsertEntity, err := entityDB.NewUpsertEntity(db)
 	if err != nil {
 		return nil, err
 	}
@@ -33,14 +33,14 @@ func NewWorker(db *sql.DB, client *tmdbAPI.Client, logger *slog.Logger) (*Worker
 		Logger:                logger,
 		DiscoverMovieMaxPages: 500,
 		DiscoverMovieThrottle: 20 * time.Second,
-		upsertExternalData:    upsertExternalData,
+		upsertEntity:          upsertEntity,
 		matViews:              matViews,
 	}, nil
 }
 
 func (w *Worker) Close() error {
-	if w.upsertExternalData != nil {
-		return w.upsertExternalData.Close()
+	if w.upsertEntity != nil {
+		return w.upsertEntity.Close()
 	}
 	return nil
 }

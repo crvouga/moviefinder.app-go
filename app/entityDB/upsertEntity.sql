@@ -1,4 +1,4 @@
-INSERT INTO external_data (
+INSERT INTO entities (
     id,
     type,
     data,

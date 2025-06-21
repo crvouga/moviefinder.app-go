@@ -12,7 +12,7 @@ SELECT
     (data->>'vote_count')::integer as vote_count,
     0 as runtime, -- Not available in discover API
     (data->>'adult')::boolean as is_adult
-FROM external_data 
+FROM entities 
 WHERE type = 'tmdb/movie'
 AND data ? 'id';
 
@@ -24,7 +24,7 @@ CREATE INDEX idx_media_mv_is_adult ON media_mv (is_adult) WHERE is_adult = false
 CREATE MATERIALIZED VIEW media_images_mv AS
 WITH config_data AS (
     SELECT data
-    FROM external_data 
+    FROM entities 
     WHERE type = 'tmdb/configuration'
     AND data ? 'images' 
     AND data->'images' ? 'secure_base_url'
@@ -51,7 +51,7 @@ poster_images AS (
         tc.poster_size as resolution,
         tc.resolution_order as resolution_order,
         tc.base_url || tc.poster_size || (ed.data->>'poster_path') as url
-    FROM external_data ed
+    FROM entities ed
     CROSS JOIN tmdb_config tc
     WHERE ed.type = 'tmdb/movie'
     AND ed.data ? 'poster_path'
@@ -76,7 +76,7 @@ backdrop_images AS (
         bc.backdrop_size as resolution,
         bc.resolution_order as resolution_order,
         bc.base_url || bc.backdrop_size || (ed.data->>'backdrop_path') as url
-    FROM external_data ed
+    FROM entities ed
     CROSS JOIN backdrop_config bc
     WHERE ed.type = 'tmdb/movie'
     AND ed.data ? 'backdrop_path'
@@ -96,7 +96,7 @@ CREATE MATERIALIZED VIEW genres_mv AS
 SELECT DISTINCT
     genre_id::text as id,
     genre_name as name
-FROM external_data ed
+FROM entities ed
 CROSS JOIN LATERAL (
     SELECT 
         jsonb_array_elements(ed.data->'genre_ids')::text as genre_id,
@@ -114,7 +114,7 @@ CREATE MATERIALIZED VIEW media_genres_mv AS
 SELECT 
     (ed.data->>'id')::text as media_id,
     genre_id::text as genre_id
-FROM external_data ed
+FROM entities ed
 CROSS JOIN LATERAL jsonb_array_elements(ed.data->'genre_ids') as genre_id
 WHERE ed.type = 'tmdb/movie'
 AND ed.data ? 'genre_ids'

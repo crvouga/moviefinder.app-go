@@ -11,7 +11,7 @@ import (
 
 const HARD_MAX_PAGES = 500
 
-func (w *Worker) processMovie(configuration *tmdbAPI.ConfigurationResponse, movie tmdbAPI.DiscoverMovieResponseResult) error {
+func (w *Worker) processMovie(movie tmdbAPI.DiscoverMovieResponseResult) error {
 	w.Logger.Debug("Processing movie", "title", movie.Title, "id", movie.ID)
 	w.Logger.Debug("Movie details", "title", movie.Title, "popularity", movie.Popularity, "releaseDate", movie.ReleaseDate)
 
@@ -21,8 +21,8 @@ func (w *Worker) processMovie(configuration *tmdbAPI.ConfigurationResponse, movi
 	}
 	defer tx.Rollback()
 
-	// Store TMDB movie data in external_data
-	if err := w.upsertExternalData.Execute(tx, "tmdb/movie", strconv.FormatInt(int64(movie.ID), 10), movie); err != nil {
+	// Store TMDB movie data in entities
+	if err := w.upsertEntity.Execute(tx, "tmdb/movie", strconv.FormatInt(int64(movie.ID), 10), movie); err != nil {
 		return err
 	}
 
@@ -51,7 +51,7 @@ func (w *Worker) storeConfiguration(configuration *tmdbAPI.ConfigurationResponse
 	defer tx.Rollback()
 
 	// Store TMDB configuration data
-	if err := w.upsertExternalData.Execute(tx, "tmdb/configuration", "config", configuration); err != nil {
+	if err := w.upsertEntity.Execute(tx, "tmdb/configuration", "config", configuration); err != nil {
 		return err
 	}
 
@@ -63,7 +63,7 @@ func (w *Worker) storeConfiguration(configuration *tmdbAPI.ConfigurationResponse
 	return nil
 }
 
-func (w *Worker) processMoviePage(configuration *tmdbAPI.ConfigurationResponse, page int) (bool, error) {
+func (w *Worker) processMoviePage(page int) (bool, error) {
 	w.Logger.Debug("Fetching page of movies from TMDB API", "page", page)
 
 	response, err := w.tmdbClient.DiscoverMovie(tmdbAPI.DiscoverMovieParams{
@@ -78,7 +78,7 @@ func (w *Worker) processMoviePage(configuration *tmdbAPI.ConfigurationResponse, 
 
 	for i, movieResult := range response.Results {
 		w.Logger.Debug("Processing movie", "number", i+1, "total", len(response.Results), "page", page)
-		if err := w.processMovie(configuration, movieResult); err != nil {
+		if err := w.processMovie(movieResult); err != nil {
 			return false, err // Return error to stop processing
 		}
 	}
@@ -103,11 +103,11 @@ func (w *Worker) startStatusTracker(logger *slog.Logger, page *int, done chan st
 	}()
 }
 
-func (w *Worker) processPages(logger *slog.Logger, configuration *tmdbAPI.ConfigurationResponse, page *int, done chan struct{}) {
+func (w *Worker) processPages(logger *slog.Logger, page *int, done chan struct{}) {
 	for *page = 1; *page <= w.DiscoverMovieMaxPages && *page <= HARD_MAX_PAGES; *page++ {
 		time.Sleep(0 * time.Second)
 
-		isLastPage, err := w.processMoviePage(configuration, *page)
+		isLastPage, err := w.processMoviePage(*page)
 		if err != nil {
 			logger.Error("Failed to process page", "page", *page, "error", err)
 			close(done)
@@ -137,40 +137,53 @@ func (w *Worker) getConfiguration(logger *slog.Logger) (*tmdbAPI.ConfigurationRe
 	return &configuration, nil
 }
 
+func (w *Worker) upsertConfiguration(logger *slog.Logger) (*tmdbAPI.ConfigurationResponse, error) {
+	configuration, err := w.getConfiguration(logger)
+	logger.Info("Got TMDB configuration", "baseURL", configuration)
+	if err != nil {
+		logger.Error("Failed to get configuration", "error", err)
+
+		return nil, err
+	}
+
+	tx, err := w.beginTransaction()
+	if err != nil {
+		logger.Error("Failed to begin transaction", "error", err)
+
+		return nil, err
+	}
+
+	err = w.upsertEntity.Execute(tx, "tmdb/configuration", "0", configuration)
+	logger.Info("Executed upsert external data", "error", err)
+	if err != nil {
+		logger.Error("Failed to execute upsert external data", "error", err)
+
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		logger.Error("Failed to commit transaction", "error", err)
+		return nil, err
+	}
+
+	return configuration, nil
+}
+
 func (w *Worker) WorkerDiscoverMovieLoader() chan struct{} {
 	logger := w.Logger.WithGroup("workerDiscoverMovie")
 	done := make(chan struct{})
 	page := 0
 
 	go func() {
+		if _, err := w.upsertConfiguration(logger); err != nil {
+			logger.Error("Failed to upsert configuration", "error", err)
+			close(done)
+			return
+		}
 		logger.Info("Starting TMDB Discover Movie worker")
 		logger.Info("Processing pages", "maxPages", w.DiscoverMovieMaxPages)
 
-		configuration, err := w.getConfiguration(logger)
-		logger.Info("Got TMDB configuration", "baseURL", configuration)
-		if err != nil {
-			logger.Error("Failed to get configuration", "error", err)
-			close(done)
-			return
-		}
-
-		tx, err := w.beginTransaction()
-		if err != nil {
-			logger.Error("Failed to begin transaction", "error", err)
-			close(done)
-			return
-		}
-
-		err = w.upsertExternalData.Execute(tx, "tmdb/configuration", "0", configuration)
-		logger.Info("Executed upsert external data", "error", err)
-		if err != nil {
-			logger.Error("Failed to execute upsert external data", "error", err)
-			close(done)
-			return
-		}
-		tx.Commit()
-
-		w.processPages(logger, configuration, &page, done)
+		w.processPages(logger, &page, done)
 	}()
 
 	w.startStatusTracker(logger, &page, done)

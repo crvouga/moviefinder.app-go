@@ -10,15 +10,51 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+--
+-- Name: refresh_media_mv(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.refresh_media_mv() RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- First refresh without CONCURRENTLY to handle empty views
+    BEGIN
+        REFRESH MATERIALIZED VIEW CONCURRENTLY media_mv;
+    EXCEPTION WHEN OTHERS THEN
+        REFRESH MATERIALIZED VIEW media_mv;
+    END;
+
+    BEGIN
+        REFRESH MATERIALIZED VIEW CONCURRENTLY media_images_mv;
+    EXCEPTION WHEN OTHERS THEN
+        REFRESH MATERIALIZED VIEW media_images_mv;
+    END;
+
+    BEGIN
+        REFRESH MATERIALIZED VIEW CONCURRENTLY genres_mv;
+    EXCEPTION WHEN OTHERS THEN
+        REFRESH MATERIALIZED VIEW genres_mv;
+    END;
+
+    BEGIN
+        REFRESH MATERIALIZED VIEW CONCURRENTLY media_genres_mv;
+    EXCEPTION WHEN OTHERS THEN
+        REFRESH MATERIALIZED VIEW media_genres_mv;
+    END;
+END;
+$$;
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: external_data; Type: TABLE; Schema: public; Owner: -
+-- Name: entities; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.external_data (
+CREATE TABLE public.entities (
     id text NOT NULL,
     type text NOT NULL,
     data jsonb NOT NULL,
@@ -62,6 +98,115 @@ CREATE TABLE public.genres (
 
 
 --
+-- Name: genres_mv; Type: MATERIALIZED VIEW; Schema: public; Owner: -
+--
+
+CREATE MATERIALIZED VIEW public.genres_mv AS
+ SELECT DISTINCT genres.genre_id AS id,
+    genres.genre_name AS name
+   FROM (public.entities ed
+     CROSS JOIN LATERAL ( SELECT (jsonb_array_elements((ed.data -> 'genre_ids'::text)))::text AS genre_id,
+            ('Genre '::text || (jsonb_array_elements((ed.data -> 'genre_ids'::text)))::text) AS genre_name) genres)
+  WHERE ((ed.type = 'tmdb/movie'::text) AND (ed.data ? 'genre_ids'::text) AND (jsonb_typeof((ed.data -> 'genre_ids'::text)) = 'array'::text))
+  WITH NO DATA;
+
+
+--
+-- Name: media_genres_mv; Type: MATERIALIZED VIEW; Schema: public; Owner: -
+--
+
+CREATE MATERIALIZED VIEW public.media_genres_mv AS
+ SELECT (ed.data ->> 'id'::text) AS media_id,
+    (genre_id.value)::text AS genre_id
+   FROM (public.entities ed
+     CROSS JOIN LATERAL jsonb_array_elements((ed.data -> 'genre_ids'::text)) genre_id(value))
+  WHERE ((ed.type = 'tmdb/movie'::text) AND (ed.data ? 'genre_ids'::text) AND (jsonb_typeof((ed.data -> 'genre_ids'::text)) = 'array'::text))
+  WITH NO DATA;
+
+
+--
+-- Name: media_images_mv; Type: MATERIALIZED VIEW; Schema: public; Owner: -
+--
+
+CREATE MATERIALIZED VIEW public.media_images_mv AS
+ WITH config_data AS (
+         SELECT entities.data
+           FROM public.entities
+          WHERE ((entities.type = 'tmdb/configuration'::text) AND (entities.data ? 'images'::text) AND ((entities.data -> 'images'::text) ? 'secure_base_url'::text) AND ((entities.data -> 'images'::text) ? 'poster_sizes'::text) AND ((entities.data -> 'images'::text) ? 'backdrop_sizes'::text) AND (jsonb_typeof(((entities.data -> 'images'::text) -> 'poster_sizes'::text)) = 'array'::text) AND (jsonb_typeof(((entities.data -> 'images'::text) -> 'backdrop_sizes'::text)) = 'array'::text))
+         LIMIT 1
+        ), tmdb_config AS (
+         SELECT ((cd.data -> 'images'::text) ->> 'secure_base_url'::text) AS base_url,
+            poster_elem.value AS poster_size,
+            (poster_elem.ordinality - 1) AS resolution_order,
+            poster_elem.ordinality AS poster_idx
+           FROM (config_data cd
+             CROSS JOIN LATERAL jsonb_array_elements_text(((cd.data -> 'images'::text) -> 'poster_sizes'::text)) WITH ORDINALITY poster_elem(value, ordinality))
+        ), poster_images AS (
+         SELECT (((((ed.data ->> 'id'::text) || '_poster_'::text) || tc.poster_size) || '_'::text) || (tc.poster_idx - 1)) AS id,
+            (ed.data ->> 'id'::text) AS media_id,
+            'poster'::text AS image_type,
+            tc.poster_size AS resolution,
+            tc.resolution_order,
+            ((tc.base_url || tc.poster_size) || (ed.data ->> 'poster_path'::text)) AS url
+           FROM (public.entities ed
+             CROSS JOIN tmdb_config tc)
+          WHERE ((ed.type = 'tmdb/movie'::text) AND (ed.data ? 'poster_path'::text) AND ((ed.data ->> 'poster_path'::text) IS NOT NULL) AND ((ed.data ->> 'poster_path'::text) <> ''::text) AND (tc.base_url IS NOT NULL))
+        ), backdrop_config AS (
+         SELECT ((cd.data -> 'images'::text) ->> 'secure_base_url'::text) AS base_url,
+            backdrop_elem.value AS backdrop_size,
+            (backdrop_elem.ordinality - 1) AS resolution_order,
+            backdrop_elem.ordinality AS backdrop_idx
+           FROM (config_data cd
+             CROSS JOIN LATERAL jsonb_array_elements_text(((cd.data -> 'images'::text) -> 'backdrop_sizes'::text)) WITH ORDINALITY backdrop_elem(value, ordinality))
+        ), backdrop_images AS (
+         SELECT (((((ed.data ->> 'id'::text) || '_backdrop_'::text) || bc.backdrop_size) || '_'::text) || (bc.backdrop_idx - 1)) AS id,
+            (ed.data ->> 'id'::text) AS media_id,
+            'backdrop'::text AS image_type,
+            bc.backdrop_size AS resolution,
+            bc.resolution_order,
+            ((bc.base_url || bc.backdrop_size) || (ed.data ->> 'backdrop_path'::text)) AS url
+           FROM (public.entities ed
+             CROSS JOIN backdrop_config bc)
+          WHERE ((ed.type = 'tmdb/movie'::text) AND (ed.data ? 'backdrop_path'::text) AND ((ed.data ->> 'backdrop_path'::text) IS NOT NULL) AND ((ed.data ->> 'backdrop_path'::text) <> ''::text) AND (bc.base_url IS NOT NULL))
+        )
+ SELECT poster_images.id,
+    poster_images.media_id,
+    poster_images.image_type,
+    poster_images.resolution,
+    poster_images.resolution_order,
+    poster_images.url
+   FROM poster_images
+UNION ALL
+ SELECT backdrop_images.id,
+    backdrop_images.media_id,
+    backdrop_images.image_type,
+    backdrop_images.resolution,
+    backdrop_images.resolution_order,
+    backdrop_images.url
+   FROM backdrop_images
+  WITH NO DATA;
+
+
+--
+-- Name: media_mv; Type: MATERIALIZED VIEW; Schema: public; Owner: -
+--
+
+CREATE MATERIALIZED VIEW public.media_mv AS
+ SELECT (data ->> 'id'::text) AS id,
+    (data ->> 'title'::text) AS title,
+    COALESCE((data ->> 'overview'::text), ''::text) AS description,
+    ((data ->> 'popularity'::text))::double precision AS popularity,
+    COALESCE((data ->> 'release_date'::text), ''::text) AS release_date,
+    ((data ->> 'vote_average'::text))::double precision AS vote_average,
+    ((data ->> 'vote_count'::text))::integer AS vote_count,
+    0 AS runtime,
+    ((data ->> 'adult'::text))::boolean AS is_adult
+   FROM public.entities
+  WHERE ((type = 'tmdb/movie'::text) AND (data ? 'id'::text))
+  WITH NO DATA;
+
+
+--
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -96,11 +241,11 @@ CREATE TABLE public.user_sessions (
 
 
 --
--- Name: external_data external_data_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: entities entities_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.external_data
-    ADD CONSTRAINT external_data_pkey PRIMARY KEY (id, type);
+ALTER TABLE ONLY public.entities
+    ADD CONSTRAINT entities_pkey PRIMARY KEY (id, type);
 
 
 --
@@ -152,24 +297,24 @@ ALTER TABLE ONLY public.user_sessions
 
 
 --
--- Name: idx_external_data_data; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_entities_data; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_external_data_data ON public.external_data USING gin (data);
-
-
---
--- Name: idx_external_data_type; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_external_data_type ON public.external_data USING btree (type);
+CREATE INDEX idx_entities_data ON public.entities USING gin (data);
 
 
 --
--- Name: idx_external_data_updated_at_epoch; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_entities_type; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_external_data_updated_at_epoch ON public.external_data USING btree (updated_at_epoch);
+CREATE INDEX idx_entities_type ON public.entities USING btree (type);
+
+
+--
+-- Name: idx_entities_updated_at_epoch; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_entities_updated_at_epoch ON public.entities USING btree (updated_at_epoch);
 
 
 --
@@ -184,6 +329,69 @@ CREATE INDEX idx_feed_session_mapping_feed_id ON public.feed_session_mapping USI
 --
 
 CREATE INDEX idx_feed_session_mapping_session_id ON public.feed_session_mapping USING btree (session_id);
+
+
+--
+-- Name: idx_genres_mv_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_genres_mv_id ON public.genres_mv USING btree (id);
+
+
+--
+-- Name: idx_media_genres_mv_genre_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_media_genres_mv_genre_id ON public.media_genres_mv USING btree (genre_id);
+
+
+--
+-- Name: idx_media_genres_mv_media_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_media_genres_mv_media_id ON public.media_genres_mv USING btree (media_id);
+
+
+--
+-- Name: idx_media_genres_mv_pkey; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_media_genres_mv_pkey ON public.media_genres_mv USING btree (media_id, genre_id);
+
+
+--
+-- Name: idx_media_images_mv_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_media_images_mv_id ON public.media_images_mv USING btree (id);
+
+
+--
+-- Name: idx_media_images_mv_lookup; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_media_images_mv_lookup ON public.media_images_mv USING btree (media_id, image_type, url);
+
+
+--
+-- Name: idx_media_mv_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_media_mv_id ON public.media_mv USING btree (id);
+
+
+--
+-- Name: idx_media_mv_is_adult; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_media_mv_is_adult ON public.media_mv USING btree (is_adult) WHERE (is_adult = false);
+
+
+--
+-- Name: idx_media_mv_popularity; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_media_mv_popularity ON public.media_mv USING btree (popularity DESC);
 
 
 --
@@ -231,4 +439,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20250606082308'),
     ('20250620011605'),
     ('20250621052321'),
-    ('20250621073938');
+    ('20250621073938'),
+    ('20250621074526');
