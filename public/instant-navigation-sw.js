@@ -15,30 +15,15 @@ self.addEventListener("message", (event) => {
 });
 
 const updateCache = async (url) => {
-  try {
-    const cache = await caches.open(CACHE_NAME);
-    const response = await fetch(url, { cache: "reload" });
-
-    if (response.ok) {
-      await cache.put(url, response.clone());
-      console.log("Service worker updated cache for:", url);
-    }
-  } catch (error) {
-    console.error("Service worker failed to update cache for:", url, error);
+  const cache = await caches.open(CACHE_NAME);
+  const response = await fetch(url, { cache: "reload" });
+  if (response.ok) {
+    await cache.put(url, response.clone());
   }
 };
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
-  const url = new URL(req.url);
-
-  if (
-    url.pathname.includes("manifest.json") ||
-    url.pathname.includes("apple-touch-icon") ||
-    url.pathname.includes("icon-")
-  ) {
-    return;
-  }
 
   if (req.method !== "GET" || req.mode !== "navigate") return;
 

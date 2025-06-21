@@ -17,10 +17,11 @@
 		swiper.addEventListener("swiperslidechange", async (event) => {
 			const shouldLoadNext = swiper.swiper.activeIndex >= swiper.swiper.slides.length - PRELOAD_THRESHOLD;
 			if (shouldLoadNext) {
-				fetch(LOAD_NEXT_URL).then(r => r.text()).then(html => swiperSlideLast.insertAdjacentHTML("beforebegin", html));
+				const html = await fetch(LOAD_NEXT_URL).then(r => r.text());
+				swiperSlideLast.insertAdjacentHTML("beforebegin", html);
 			}
 			const feedIndex = parseInt(event?.detail?.[0]?.slides?.[event?.detail?.[0]?.activeIndex]?.getAttribute?.('data-feed-index'), 10)
-			fetch(`${SLIDE_CHANGED_URL}&feedIndex=${feedIndex}`, { method: "POST", });
+			await fetch(`${SLIDE_CHANGED_URL}&feedIndex=${feedIndex}`, { method: "POST" });
 		});
 	});
 </script>

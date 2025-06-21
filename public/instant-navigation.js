@@ -1,38 +1,25 @@
 navigator.serviceWorker?.register("/instant-navigation-sw.js");
-
 const requestCacheUpdate = (url) => {
   navigator.serviceWorker.controller?.postMessage({
     type: "UPDATE_CACHE",
     url: url,
   });
 };
-
 const preload = (link) => {
   const href = link.getAttribute("href");
   if (!href) return;
   requestCacheUpdate(href);
 };
-
-const bindLinkHandlers = () => {
+const onLoad = () => {
   document.querySelectorAll("a").forEach((link) => {
     preload(link);
-    link.addEventListener("mouseenter", () => preload(link));
-    link.addEventListener("touchstart", () => preload(link));
+    link.addEventListener("pointerover", () => preload(link));
+    link.addEventListener("pointerdown", () => preload(link));
   });
 };
-
-document.addEventListener("DOMContentLoaded", () => {
-  bindLinkHandlers();
-});
-
-let previousHref =
-  sessionStorage.getItem("previousHref") || window.location.href;
+document.addEventListener("DOMContentLoaded", onLoad);
 const onNavigation = () => {
-  const currentHref = window.location.href;
-  requestCacheUpdate(previousHref);
-  requestCacheUpdate(currentHref);
-  sessionStorage.setItem("previousHref", currentHref);
-  previousHref = currentHref;
+  requestCacheUpdate(window.location.href);
 };
 window.addEventListener("popstate", onNavigation);
 window.addEventListener("pushstate", onNavigation);
