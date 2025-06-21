@@ -15,6 +15,7 @@ const preload = (link) => {
 
 const bindLinkHandlers = () => {
   document.querySelectorAll("a").forEach((link) => {
+    preload(link);
     link.addEventListener("mouseenter", () => preload(link));
     link.addEventListener("touchstart", () => preload(link));
   });
