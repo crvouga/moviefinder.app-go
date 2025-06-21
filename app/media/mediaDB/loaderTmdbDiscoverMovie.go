@@ -30,111 +30,101 @@ func NewLoaderTmdbDiscoverMovie(logger *slog.Logger, db *sql.DB, upsertEntity *e
 	}
 }
 
-func (l *LoaderTmdbDiscoverMovie) beginTransaction() (*sql.Tx, error) {
-	tx, err := l.DB.Begin()
-	if err != nil {
-		return nil, fmt.Errorf("failed to begin transaction: %v", err)
-	}
-	l.Logger.Debug("Starting database transaction")
-	return tx, nil
+func (l *LoaderTmdbDiscoverMovie) Run() chan struct{} {
+	params := tmdbAPI.DiscoverMovieParams{Page: 0}
+	done := l.startLoader(params)
+	return done
 }
 
-func (l *LoaderTmdbDiscoverMovie) processMovie(movie tmdbAPI.DiscoverMovieResponseResult) error {
-	l.Logger.Debug("Processing movie", "title", movie.Title, "id", movie.ID)
-	l.Logger.Debug("Movie details", "title", movie.Title, "popularity", movie.Popularity, "releaseDate", movie.ReleaseDate)
+func (l *LoaderTmdbDiscoverMovie) startLoader(params tmdbAPI.DiscoverMovieParams) chan struct{} {
+	page := 0
+	done := make(chan struct{})
 
-	tx, err := l.beginTransaction()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	// Store TMDB movie data in entities
-	if err := l.UpsertEntity.Execute(tx, "tmdb/movie", strconv.FormatInt(int64(movie.ID), 10), movie); err != nil {
-		return err
-	}
-
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("failed to commit transaction: %v", err)
-	}
-
-	l.Logger.Debug("Successfully stored TMDB movie data", "movieID", movie.ID)
-	return nil
-}
-
-func (l *LoaderTmdbDiscoverMovie) processMoviePage(page int) (bool, error) {
-	l.Logger.Debug("Fetching page of movies from TMDB API", "page", page)
-
-	response, err := l.TmdbClient.DiscoverMovie(tmdbAPI.DiscoverMovieParams{
-		Page: page,
-	})
-	if err != nil {
-		l.Logger.Error("Failed to get page", "page", page, "error", err)
-		return false, err
-	}
-
-	l.Logger.Debug("Retrieved movies", "count", len(response.Results), "page", page, "totalPages", response.TotalPages)
-
-	for i, movieResult := range response.Results {
-		l.Logger.Debug("Processing movie", "number", i+1, "total", len(response.Results), "page", page)
-
-		if err := l.processMovie(movieResult); err != nil {
-			return false, err
-		}
-	}
-
-	l.Logger.Debug("Successfully processed page", "page", page, "movieCount", len(response.Results))
-	return page >= response.TotalPages, nil
-}
-
-func (l *LoaderTmdbDiscoverMovie) processPages(logger *slog.Logger, page *int, done chan struct{}) {
-	for *page = 1; *page <= l.MaxPages && *page <= TMDB_DISCOVER_MOVIE_HARD_MAX_PAGES; *page++ {
-		time.Sleep(0 * time.Second)
-
-		isLastPage, err := l.processMoviePage(*page)
-		if err != nil {
-			logger.Error("Failed to process page", "page", *page, "error", err)
-			close(done)
-			return
-		}
-
-		if isLastPage {
-			logger.Debug("Reached last page, media loader complete")
-			close(done)
-			return
-		}
-	}
-
-	logger.Debug("TMDB Discover Movie loader completed")
-	close(done)
-}
-
-func (l *LoaderTmdbDiscoverMovie) goStatusLogger(logger *slog.Logger, page *int, done chan struct{}) {
-	ticket := time.NewTicker(3 * time.Second)
 	go func() {
-		logger.Info("Loader status", "currentPage", *page)
+		for page = 1; page <= l.MaxPages && page <= TMDB_DISCOVER_MOVIE_HARD_MAX_PAGES; page++ {
+
+			params.Page = page
+
+			isLastPage, err := l.loadPage(params)
+
+			if err != nil {
+				l.Logger.Error("Failed to process page", "page", page, "error", err)
+				close(done)
+				return
+			}
+
+			if isLastPage {
+				l.Logger.Debug("Reached last page, media loader complete")
+				close(done)
+				return
+			}
+		}
+		l.Logger.Debug("TMDB Discover Movie loader completed")
+	}()
+
+	go func() {
+		ticker := time.NewTicker(3 * time.Second)
+		l.Logger.Info("Loader status", "currentPage", params.Page)
 		for {
 			select {
-			case <-ticket.C:
-				logger.Info("Loader status", "currentPage", *page)
+			case <-ticker.C:
+				l.Logger.Info("Loader status", "currentPage", params.Page)
 			case <-done:
-				ticket.Stop()
+				ticker.Stop()
 				return
 			}
 		}
 	}()
-}
 
-func (l *LoaderTmdbDiscoverMovie) goLoader(page *int, done chan struct{}) {
-	go func() {
-		l.processPages(l.Logger, page, done)
-	}()
-}
-
-func (l *LoaderTmdbDiscoverMovie) Run() chan struct{} {
-	done := make(chan struct{})
-	page := 0
-	l.goStatusLogger(l.Logger, &page, done)
-	l.goLoader(&page, done)
 	return done
+}
+
+func (l *LoaderTmdbDiscoverMovie) loadPage(params tmdbAPI.DiscoverMovieParams) (bool, error) {
+	l.Logger.Debug("Fetching page of movies from TMDB API", "page", params.Page)
+
+	response, err := l.TmdbClient.DiscoverMovie(params)
+
+	if err != nil {
+		l.Logger.Error("Failed to get page", "page", params.Page, "error", err)
+		return false, err
+	}
+
+	l.Logger.Debug("Retrieved movies", "count", len(response.Results), "page", params.Page, "totalPages", response.TotalPages)
+
+	tx, err := l.DB.Begin()
+
+	if err != nil {
+		return false, err
+	}
+
+	defer tx.Rollback()
+
+	for i, movieResult := range response.Results {
+		l.Logger.Debug("Processing movie", "number", i+1, "total", len(response.Results), "page", params.Page)
+
+		if err := l.upsertMovie(tx, movieResult); err != nil {
+			return false, err
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return false, fmt.Errorf("failed to commit transaction: %v", err)
+	}
+
+	l.Logger.Debug("Successfully processed page", "page", params.Page, "movieCount", len(response.Results))
+
+	return params.Page >= response.TotalPages, nil
+}
+
+func (l *LoaderTmdbDiscoverMovie) upsertMovie(tx *sql.Tx, movie tmdbAPI.DiscoverMovieResponseResult) error {
+	l.Logger.Debug("Processing movie", "title", movie.Title, "id", movie.ID)
+
+	l.Logger.Debug("Movie details", "title", movie.Title, "popularity", movie.Popularity, "releaseDate", movie.ReleaseDate)
+
+	if err := l.UpsertEntity.Execute(tx, "tmdb/movie", strconv.FormatInt(int64(movie.ID), 10), movie); err != nil {
+		return err
+	}
+
+	l.Logger.Debug("Successfully stored TMDB movie data", "movieID", movie.ID)
+	return nil
 }

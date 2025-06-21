@@ -3,12 +3,13 @@ package mediaDB
 import (
 	"database/sql"
 	_ "embed"
+	"fmt"
 	"log/slog"
 	"strings"
 	"time"
 )
 
-type MediaDbMatViews struct {
+type WorkerMatViews struct {
 	db     *sql.DB
 	logger *slog.Logger
 }
@@ -16,14 +17,14 @@ type MediaDbMatViews struct {
 //go:embed matViews.sql
 var matViewsSQL string
 
-func NewMediaDbMatViews(db *sql.DB, logger *slog.Logger) *MediaDbMatViews {
-	return &MediaDbMatViews{
+func NewWorkerMatViews(db *sql.DB, logger *slog.Logger) *WorkerMatViews {
+	return &WorkerMatViews{
 		db:     db,
-		logger: logger.WithGroup("mediaDBMatViews"),
+		logger: logger.WithGroup("workerMatViews"),
 	}
 }
 
-func (m *MediaDbMatViews) Up() error {
+func (m *WorkerMatViews) Up() error {
 	m.logger.Info("Running materialized views up migration")
 	parts := strings.Split(matViewsSQL, "-- migrate:down")
 	if len(parts) != 2 {
@@ -41,7 +42,7 @@ func (m *MediaDbMatViews) Up() error {
 	return err
 }
 
-func (m *MediaDbMatViews) Down() error {
+func (m *WorkerMatViews) Down() error {
 	m.logger.Info("Running materialized views down migration")
 	parts := strings.Split(matViewsSQL, "-- migrate:down")
 	if len(parts) != 2 {
@@ -59,18 +60,20 @@ func (m *MediaDbMatViews) Down() error {
 	return err
 }
 
-func (m *MediaDbMatViews) Refresh() error {
-	m.logger.Debug("Refreshing materialized views")
+func (m *WorkerMatViews) Refresh() error {
+	m.logger.Info("Refreshing materialized views")
+	start := time.Now()
 	_, err := m.db.Exec("SELECT refresh_media_mv()")
+	duration := time.Since(start)
 	if err != nil {
-		m.logger.Error("Failed to refresh materialized views", "error", err)
+		m.logger.Error("Failed to refresh materialized views", "error", err, "duration", fmt.Sprintf("%.2fs", duration.Seconds()))
 		return err
 	}
-	m.logger.Debug("Successfully refreshed materialized views")
+	m.logger.Info("Successfully refreshed materialized views", "duration", fmt.Sprintf("%.2fs", duration.Seconds()))
 	return err
 }
 
-func (m *MediaDbMatViews) Init() error {
+func (m *WorkerMatViews) Init() error {
 	m.logger.Info("Initializing materialized views")
 	if err := m.Down(); err != nil {
 		m.logger.Error("Failed to run down migration during init", "error", err)
@@ -88,7 +91,7 @@ func (m *MediaDbMatViews) Init() error {
 	return nil
 }
 
-func (m *MediaDbMatViews) RefreshWorker() chan struct{} {
+func (m *WorkerMatViews) Start() chan struct{} {
 	done := make(chan struct{})
 	logger := m.logger.WithGroup("workerMatViews")
 

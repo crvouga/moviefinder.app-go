@@ -2,7 +2,6 @@ package mediaDB
 
 import (
 	"database/sql"
-	"fmt"
 	"log/slog"
 	"movieFinder/app/entityDB"
 	"movieFinder/lib/tmdbAPI"
@@ -19,63 +18,63 @@ func NewLoaderTmdbConfiguration(logger *slog.Logger, db *sql.DB, upsertEntity *e
 	return &LoaderTmdbConfiguration{Logger: logger.WithGroup("loaderTmdbConfiguration"), DB: db, UpsertEntity: upsertEntity, TmdbClient: tmdbClient}
 }
 
-func (l *LoaderTmdbConfiguration) get(logger *slog.Logger) (*tmdbAPI.ConfigurationResponse, error) {
+func (l *LoaderTmdbConfiguration) Run() chan struct{} {
+	done := make(chan struct{})
+	go func() {
+		configuration, err := l.get()
+		if err != nil {
+			l.Logger.Error("Failed to get configuration", "error", err)
+			close(done)
+			return
+		}
+		if err := l.upsert(configuration); err != nil {
+			l.Logger.Error("Failed to upsert configuration", "error", err)
+			close(done)
+			return
+		}
+		close(done)
+	}()
+	return done
+}
+
+func (l *LoaderTmdbConfiguration) get() (*tmdbAPI.ConfigurationResponse, error) {
 	configuration, err := l.TmdbClient.Configuration()
+
 	if err != nil {
 		return nil, err
 	}
 
-	logger.Debug("Got TMDB configuration", "baseURL", configuration.Images.SecureBaseURL)
-	logger.Debug("Image sizes", "posterSizes", configuration.Images.PosterSizes, "backdropSizes", configuration.Images.BackdropSizes)
+	l.Logger.Debug("Got TMDB configuration", "baseURL", configuration.Images.SecureBaseURL)
+
+	l.Logger.Debug("Image sizes", "posterSizes", configuration.Images.PosterSizes, "backdropSizes", configuration.Images.BackdropSizes)
 
 	return &configuration, nil
 }
 
-func (l *LoaderTmdbConfiguration) upsert(logger *slog.Logger) (*tmdbAPI.ConfigurationResponse, error) {
-	configuration, err := l.get(logger)
-	logger.Debug("Got TMDB configuration", "baseURL", configuration)
+func (l *LoaderTmdbConfiguration) upsert(configuration *tmdbAPI.ConfigurationResponse) error {
+	l.Logger.Debug("Got TMDB configuration", "baseURL", configuration)
+
+	tx, err := l.DB.Begin()
+
 	if err != nil {
-		logger.Error("Failed to get configuration", "error", err)
+		l.Logger.Error("Failed to begin transaction", "error", err)
 
-		return nil, err
-	}
-
-	tx, err := l.beginTransaction()
-	if err != nil {
-		logger.Error("Failed to begin transaction", "error", err)
-
-		return nil, err
+		return err
 	}
 
 	err = l.UpsertEntity.Execute(tx, "tmdb/configuration", "0", configuration)
-	logger.Info("Executed upsert external data", "error", err)
-	if err != nil {
-		logger.Error("Failed to execute upsert external data", "error", err)
 
-		return nil, err
+	l.Logger.Info("Executed upsert external data", "error", err)
+
+	if err != nil {
+		l.Logger.Error("Failed to execute upsert external data", "error", err)
+		return err
 	}
 
 	if err := tx.Commit(); err != nil {
-		logger.Error("Failed to commit transaction", "error", err)
-		return nil, err
+		l.Logger.Error("Failed to commit transaction", "error", err)
+		return err
 	}
 
-	return configuration, nil
-}
-
-func (l *LoaderTmdbConfiguration) beginTransaction() (*sql.Tx, error) {
-	tx, err := l.DB.Begin()
-	if err != nil {
-		return nil, fmt.Errorf("failed to begin transaction: %v", err)
-	}
-	l.Logger.Debug("Starting database transaction")
-	return tx, nil
-}
-
-func (l *LoaderTmdbConfiguration) Run() chan struct{} {
-	done := make(chan struct{})
-	go func() {
-		l.upsert(l.Logger)
-	}()
-	return done
+	return nil
 }

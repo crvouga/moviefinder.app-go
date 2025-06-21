@@ -21,7 +21,7 @@ func (w *Worker) Run() (chan struct{}, error) {
 		return nil, err
 	}
 
-	done := mediaDBWorker.Run()
+	done := mediaDBWorker.Start()
 
 	go func() {
 		<-done
