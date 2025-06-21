@@ -4,6 +4,7 @@ import (
 	"movieFinder/app/ctx/appCtx"
 	"movieFinder/app/ctx/reqCtx"
 	"movieFinder/app/feed/feedPage"
+	"movieFinder/app/media/mediaDB"
 	"movieFinder/app/media/mediaPage"
 	"movieFinder/app/ui/pages"
 	"movieFinder/app/users"
@@ -27,6 +28,10 @@ func Handler() http.Handler {
 		TmdbClient: ac.TmdbClient,
 		Logger:     ac.Logger,
 	}
+
+	matViews := mediaDB.NewMediaDbMatViews(ac.DB, ac.Logger)
+	matViews.Init()
+
 	done, err := worker.Run()
 	if err != nil {
 		ac.Logger.Error("Failed to start worker", "error", err)

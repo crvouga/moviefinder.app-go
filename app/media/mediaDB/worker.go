@@ -3,96 +3,59 @@ package mediaDB
 import (
 	"database/sql"
 	"log/slog"
+	"movieFinder/app/externalDataDB"
 	"movieFinder/lib/tmdbAPI"
 	"time"
 )
 
 type Worker struct {
 	DB                    *sql.DB
-	Client                *tmdbAPI.Client
+	tmdbClient            *tmdbAPI.Client
 	Logger                *slog.Logger
 	DiscoverMovieMaxPages int
 	DiscoverMovieThrottle time.Duration
 	//
-	insertMediaStmt      *InsertMedia
-	insertMediaImageStmt *InsertMediaImage
-	insertGenreStmt      *InsertGenre
-	insertMediaGenreStmt *InsertMediaGenre
+	upsertExternalData *externalDataDB.UpsertExternalData
+	matViews           *MediaDbMatViews
 }
 
 func NewWorker(db *sql.DB, client *tmdbAPI.Client, logger *slog.Logger) (*Worker, error) {
-	insertMedia, err := NewInsertMedia(db)
+	upsertExternalData, err := externalDataDB.NewUpsertExternalData(db)
 	if err != nil {
 		return nil, err
 	}
 
-	insertMediaImage, err := NewInsertMediaImage(db)
-	if err != nil {
-		insertMedia.Close()
-		return nil, err
-	}
-
-	insertGenre, err := NewInsertGenre(db)
-	if err != nil {
-		insertMedia.Close()
-		insertMediaImage.Close()
-		return nil, err
-	}
-
-	insertMediaGenre, err := NewInsertMediaGenre(db)
-	if err != nil {
-		insertMedia.Close()
-		insertMediaImage.Close()
-		insertGenre.Close()
-		return nil, err
-	}
+	matViews := NewMediaDbMatViews(db, logger)
 
 	return &Worker{
 		DB:                    db,
-		Client:                client,
+		tmdbClient:            client,
 		Logger:                logger,
 		DiscoverMovieMaxPages: 500,
 		DiscoverMovieThrottle: 20 * time.Second,
-		insertMediaStmt:       insertMedia,
-		insertMediaImageStmt:  insertMediaImage,
-		insertGenreStmt:       insertGenre,
-		insertMediaGenreStmt:  insertMediaGenre,
+		upsertExternalData:    upsertExternalData,
+		matViews:              matViews,
 	}, nil
 }
 
 func (w *Worker) Close() error {
-	var err error
-	if w.insertMediaStmt != nil {
-		if closeErr := w.insertMediaStmt.Close(); closeErr != nil {
-			err = closeErr
-		}
+	if w.upsertExternalData != nil {
+		return w.upsertExternalData.Close()
 	}
-	if w.insertMediaImageStmt != nil {
-		if closeErr := w.insertMediaImageStmt.Close(); closeErr != nil {
-			err = closeErr
-		}
-	}
-	if w.insertGenreStmt != nil {
-		if closeErr := w.insertGenreStmt.Close(); closeErr != nil {
-			err = closeErr
-		}
-	}
-	if w.insertMediaGenreStmt != nil {
-		if closeErr := w.insertMediaGenreStmt.Close(); closeErr != nil {
-			err = closeErr
-		}
-	}
-	return err
+	return nil
 }
 
 func (w *Worker) Run() chan struct{} {
 	w.Logger.Info("starting media worker")
 
-	done := w.WorkerDiscoverMovieLoader()
+	doneDiscoverMovie := w.WorkerDiscoverMovieLoader()
 
+	done := make(chan struct{})
 	go func() {
-		<-done
+		<-doneDiscoverMovie
+
 		w.Logger.Info("media worker completed successfully")
+		close(done)
 	}()
 
 	return done

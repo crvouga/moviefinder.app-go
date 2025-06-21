@@ -15,26 +15,14 @@ func (w *Worker) processMovie(configuration *tmdbAPI.ConfigurationResponse, movi
 	w.Logger.Debug("Processing movie", "title", movie.Title, "id", movie.ID)
 	w.Logger.Debug("Movie details", "title", movie.Title, "popularity", movie.Popularity, "releaseDate", movie.ReleaseDate)
 
-	posterURLs := tmdbAPI.ToPosterURLs(movie.PosterPath, *configuration, configuration.Images.PosterSizes)
-	backdropURLs := tmdbAPI.ToBackdropURLs(movie.BackdropPath, *configuration, configuration.Images.BackdropSizes)
-
-	w.Logger.Debug("Generated URLs", "posterCount", len(posterURLs), "backdropCount", len(backdropURLs))
-
 	tx, err := w.beginTransaction()
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
-	if err := w.insertMedia(tx, movie); err != nil {
-		return err
-	}
-
-	if err := w.insertMovieImages(tx, movie.ID, posterURLs, backdropURLs, configuration); err != nil {
-		return err
-	}
-
-	if err := w.insertMovieGenres(tx, movie.ID, movie.GenreIds); err != nil {
+	// Store TMDB movie data in external_data
+	if err := w.upsertExternalData.Execute(tx, "tmdb/movie", strconv.FormatInt(int64(movie.ID), 10), movie); err != nil {
 		return err
 	}
 
@@ -42,7 +30,7 @@ func (w *Worker) processMovie(configuration *tmdbAPI.ConfigurationResponse, movi
 		return fmt.Errorf("failed to commit transaction: %v", err)
 	}
 
-	w.Logger.Debug("Successfully completed database transaction", "movieID", movie.ID)
+	w.Logger.Debug("Successfully stored TMDB movie data", "movieID", movie.ID)
 	return nil
 }
 
@@ -55,100 +43,30 @@ func (w *Worker) beginTransaction() (*sql.Tx, error) {
 	return tx, nil
 }
 
-func (w *Worker) insertMedia(tx *sql.Tx, movie tmdbAPI.DiscoverMovieResponseResult) error {
-	dto := InsertMediaDTO{
-		ID:          movie.ID,
-		Title:       movie.Title,
-		Overview:    movie.Overview,
-		Popularity:  movie.Popularity,
-		ReleaseDate: movie.ReleaseDate,
-		VoteAverage: movie.VoteAverage,
-		VoteCount:   movie.VoteCount,
-		Runtime:     0, // TODO: add this
-		Adult:       movie.Adult,
+func (w *Worker) storeConfiguration(configuration *tmdbAPI.ConfigurationResponse) error {
+	tx, err := w.beginTransaction()
+	if err != nil {
+		return err
 	}
+	defer tx.Rollback()
 
-	if err := w.insertMediaStmt.Execute(tx, dto); err != nil {
+	// Store TMDB configuration data
+	if err := w.upsertExternalData.Execute(tx, "tmdb/configuration", "config", configuration); err != nil {
 		return err
 	}
 
-	w.Logger.Debug("Inserted base movie data", "movieID", movie.ID)
-	return nil
-}
-
-func (w *Worker) insertMovieImages(tx *sql.Tx, movieID int, posterURLs []string, backdropURLs []string, configuration *tmdbAPI.ConfigurationResponse) error {
-	if err := w.insertPosterImages(tx, movieID, posterURLs, configuration); err != nil {
-		return err
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit configuration: %v", err)
 	}
 
-	if err := w.insertBackdropImages(tx, movieID, backdropURLs, configuration); err != nil {
-		return err
-	}
-
+	w.Logger.Debug("Successfully stored TMDB configuration")
 	return nil
-}
-
-func (w *Worker) insertPosterImages(tx *sql.Tx, movieID int, posterURLs []string, configuration *tmdbAPI.ConfigurationResponse) error {
-	for i, posterURL := range posterURLs {
-		id := fmt.Sprintf("%d_poster_%d", movieID, i)
-		mediaID := strconv.FormatInt(int64(movieID), 10)
-		imageType := "poster"
-		resolution := configuration.Images.PosterSizes[i]
-
-		if err := w.insertMediaImageStmt.Execute(tx, id, mediaID, imageType, resolution, posterURL); err != nil {
-			return err
-		}
-
-		w.Logger.Debug("Inserted poster image", "number", i+1, "total", len(posterURLs), "movieID", movieID)
-	}
-	return nil
-}
-
-func (w *Worker) insertBackdropImages(tx *sql.Tx, movieID int, backdropURLs []string, configuration *tmdbAPI.ConfigurationResponse) error {
-	for i, backdropURL := range backdropURLs {
-		id := fmt.Sprintf("%d_backdrop_%d", movieID, i)
-		mediaID := strconv.FormatInt(int64(movieID), 10)
-		imageType := "backdrop"
-		resolution := configuration.Images.BackdropSizes[i]
-
-		if err := w.insertMediaImageStmt.Execute(tx, id, mediaID, imageType, resolution, backdropURL); err != nil {
-			return err
-		}
-
-		w.Logger.Debug("Inserted backdrop image", "number", i+1, "total", len(backdropURLs), "movieID", movieID)
-	}
-	return nil
-}
-
-func (w *Worker) insertMovieGenres(tx *sql.Tx, movieID int, genreIDs []int) error {
-	w.Logger.Debug("Processing genres", "count", len(genreIDs), "movieID", movieID)
-
-	for i, genreID := range genreIDs {
-		if err := w.insertGenre(tx, genreID); err != nil {
-			return err
-		}
-
-		if err := w.insertMediaGenreRelation(tx, movieID, genreID); err != nil {
-			return err
-		}
-
-		w.Logger.Debug("Processed genre", "number", i+1, "total", len(genreIDs), "genreID", genreID, "movieID", movieID)
-	}
-	return nil
-}
-
-func (w *Worker) insertGenre(tx *sql.Tx, genreID int) error {
-	return w.insertGenreStmt.Execute(tx, genreID)
-}
-
-func (w *Worker) insertMediaGenreRelation(tx *sql.Tx, movieID int, genreID int) error {
-	return w.insertMediaGenreStmt.Execute(tx, movieID, genreID)
 }
 
 func (w *Worker) processMoviePage(configuration *tmdbAPI.ConfigurationResponse, page int) (bool, error) {
 	w.Logger.Debug("Fetching page of movies from TMDB API", "page", page)
 
-	response, err := w.Client.DiscoverMovie(tmdbAPI.DiscoverMovieParams{
+	response, err := w.tmdbClient.DiscoverMovie(tmdbAPI.DiscoverMovieParams{
 		Page: page,
 	})
 	if err != nil {
@@ -208,7 +126,7 @@ func (w *Worker) processPages(logger *slog.Logger, configuration *tmdbAPI.Config
 }
 
 func (w *Worker) getConfiguration(logger *slog.Logger) (*tmdbAPI.ConfigurationResponse, error) {
-	configuration, err := w.Client.Configuration()
+	configuration, err := w.tmdbClient.Configuration()
 	if err != nil {
 		return nil, err
 	}
@@ -229,11 +147,28 @@ func (w *Worker) WorkerDiscoverMovieLoader() chan struct{} {
 		logger.Info("Processing pages", "maxPages", w.DiscoverMovieMaxPages)
 
 		configuration, err := w.getConfiguration(logger)
+		logger.Info("Got TMDB configuration", "baseURL", configuration)
 		if err != nil {
 			logger.Error("Failed to get configuration", "error", err)
 			close(done)
 			return
 		}
+
+		tx, err := w.beginTransaction()
+		if err != nil {
+			logger.Error("Failed to begin transaction", "error", err)
+			close(done)
+			return
+		}
+
+		err = w.upsertExternalData.Execute(tx, "tmdb/configuration", "0", configuration)
+		logger.Info("Executed upsert external data", "error", err)
+		if err != nil {
+			logger.Error("Failed to execute upsert external data", "error", err)
+			close(done)
+			return
+		}
+		tx.Commit()
 
 		w.processPages(logger, configuration, &page, done)
 	}()
