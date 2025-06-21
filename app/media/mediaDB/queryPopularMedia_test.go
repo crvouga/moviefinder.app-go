@@ -15,8 +15,7 @@ func TestQueryPopularMedia(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected no error creating worker, got %v", err)
 	}
-	worker.DiscoverMovieMaxPages = 1
-	done := worker.Run()
+	done := worker.WorkerTmdbDiscoverMovieLoader()
 
 	// Wait for loading to complete
 	select {

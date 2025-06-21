@@ -3,7 +3,6 @@ package mediaDB
 import (
 	"log/slog"
 	"testing"
-	"time"
 )
 
 func TestWorker(t *testing.T) {
@@ -16,9 +15,7 @@ func TestWorker(t *testing.T) {
 	}
 	defer worker.Close()
 
-	worker.DiscoverMovieMaxPages = 1
-	worker.DiscoverMovieThrottle = 0 * time.Second
-	done := worker.Run()
+	done := worker.WorkerTmdbDiscoverMovieLoader()
 
 	t.Log("waiting for worker to complete")
 	<-done

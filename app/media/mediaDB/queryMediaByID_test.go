@@ -17,8 +17,7 @@ func TestQueryMediaByID(t *testing.T) {
 	}
 	defer worker.Close()
 
-	worker.DiscoverMovieMaxPages = 1
-	done := worker.Run()
+	done := worker.WorkerTmdbDiscoverMovieLoader()
 
 	// Wait for loading to complete
 	select {
