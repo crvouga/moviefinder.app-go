@@ -5,6 +5,6 @@ SELECT
 FROM media_mv
 JOIN media_genres_mv ON media_mv.id = media_genres_mv.media_id
 JOIN genres_mv ON media_genres_mv.genre_id = genres_mv.id
-WHERE genres_mv.name ILIKE '%horror%'
-ORDER BY media_mv.popularity ASC
-LIMIT 10;   
+WHERE genres_mv.name ILIKE '%western%'
+ORDER BY media_mv.popularity DESC
+LIMIT 10;
