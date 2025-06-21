@@ -23,18 +23,14 @@ clean:
 preview:
 	docker build -t moviefinder . && docker run -p 8080:8080 moviefinder
 
-sql:
-	sqlite3 db/db.sqlite3
-
 q:
 	psql postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable
 
-
 db-up:
-	docker compose up -d
+	docker compose -f db/docker-compose.yml up -d
 
 db-down:
-	docker compose down
+	docker compose -f db/docker-compose.yml down
 
 db-restart:
 	make db-down && make db-up

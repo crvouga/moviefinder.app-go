@@ -8,7 +8,7 @@ import (
 	_ "github.com/amacneil/dbmate/v2/pkg/driver/postgres"
 )
 
-func (p *Postgres) MigrateUp(migrationsFS embed.FS) error {
+func (p *Postgres) MigrateUp(migrationsFS embed.FS, migrationsDir string) error {
 	p.Logger.Info("Migrating up")
 	u, err := url.Parse(p.DatabaseURL)
 
@@ -20,7 +20,7 @@ func (p *Postgres) MigrateUp(migrationsFS embed.FS) error {
 	p.Logger.Info("Creating database connection")
 	db := dbmate.New(u)
 	db.FS = migrationsFS
-	db.MigrationsDir = []string{"db/migrations"}
+	db.MigrationsDir = []string{migrationsDir}
 
 	p.Logger.Info("Running database migrations")
 	err = db.CreateAndMigrate()

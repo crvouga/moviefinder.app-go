@@ -7,3 +7,5 @@ var SchemaFs embed.FS
 
 //go:embed migrations/*.sql
 var MigrationsFs embed.FS
+
+const MigrationsDir = "migrations"

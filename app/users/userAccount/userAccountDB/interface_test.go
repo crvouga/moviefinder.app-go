@@ -1,15 +1,16 @@
 package userAccountDB
 
 import (
+	"log/slog"
 	"testing"
 	"time"
 
+	"movieFinder/app/appDb"
 	"movieFinder/app/users/userAccount"
 	"movieFinder/app/users/userAccount/userRole"
 	"movieFinder/app/users/userID"
 	"movieFinder/lib/email/emailAddress"
 	"movieFinder/lib/keyValueDB"
-	"movieFinder/lib/sqlite"
 	"movieFinder/lib/uow"
 )
 
@@ -19,15 +20,13 @@ type Fixture struct {
 }
 
 func newFixture() *Fixture {
-	db, err := sqlite.New(":memory:")
-	if err != nil {
-		panic(err)
-	}
+	logger := slog.Default().WithGroup("app")
+	postgres := appDb.New(logger)
 	keyValueDB := &keyValueDB.ImplHashMap{}
 
 	return &Fixture{
 		DB:         NewImplKeyValueDB(keyValueDB),
-		UowFactory: *uow.NewFactory(db),
+		UowFactory: *uow.NewFactory(postgres.DB),
 	}
 }
 

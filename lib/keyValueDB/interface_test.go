@@ -1,9 +1,10 @@
 package keyValueDB
 
 import (
+	"log/slog"
 	"testing"
 
-	"movieFinder/lib/sqlite"
+	"movieFinder/app/appDb"
 	"movieFinder/lib/uow"
 )
 
@@ -13,10 +14,8 @@ type Fixture struct {
 }
 
 func newFixtures() []*Fixture {
-	db, err := sqlite.New(":memory:")
-	if err != nil {
-		panic(err)
-	}
+	logger := slog.Default().WithGroup("app")
+	postgres := appDb.New(logger)
 
 	fixtures := make([]*Fixture, 0)
 
@@ -29,7 +28,7 @@ func newFixtures() []*Fixture {
 	for _, keyValueDB := range keyValueDBs {
 		fixtures = append(fixtures, &Fixture{
 			KeyValueDB: keyValueDB,
-			UowFactory: *uow.NewFactory(db),
+			UowFactory: *uow.NewFactory(postgres.DB),
 		})
 	}
 
