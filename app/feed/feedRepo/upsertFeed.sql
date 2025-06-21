@@ -4,10 +4,10 @@ INSERT INTO feed (
     created_at_epoch,
     updated_at_epoch
 ) VALUES (
-    ?,
-    ?,
-    ?,
-    ?
+    $1,
+    $2,
+    $3,
+    $4
 )
 ON CONFLICT(id) DO UPDATE SET
     current_feed_index = excluded.current_feed_index,

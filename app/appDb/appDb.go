@@ -6,14 +6,26 @@ import (
 	"io"
 	"log/slog"
 	"movieFinder/db"
+	"movieFinder/lib/dotEnv"
+	"movieFinder/lib/postgres"
 	"movieFinder/lib/sqlite"
+	"os"
 )
 
-const DbPath = "./db/db.sqlite3"
-const DbUrl = "sqlite:" + DbPath
+func getDatabaseUrl() string {
+	err := dotEnv.Load()
+	if err != nil {
+		panic(err)
+	}
+	databaseUrl := os.Getenv("DATABASE_URL")
+	if databaseUrl == "" {
+		panic("DATABASE_URL is not set")
+	}
+	return databaseUrl
+}
 
 func OpenDurable() *sql.DB {
-	db, err := sqlite.New(DbPath)
+	db, err := postgres.New(getDatabaseUrl())
 	if err != nil {
 		panic(err)
 	}

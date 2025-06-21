@@ -1,1 +1,2 @@
-INSERT OR IGNORE INTO genres (id, name) VALUES (?, ?) 
+INSERT INTO genres (id, name) VALUES ($1, $2) 
+ON CONFLICT(id) DO NOTHING 

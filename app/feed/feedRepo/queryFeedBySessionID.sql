@@ -1,7 +1,7 @@
 WITH mapping AS (
     SELECT feed_id, session_id
     FROM feed_session_mapping
-    WHERE session_id = ?
+    WHERE session_id = $1
     LIMIT 1
 )
 SELECT 

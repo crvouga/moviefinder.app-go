@@ -12,4 +12,4 @@ SELECT
         ''
     ) AS backdrop_url
 FROM media	
-WHERE id = ?
+WHERE id = $1

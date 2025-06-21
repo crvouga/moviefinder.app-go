@@ -1,6 +1,6 @@
 
 run:
-	go run main.go
+	clear && go run main.go
 
 build:
 	make tw-build & go build -o main main.go
@@ -26,6 +26,19 @@ preview:
 sql:
 	sqlite3 db/db.sqlite3
 
+q:
+	psql postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable
+
+
+db-up:
+	docker compose up -d
+
+db-down:
+	docker compose down
+
+db-restart:
+	make db-down && make db-up
+
 dbmate-download:
 	curl -fsSL -o dbmate https://github.com/amacneil/dbmate/releases/latest/download/dbmate-macos-amd64
 	chmod +x dbmate
@@ -38,17 +51,16 @@ dbmate-download-cached:
 
 dbmate-up:
 	make dbmate-download-cached
-
-	mkdir -p db && ./dbmate --url "sqlite:db/db.sqlite3" up
+	mkdir -p db && ./dbmate up
 
 dbmate-new:
 	make dbmate-download-cached
-	mkdir -p db && ./dbmate --url "sqlite:db/db.sqlite3" new "new-migration-rename-me"
+	mkdir -p db && ./dbmate new "$(name)"
 
 dbmate-down:
-	./dbmate --url "sqlite:db/db.sqlite3" down
+	./dbmate down
 
-	mkdir -p db && ./dbmate --url "sqlite:db/db.sqlite3" down
+	mkdir -p db && ./dbmate down
 
 tw-download:
 	curl -fsSL -o tailwindcss https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-macos-arm64
