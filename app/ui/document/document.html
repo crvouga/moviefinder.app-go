@@ -8,6 +8,15 @@
   <meta name="description" content="Movie finder" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="output.css" />
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").then((registration) => {
+        console.log("Service worker registered", registration);
+      }).catch((error) => {
+        console.error("Service worker registration failed", error);
+      });
+    }
+  </script>
 </head>
 
 <body class="bg-black text-white grid place-items-center w-[100dvw] h-[100dvh] overflow-hidden">
