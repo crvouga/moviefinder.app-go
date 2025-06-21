@@ -1,37 +1,42 @@
-const extractBody = (html) => {
-  return /<body[^>]*>([\s\S]*)<\/body>/i.exec(html)[1];
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker
+    .register("/instant-navigation-sw.js")
+    .then((registration) => {
+      console.log("Service worker registered", registration);
+    })
+    .catch((error) => {
+      console.error("Service worker registration failed", error);
+    });
+}
+
+// Send message to service worker to update cache
+const requestCacheUpdate = (url) => {
+  if (navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({
+      type: "UPDATE_CACHE",
+      url: url,
+    });
+  }
 };
 
 const updatePage = async (url) => {
-  const res = await fetch(url);
-  const html = await res.text();
-  document.body.innerHTML = extractBody(html);
-  bindLinkHandlers();
+  // Tell service worker to update cache in background
+  requestCacheUpdate(url);
 };
 
-const preload = async (link) => {
+const preload = (link) => {
   const href = link.getAttribute("href");
   if (!href) return;
-  // Browser will cache this automatically due to cache headers
-  await fetch(href);
+
+  // Tell service worker to fetch and cache this URL
+  requestCacheUpdate(href);
+  console.log("Requested cache update for:", href);
 };
 
 const bindLinkHandlers = () => {
   document.querySelectorAll("a").forEach((link) => {
     link.addEventListener("mouseenter", () => preload(link));
     link.addEventListener("touchstart", () => preload(link));
-    link.addEventListener("click", async (e) => {
-      e.preventDefault();
-      const href = link.getAttribute("href");
-      if (!href) return;
-
-      // Fetch will use browser cache if available
-      const res = await fetch(href);
-      const html = await res.text();
-      document.body.innerHTML = extractBody(html);
-      history.pushState(null, "", href);
-      bindLinkHandlers();
-    });
   });
 };
 
