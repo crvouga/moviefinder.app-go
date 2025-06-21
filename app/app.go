@@ -19,8 +19,7 @@ import (
 )
 
 // Handler is the main handler for the application.
-func Handler() http.Handler {
-	ac := appCtx.New()
+func Handler(ac *appCtx.AppCtx) http.Handler {
 	ac.Logger.Debug("initializing application handler")
 
 	worker := Worker{
@@ -46,7 +45,7 @@ func Handler() http.Handler {
 	mux := http.NewServeMux()
 
 	ac.Logger.Debug("setting up router")
-	router(mux, &ac)
+	router(mux, ac)
 
 	handler := traceID.WithTraceIDHeader(sessionID.WithSessionIDCookie(mux))
 	handler = httpExt.GzipMiddleware(handler)

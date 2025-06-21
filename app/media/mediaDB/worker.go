@@ -49,11 +49,12 @@ func (w *Worker) Run() chan struct{} {
 	w.Logger.Info("starting media worker")
 
 	doneDiscoverMovie := w.WorkerDiscoverMovieLoader()
+	doneRefreshMatViews := w.matViews.RefreshWorker()
 
 	done := make(chan struct{})
 	go func() {
 		<-doneDiscoverMovie
-
+		<-doneRefreshMatViews
 		w.Logger.Info("media worker completed successfully")
 		close(done)
 	}()

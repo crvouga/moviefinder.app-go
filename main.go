@@ -1,20 +1,24 @@
 package main
 
 import (
-	"log"
 	"movieFinder/app"
+	"movieFinder/app/ctx/appCtx"
 	"net/http"
+	"os"
 )
 
 func main() {
 
-	handler := app.Handler()
+	ac := appCtx.New()
+
+	handler := app.Handler(&ac)
 
 	addr := ":8080"
 
-	log.Printf("Server live here http://localhost%s/ \n", addr)
+	ac.Logger.Info("Server live", "url", "http://localhost"+addr+"/")
 
 	if err := http.ListenAndServe(addr, handler); err != nil {
-		log.Fatal(err)
+		ac.Logger.Error("Failed to start server", "error", err)
+		os.Exit(1)
 	}
 }

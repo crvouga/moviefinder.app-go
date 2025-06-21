@@ -19,7 +19,7 @@ func (w *Worker) getConfiguration(logger *slog.Logger) (*tmdbAPI.ConfigurationRe
 
 func (w *Worker) upsertConfiguration(logger *slog.Logger) (*tmdbAPI.ConfigurationResponse, error) {
 	configuration, err := w.getConfiguration(logger)
-	logger.Info("Got TMDB configuration", "baseURL", configuration)
+	logger.Debug("Got TMDB configuration", "baseURL", configuration)
 	if err != nil {
 		logger.Error("Failed to get configuration", "error", err)
 

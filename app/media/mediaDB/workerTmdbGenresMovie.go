@@ -33,12 +33,14 @@ func (w *Worker) upsertGenresMovie(logger *slog.Logger) (*tmdbAPI.GenresMovieRes
 
 	for _, genre := range genres.Genres {
 		err = w.upsertEntity.Execute(tx, "tmdb/genres/movie", strconv.FormatInt(int64(genre.ID), 10), genre)
-		logger.Info("Executed upsert movie genre", "error", err)
+		logger.Debug("Executed upsert movie genre", "error", err)
 		if err != nil {
 			logger.Error("Failed to execute upsert movie genre", "error", err)
 			return nil, err
 		}
 	}
+
+	logger.Info("Upserted movie genres", "count", len(genres.Genres))
 
 	if err := tx.Commit(); err != nil {
 		logger.Error("Failed to commit transaction", "error", err)
