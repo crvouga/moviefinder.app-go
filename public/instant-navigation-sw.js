@@ -28,8 +28,17 @@ const updateCache = async (url) => {
   }
 };
 
-self.addEventListener("fetch", async (event) => {
+self.addEventListener("fetch", (event) => {
   const req = event.request;
+  const url = new URL(req.url);
+
+  if (
+    url.pathname.includes("manifest.json") ||
+    url.pathname.includes("apple-touch-icon") ||
+    url.pathname.includes("icon-")
+  ) {
+    return;
+  }
 
   if (req.method !== "GET" || req.mode !== "navigate") return;
 
