@@ -43,26 +43,6 @@ func (w *Worker) beginTransaction() (*sql.Tx, error) {
 	return tx, nil
 }
 
-func (w *Worker) storeConfiguration(configuration *tmdbAPI.ConfigurationResponse) error {
-	tx, err := w.beginTransaction()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	// Store TMDB configuration data
-	if err := w.upsertEntity.Execute(tx, "tmdb/configuration", "config", configuration); err != nil {
-		return err
-	}
-
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("failed to commit configuration: %v", err)
-	}
-
-	w.Logger.Debug("Successfully stored TMDB configuration")
-	return nil
-}
-
 func (w *Worker) processMoviePage(page int) (bool, error) {
 	w.Logger.Debug("Fetching page of movies from TMDB API", "page", page)
 
