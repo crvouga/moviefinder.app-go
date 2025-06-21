@@ -1,7 +1,7 @@
 {
-  "name": "MovieFinder",
-  "short_name": "MovieFinder",
-  "description": "Discover and explore movies",
+  "name": "moviefinder.app",
+  "short_name": "moviefinder.app",
+  "description": "moviefinder.app",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#000000",
