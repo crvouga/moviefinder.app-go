@@ -1,4 +1,4 @@
-navigator.serviceWorker?.register("/instant-navigation-sw.js");
+navigator.serviceWorker?.register("/app-sw.js");
 const requestCacheUpdate = (url) => {
   navigator.serviceWorker.controller?.postMessage({
     type: "UPDATE_CACHE",
@@ -13,8 +13,7 @@ const preload = (link) => {
 const onLoad = () => {
   document.querySelectorAll("a").forEach((link) => {
     preload(link);
-    link.addEventListener("pointerover", () => preload(link));
-    link.addEventListener("pointerdown", () => preload(link));
+    link.addEventListener("pointerenter", () => preload(link));
   });
 };
 document.addEventListener("DOMContentLoaded", onLoad);

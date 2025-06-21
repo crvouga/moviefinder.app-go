@@ -21,7 +21,7 @@
 				swiperSlideLast.insertAdjacentHTML("beforebegin", html);
 			}
 			const feedIndex = parseInt(event?.detail?.[0]?.slides?.[event?.detail?.[0]?.activeIndex]?.getAttribute?.('data-feed-index'), 10)
-			await fetch(`${SLIDE_CHANGED_URL}&feedIndex=${feedIndex}`, { method: "POST" });
+			await fetch(`${SLIDE_CHANGED_URL}?feedIndex=${feedIndex}`, { method: "POST" });
 		});
 	});
 </script>
