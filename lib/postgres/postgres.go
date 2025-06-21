@@ -2,12 +2,19 @@ package postgres
 
 import (
 	"database/sql"
+	"log/slog"
 
 	_ "github.com/lib/pq"
 )
 
-func New(dbURL string) (*sql.DB, error) {
-	db, err := sql.Open("postgres", dbURL)
+type Postgres struct {
+	DB          *sql.DB
+	DatabaseURL string
+	Logger      *slog.Logger
+}
+
+func New(databaseURL string, logger *slog.Logger) (*Postgres, error) {
+	db, err := sql.Open("postgres", databaseURL)
 
 	if err != nil {
 		return nil, err
@@ -18,5 +25,9 @@ func New(dbURL string) (*sql.DB, error) {
 		return nil, err
 	}
 
-	return db, nil
+	return &Postgres{
+		DB:          db,
+		DatabaseURL: databaseURL,
+		Logger:      logger,
+	}, nil
 }

@@ -13,14 +13,14 @@ type Fixture struct {
 }
 
 func NewFixture() *Fixture {
-	db := appDb.OpenInMemory()
+	postgres := appDb.New(slog.Default())
 
 	client, err := tmdbAPI.NewFromEnv(slog.Default())
 	if err != nil {
 		panic(err)
 	}
 	return &Fixture{
-		DB:     db,
+		DB:     postgres.DB,
 		Client: client,
 	}
 }

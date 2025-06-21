@@ -5,6 +5,7 @@ go 1.24.2
 require (
 	github.com/ClickHouse/clickhouse-go v1.5.4 // indirect
 	github.com/amacneil/dbmate v1.16.2 // indirect
+	github.com/amacneil/dbmate/v2 v2.27.0 // indirect
 	github.com/cloudflare/golz4 v0.0.0-20150217214814-ef862a3cdc58 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect

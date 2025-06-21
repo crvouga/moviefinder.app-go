@@ -8,12 +8,14 @@ import (
 	"movieFinder/app/users/userSession/userSessionDB"
 	"movieFinder/lib/email/emailOutbox"
 	"movieFinder/lib/keyValueDB"
+	"movieFinder/lib/postgres"
 	"movieFinder/lib/tmdbAPI"
 	"movieFinder/lib/uow"
 	"os"
 )
 
 type AppCtx struct {
+	Postgres   *postgres.Postgres
 	DB         *sql.DB
 	DBDurable  *sql.DB
 	TmdbClient *tmdbAPI.Client
@@ -31,16 +33,12 @@ func (ac *AppCtx) CleanUp() {
 }
 
 func New() AppCtx {
-	dbDurable := appDb.OpenDurable()
-	// dbDurable := appDb.OpenInMemory()
-	// db := appDb.OpenInMemory()
-	db := appDb.OpenDurable() // We're getting errors with in memory db
+	MAX_LOG_LEVEL := slog.LevelInfo
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: MAX_LOG_LEVEL})).WithGroup("app")
+
+	postgres := appDb.New(logger)
 
 	keyValueDBFs := keyValueDB.NewImplFs("keyValueDB.json")
-
-	MAX_LOG_LEVEL := slog.LevelInfo
-
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: MAX_LOG_LEVEL})).WithGroup("app")
 
 	tmdbAPIClient, err := tmdbAPI.NewFromEnv(logger.WithGroup("tmdbAPI"))
 
@@ -53,13 +51,12 @@ func New() AppCtx {
 	}
 
 	return AppCtx{
-		DB:         db,
-		DBDurable:  dbDurable,
-		TmdbClient: tmdbAPIClient,
-		UowFactory: *uow.NewFactory(db),
-		Logger:     logger,
-		KeyValueDB: keyValueDB.NewImplNamespaced(keyValueDBFs, "app"),
-
+		Postgres:      postgres,
+		DB:            postgres.DB,
+		TmdbClient:    tmdbAPIClient,
+		UowFactory:    *uow.NewFactory(postgres.DB),
+		Logger:        logger.WithGroup("app"),
+		KeyValueDB:    keyValueDB.NewImplNamespaced(keyValueDBFs, "app"),
 		EmailOutbox:   emailOutbox.NewImplKeyValueDB(keyValueDBFs),
 		UserSessionDB: userSessionDB.NewImplKeyValueDB(keyValueDBFs),
 		UserAccountDB: userAccountDB.NewImplKeyValueDB(keyValueDBFs),
@@ -67,12 +64,14 @@ func New() AppCtx {
 }
 
 func NewTest() AppCtx {
-	db := appDb.OpenInMemory()
+	logger := slog.Default().WithGroup("app")
+	postgres := appDb.New(logger)
 	keyValueDBHashMap := keyValueDB.ImplHashMap{}
 	return AppCtx{
-		DB:            db,
-		UowFactory:    *uow.NewFactory(db),
-		Logger:        slog.Default(),
+		Postgres:      postgres,
+		DB:            postgres.DB,
+		UowFactory:    *uow.NewFactory(postgres.DB),
+		Logger:        logger,
 		KeyValueDB:    &keyValueDBHashMap,
 		EmailOutbox:   emailOutbox.NewImplKeyValueDB(&keyValueDBHashMap),
 		UserSessionDB: userSessionDB.NewImplKeyValueDB(&keyValueDBHashMap),

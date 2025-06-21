@@ -1,15 +1,27 @@
 package main
 
 import (
+	"embed"
 	"movieFinder/app"
 	"movieFinder/app/ctx/appCtx"
 	"net/http"
 	"os"
+
+	_ "embed"
 )
 
-func main() {
+//go:embed db/migrations
+var migrations embed.FS
 
+func main() {
 	ac := appCtx.New()
+
+	err := ac.Postgres.MigrateUp(migrations)
+
+	if err != nil {
+		ac.Logger.Error("Failed to migrate up", "error", err)
+		os.Exit(1)
+	}
 
 	handler := app.Handler(&ac)
 
