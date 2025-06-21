@@ -15,32 +15,6 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: credits; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.credits (
-    id text NOT NULL,
-    media_id text NOT NULL,
-    person_id text NOT NULL,
-    job text,
-    "character" text,
-    "order" integer NOT NULL,
-    type text NOT NULL,
-    computed_is_director integer GENERATED ALWAYS AS (
-CASE
-    WHEN (lower(job) = 'director'::text) THEN 1
-    ELSE 0
-END) STORED,
-    computed_is_cast integer GENERATED ALWAYS AS (
-CASE
-    WHEN (type = 'cast'::text) THEN 1
-    ELSE 0
-END) STORED,
-    CONSTRAINT credits_type_check CHECK ((type = ANY (ARRAY['cast'::text, 'crew'::text])))
-);
-
-
---
 -- Name: external_data; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -88,71 +62,6 @@ CREATE TABLE public.genres (
 
 
 --
--- Name: media; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.media (
-    id text NOT NULL,
-    title text NOT NULL,
-    description text NOT NULL,
-    popularity double precision NOT NULL,
-    release_date text NOT NULL,
-    vote_average double precision NOT NULL,
-    vote_count integer NOT NULL,
-    runtime integer NOT NULL,
-    is_adult boolean DEFAULT false NOT NULL
-);
-
-
---
--- Name: media_genres; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.media_genres (
-    media_id text NOT NULL,
-    genre_id text NOT NULL
-);
-
-
---
--- Name: media_images; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.media_images (
-    id text NOT NULL,
-    media_id text NOT NULL,
-    image_type text NOT NULL,
-    resolution text NOT NULL,
-    url text NOT NULL
-);
-
-
---
--- Name: media_relationships; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.media_relationships (
-    id text NOT NULL,
-    "from" text NOT NULL,
-    "to" text NOT NULL,
-    type text NOT NULL,
-    "order" integer NOT NULL,
-    CONSTRAINT media_relationships_type_check CHECK ((type = ANY (ARRAY['recommendation'::text, 'similar'::text])))
-);
-
-
---
--- Name: people; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.people (
-    id text NOT NULL,
-    name text NOT NULL,
-    popularity double precision DEFAULT 0 NOT NULL
-);
-
-
---
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -184,34 +93,6 @@ CREATE TABLE public.user_sessions (
     created_at_epoch bigint NOT NULL,
     ended_at_epoch bigint NOT NULL
 );
-
-
---
--- Name: videos; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.videos (
-    id text NOT NULL,
-    iso_639_1 text NOT NULL,
-    iso_3166_1 text NOT NULL,
-    name text NOT NULL,
-    key text NOT NULL,
-    site text NOT NULL,
-    size integer NOT NULL,
-    type text NOT NULL,
-    official boolean DEFAULT false NOT NULL,
-    published_at text NOT NULL,
-    media_id text NOT NULL,
-    "order" integer NOT NULL
-);
-
-
---
--- Name: credits credits_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.credits
-    ADD CONSTRAINT credits_pkey PRIMARY KEY (id);
 
 
 --
@@ -247,54 +128,6 @@ ALTER TABLE ONLY public.genres
 
 
 --
--- Name: media_genres media_genres_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.media_genres
-    ADD CONSTRAINT media_genres_pkey PRIMARY KEY (media_id, genre_id);
-
-
---
--- Name: media_images media_images_media_id_image_type_resolution_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.media_images
-    ADD CONSTRAINT media_images_media_id_image_type_resolution_key UNIQUE (media_id, image_type, resolution);
-
-
---
--- Name: media_images media_images_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.media_images
-    ADD CONSTRAINT media_images_pkey PRIMARY KEY (id);
-
-
---
--- Name: media media_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.media
-    ADD CONSTRAINT media_pkey PRIMARY KEY (id);
-
-
---
--- Name: media_relationships media_relationships_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.media_relationships
-    ADD CONSTRAINT media_relationships_pkey PRIMARY KEY (id);
-
-
---
--- Name: people people_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.people
-    ADD CONSTRAINT people_pkey PRIMARY KEY (id);
-
-
---
 -- Name: schema_migrations schema_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -316,42 +149,6 @@ ALTER TABLE ONLY public.user_accounts
 
 ALTER TABLE ONLY public.user_sessions
     ADD CONSTRAINT user_sessions_pkey PRIMARY KEY (user_session_id);
-
-
---
--- Name: videos videos_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.videos
-    ADD CONSTRAINT videos_pkey PRIMARY KEY (id);
-
-
---
--- Name: idx_credits_cast; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_credits_cast ON public.credits USING btree (media_id) WHERE (computed_is_cast = 1);
-
-
---
--- Name: idx_credits_director; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_credits_director ON public.credits USING btree (media_id) WHERE (computed_is_director = 1);
-
-
---
--- Name: idx_credits_media; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_credits_media ON public.credits USING btree (media_id, type, "order");
-
-
---
--- Name: idx_credits_person; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_credits_person ON public.credits USING btree (person_id, type);
 
 
 --
@@ -390,48 +187,6 @@ CREATE INDEX idx_feed_session_mapping_session_id ON public.feed_session_mapping 
 
 
 --
--- Name: idx_media_images_lookup; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_media_images_lookup ON public.media_images USING btree (media_id, image_type, url);
-
-
---
--- Name: idx_media_is_adult; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_media_is_adult ON public.media USING btree (is_adult) WHERE (is_adult = false);
-
-
---
--- Name: idx_media_popularity; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_media_popularity ON public.media USING btree (popularity DESC);
-
-
---
--- Name: idx_media_relationships_from; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_media_relationships_from ON public.media_relationships USING btree ("from", type, "order");
-
-
---
--- Name: idx_media_relationships_to; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_media_relationships_to ON public.media_relationships USING btree ("to", type, "order");
-
-
---
--- Name: idx_people_popularity; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_people_popularity ON public.people USING btree (popularity DESC);
-
-
---
 -- Name: idx_user_accounts_phone_number; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -453,82 +208,11 @@ CREATE INDEX idx_user_sessions_session_id ON public.user_sessions USING btree (s
 
 
 --
--- Name: idx_videos_media; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_videos_media ON public.videos USING btree (media_id, type, "order");
-
-
---
--- Name: credits credits_media_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.credits
-    ADD CONSTRAINT credits_media_id_fkey FOREIGN KEY (media_id) REFERENCES public.media(id) ON DELETE CASCADE;
-
-
---
--- Name: credits credits_person_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.credits
-    ADD CONSTRAINT credits_person_id_fkey FOREIGN KEY (person_id) REFERENCES public.people(id) ON DELETE CASCADE;
-
-
---
 -- Name: feed_session_mapping feed_session_mapping_feed_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.feed_session_mapping
     ADD CONSTRAINT feed_session_mapping_feed_id_fkey FOREIGN KEY (feed_id) REFERENCES public.feed(id) ON DELETE CASCADE;
-
-
---
--- Name: media_genres media_genres_genre_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.media_genres
-    ADD CONSTRAINT media_genres_genre_id_fkey FOREIGN KEY (genre_id) REFERENCES public.genres(id) ON DELETE CASCADE;
-
-
---
--- Name: media_genres media_genres_media_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.media_genres
-    ADD CONSTRAINT media_genres_media_id_fkey FOREIGN KEY (media_id) REFERENCES public.media(id) ON DELETE CASCADE;
-
-
---
--- Name: media_images media_images_media_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.media_images
-    ADD CONSTRAINT media_images_media_id_fkey FOREIGN KEY (media_id) REFERENCES public.media(id) ON DELETE CASCADE;
-
-
---
--- Name: media_relationships media_relationships_from_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.media_relationships
-    ADD CONSTRAINT media_relationships_from_fkey FOREIGN KEY ("from") REFERENCES public.media(id) ON DELETE CASCADE;
-
-
---
--- Name: media_relationships media_relationships_to_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.media_relationships
-    ADD CONSTRAINT media_relationships_to_fkey FOREIGN KEY ("to") REFERENCES public.media(id) ON DELETE CASCADE;
-
-
---
--- Name: videos videos_media_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.videos
-    ADD CONSTRAINT videos_media_id_fkey FOREIGN KEY (media_id) REFERENCES public.media(id) ON DELETE CASCADE;
 
 
 --
@@ -546,4 +230,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20250606073703'),
     ('20250606082308'),
     ('20250620011605'),
-    ('20250621052321');
+    ('20250621052321'),
+    ('20250621073938');
