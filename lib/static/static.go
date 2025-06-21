@@ -13,7 +13,7 @@ import (
 var ErrFileNotFound = errors.New("file not found")
 var ErrInvalidSuffix = errors.New("invalid suffix")
 
-var whitelistSuffix = []string{".js", ".css", ".html", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".webp", ".bmp"}
+var whitelistSuffix = []string{".js", ".css", ".html", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".webp", ".bmp", ".txt"}
 
 func hasValidSuffix(requestPath string) bool {
 	for _, suffix := range whitelistSuffix {
@@ -43,7 +43,6 @@ func ServeStaticAssets(w http.ResponseWriter, r *http.Request, directory string)
 		return ErrFileNotFound
 	}
 
-	// Set more aggressive caching for CSS and JS files
 	if strings.HasSuffix(requestPath, ".css") || strings.HasSuffix(requestPath, ".js") {
 		w.Header().Set("Cache-Control", "public, max-age=3600, must-revalidate, stale-while-revalidate=86400")
 		w.Header().Set("Expires", time.Now().Add(1*time.Hour).Format(time.RFC1123))

@@ -86,7 +86,7 @@ func respondLoadNext(ac *appCtx.AppCtx) http.HandlerFunc {
 		data.FeedSwiper.Slides = make([]feedSwiperSlides.FeedSwiperSlide, len(media))
 
 		for i, m := range media {
-			data.FeedSwiper.Slides[i] = feedSwiperSlides.FromMedia(m, int64(startingFeedIndexInt+i))
+			data.FeedSwiper.Slides[i] = feedSwiperSlides.FromMedia(m, int64(startingFeedIndexInt+i), int64(i))
 		}
 
 		templateExt.Respond(templ, feedSwiperSlides.TemplateName, data, w)

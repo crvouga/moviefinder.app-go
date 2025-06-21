@@ -1,9 +1,14 @@
 {{define "feedSwiperSlides"}}
 {{range .FeedSwiper.Slides}}
 <swiper-slide data-feed-index="{{.FeedIndex}}">
-	<a class="flex w-full h-full bg-neutral-900" href="{{.URL}}">
-		{{if .ImageSrc}}<img src="{{.ImageSrc}}" alt=" " class="w-full h-full object-cover" />{{end}}
-		{{if .PreloadImageSrc}}<img src="{{.PreloadImageSrc}}" alt=" " class="hidden" />{{end}}
+	<a class="flex w-full h-full bg-neutral-900" href="{{.URL}}" aria-label="{{.AriaLabel}}">
+		{{if .ImageSrc}}
+		<img src="{{.ImageSrc}}" alt="{{.ImageAlt}}" {{if eq .SlideIndex 0}} fetchpriority="high" {{else}}
+			fetchpriority="auto" {{end}} class="w-full h-full object-cover" />
+		{{end}}
+		{{if .PreloadImageSrc}}
+		<img fetchpriority="low" src="{{.PreloadImageSrc}}" alt="{{.PreloadImageAlt}}" class="hidden" />
+		{{end}}
 	</a>
 </swiper-slide>
 {{end}}

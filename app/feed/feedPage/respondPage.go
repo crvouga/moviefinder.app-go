@@ -89,7 +89,7 @@ func respondPage(ac *appCtx.AppCtx) http.HandlerFunc {
 		rc.Logger.Debug("allocated slides array", "length", len(found))
 
 		for i, m := range found {
-			slide := feedSwiperSlides.FromMedia(m, feed_.CurrentFeedIndex+int64(i))
+			slide := feedSwiperSlides.FromMedia(m, feed_.CurrentFeedIndex+int64(i), int64(i))
 			data.FeedSwiper.Slides[i] = slide
 		}
 		rc.Logger.Debug("populated slides")

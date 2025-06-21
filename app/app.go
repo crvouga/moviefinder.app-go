@@ -34,7 +34,6 @@ func Handler(ac *appCtx.AppCtx) http.Handler {
 	done, err := worker.Run()
 	if err != nil {
 		ac.Logger.Error("Failed to start worker", "error", err)
-		// Continue without worker - the application can still serve requests
 	} else {
 		go func() {
 			<-done
@@ -48,6 +47,7 @@ func Handler(ac *appCtx.AppCtx) http.Handler {
 	router(mux, ac)
 
 	handler := traceID.WithTraceIDHeader(sessionID.WithSessionIDCookie(mux))
+	handler = httpExt.MinifierMiddleware(handler)
 	handler = httpExt.GzipMiddleware(handler)
 	ac.Logger.Debug("handler setup complete")
 

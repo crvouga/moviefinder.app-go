@@ -180,15 +180,15 @@ UNION ALL
 --
 
 CREATE MATERIALIZED VIEW public.media_mv AS
- SELECT (data ->> 'id'::text) AS id,
-    (data ->> 'title'::text) AS title,
+ SELECT COALESCE((data ->> 'id'::text), md5((random())::text)) AS id,
+    COALESCE((data ->> 'title'::text), ''::text) AS title,
     COALESCE((data ->> 'overview'::text), ''::text) AS description,
-    ((data ->> 'popularity'::text))::double precision AS popularity,
+    COALESCE(((data ->> 'popularity'::text))::double precision, (0)::double precision) AS popularity,
     COALESCE((data ->> 'release_date'::text), ''::text) AS release_date,
-    ((data ->> 'vote_average'::text))::double precision AS vote_average,
-    ((data ->> 'vote_count'::text))::integer AS vote_count,
-    0 AS runtime,
-    ((data ->> 'adult'::text))::boolean AS is_adult
+    COALESCE(((data ->> 'vote_average'::text))::double precision, (0)::double precision) AS vote_average,
+    COALESCE(((data ->> 'vote_count'::text))::integer, 0) AS vote_count,
+    COALESCE(NULLIF(((data ->> 'runtime'::text))::integer, 0), 0) AS runtime,
+    COALESCE(((data ->> 'adult'::text))::boolean, false) AS is_adult
    FROM public.entities
   WHERE ((type = 'tmdb/movie'::text) AND (data ? 'id'::text))
   WITH NO DATA;
