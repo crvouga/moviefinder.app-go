@@ -54,7 +54,7 @@ func FromHttpRequest(ac *appCtx.AppCtx, r *http.Request) ReqCtx {
 	baseURL := httpRequest.GetRequestBaseURL(r)
 
 	logger := slog.Default().With(
-		slog.String("traceID", string(traceIDVar)),
+		slog.String("traceID", " "+string(traceIDVar)),
 	)
 
 	userSessionVar := getUserSession(ac, sessionIDVar)

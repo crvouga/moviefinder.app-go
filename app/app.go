@@ -58,7 +58,9 @@ func router(mux *http.ServeMux, ac *appCtx.AppCtx) {
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rc := reqCtx.FromHttpRequest(ac, r)
-		rc.Logger.Debug("request received", "path", r.URL.Path)
+		rc.Logger.Info("request received",
+			"method", r.Method,
+			"path", r.URL.Path)
 
 		if err := static.ServeStaticAssets(w, r, "public"); err == nil {
 

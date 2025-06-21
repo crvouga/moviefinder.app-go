@@ -8,7 +8,7 @@ import (
 type TraceID string
 
 func Gen() TraceID {
-	return TraceID(id.Gen())
+	return TraceID(id.Gen("trace", 8))
 }
 
 func New(id string) TraceID {
@@ -26,7 +26,7 @@ func WithTraceIDHeader(next http.Handler) http.Handler {
 		traceID := r.Header.Get(headerName)
 		if traceID == "" {
 			// Generate a new trace ID
-			traceID = id.Gen()
+			traceID = id.Gen("trace", 8)
 
 			// Add the trace ID to the current request
 			r.Header.Set(headerName, traceID)

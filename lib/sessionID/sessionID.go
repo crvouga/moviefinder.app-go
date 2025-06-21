@@ -8,7 +8,7 @@ import (
 type SessionID string
 
 func Gen() SessionID {
-	return SessionID(id.Gen())
+	return SessionID(id.Gen("session", 16))
 }
 
 func New(id string) SessionID {
@@ -27,7 +27,7 @@ func WithSessionIDCookie(next http.Handler) http.Handler {
 		_, err := r.Cookie("sessionID")
 		if err == http.ErrNoCookie {
 			// Generate a new session ID (using a UUID would be ideal)
-			sessionID := id.Gen()
+			sessionID := id.Gen("session", 16)
 
 			// Create a new cookie
 			cookie := &http.Cookie{
