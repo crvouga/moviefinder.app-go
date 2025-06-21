@@ -1,5 +1,3 @@
-const cache = {};
-
 const extractBody = (html) => {
   return /<body[^>]*>([\s\S]*)<\/body>/i.exec(html)[1];
 };
@@ -14,21 +12,25 @@ const updatePage = async (url) => {
 const preload = async (link) => {
   const href = link.getAttribute("href");
   if (!href) return;
-  const res = await fetch(href);
-  const html = await res.text();
-  cache[href] = html;
+  // Browser will cache this automatically due to cache headers
+  await fetch(href);
 };
 
 const bindLinkHandlers = () => {
   document.querySelectorAll("a").forEach((link) => {
     link.addEventListener("mouseenter", () => preload(link));
     link.addEventListener("touchstart", () => preload(link));
-    link.addEventListener("click", (e) => {
+    link.addEventListener("click", async (e) => {
       e.preventDefault();
       const href = link.getAttribute("href");
       if (!href) return;
-      updatePage(href);
+
+      // Fetch will use browser cache if available
+      const res = await fetch(href);
+      const html = await res.text();
+      document.body.innerHTML = extractBody(html);
       history.pushState(null, "", href);
+      bindLinkHandlers();
     });
   });
 };
