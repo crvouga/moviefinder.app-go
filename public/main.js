@@ -1,4 +1,4 @@
-navigator.serviceWorker?.register("/app-sw.js");
+navigator.serviceWorker?.register("/sw.js");
 const requestCacheUpdate = (url) => {
   navigator.serviceWorker.controller?.postMessage({
     type: "UPDATE_CACHE",
