@@ -94,18 +94,10 @@ CREATE INDEX idx_media_images_mv_lookup ON media_images_mv (media_id, image_type
 -- Genres materialized view from TMDB data
 CREATE MATERIALIZED VIEW genres_mv AS
 SELECT DISTINCT
-    genre_id::text as id,
-    genre_name as name
+    ed.id::text as id,
+    ed.data->>'name' as name
 FROM entities ed
-CROSS JOIN LATERAL (
-    SELECT 
-        jsonb_array_elements(ed.data->'genre_ids')::text as genre_id,
-        -- We'll need to map genre IDs to names, for now use ID as name
-        'Genre ' || jsonb_array_elements(ed.data->'genre_ids')::text as genre_name
-) genres
-WHERE ed.type = 'tmdb/movie'
-AND ed.data ? 'genre_ids'
-AND jsonb_typeof(ed.data->'genre_ids') = 'array';
+WHERE ed.type = 'tmdb/genres/movie';
 
 CREATE UNIQUE INDEX idx_genres_mv_id ON genres_mv (id);
 
