@@ -8,14 +8,7 @@
   <meta name="description" content="Movie finder" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="output.css" />
-  {{if .Document}}
-  {{if .Document.Preload}}
-  {{range .Document.Preload}}
-  <link rel="prerender" href="{{.Href}}?no-cache=true" as="document" crossorigin="anonymous" />
-  <link rel="prefetch" href="{{.Href}}?no-cache=true" as="document" crossorigin="anonymous" />
-  {{end}}
-  {{end}}
-  {{end}}
+  <script src="instant-navigation.js" type="module"></script>
 </head>
 
 <body class="bg-black text-white grid place-items-center w-[100dvw] h-[100dvh] overflow-hidden">
