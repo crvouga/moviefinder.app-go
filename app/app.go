@@ -28,7 +28,7 @@ func Handler(ac *appCtx.AppCtx) http.Handler {
 		Logger:     ac.Logger,
 	}
 
-	matViews := mediaDB.NewWorkerMatViews(ac.DB, ac.Logger)
+	matViews := mediaDB.NewMatViews(ac.DB, ac.Logger)
 	matViews.Init()
 
 	done, err := worker.Run()

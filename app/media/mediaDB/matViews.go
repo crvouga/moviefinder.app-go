@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type WorkerMatViews struct {
+type MatViews struct {
 	db     *sql.DB
 	logger *slog.Logger
 }
@@ -17,14 +17,14 @@ type WorkerMatViews struct {
 //go:embed matViews.sql
 var matViewsSQL string
 
-func NewWorkerMatViews(db *sql.DB, logger *slog.Logger) *WorkerMatViews {
-	return &WorkerMatViews{
+func NewMatViews(db *sql.DB, logger *slog.Logger) *MatViews {
+	return &MatViews{
 		db:     db,
-		logger: logger.WithGroup("workerMatViews"),
+		logger: logger.WithGroup("matViews"),
 	}
 }
 
-func (m *WorkerMatViews) Up() error {
+func (m *MatViews) Up() error {
 	m.logger.Info("Running materialized views up migration")
 	parts := strings.Split(matViewsSQL, "-- migrate:down")
 	if len(parts) != 2 {
@@ -42,7 +42,7 @@ func (m *WorkerMatViews) Up() error {
 	return err
 }
 
-func (m *WorkerMatViews) Down() error {
+func (m *MatViews) Down() error {
 	m.logger.Info("Running materialized views down migration")
 	parts := strings.Split(matViewsSQL, "-- migrate:down")
 	if len(parts) != 2 {
@@ -60,7 +60,7 @@ func (m *WorkerMatViews) Down() error {
 	return err
 }
 
-func (m *WorkerMatViews) Refresh() error {
+func (m *MatViews) Refresh() error {
 	m.logger.Info("Refreshing materialized views")
 	start := time.Now()
 	_, err := m.db.Exec("SELECT refresh_media_mv()")
@@ -73,7 +73,7 @@ func (m *WorkerMatViews) Refresh() error {
 	return err
 }
 
-func (m *WorkerMatViews) Init() error {
+func (m *MatViews) Init() error {
 	m.logger.Info("Initializing materialized views")
 	if err := m.Down(); err != nil {
 		m.logger.Error("Failed to run down migration during init", "error", err)
@@ -89,29 +89,4 @@ func (m *WorkerMatViews) Init() error {
 	}
 	m.logger.Info("Successfully initialized materialized views")
 	return nil
-}
-
-func (m *WorkerMatViews) Start() chan struct{} {
-	done := make(chan struct{})
-	logger := m.logger.WithGroup("workerMatViews")
-
-	go func() {
-		logger.Info("Starting materialized views refresh worker")
-		ticker := time.NewTicker(10 * time.Second)
-		defer ticker.Stop()
-
-		for {
-			select {
-			case <-ticker.C:
-				if err := m.Refresh(); err != nil {
-					logger.Error("Failed to refresh materialized views", "error", err)
-				}
-			case <-done:
-				logger.Info("Stopping materialized views refresh worker")
-				return
-			}
-		}
-	}()
-
-	return done
 }

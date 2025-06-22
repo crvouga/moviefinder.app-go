@@ -12,7 +12,7 @@ type Worker struct {
 	tmdbClient     *tmdbAPI.Client
 	Logger         *slog.Logger
 	upsertEntity   *entityDB.UpsertEntity
-	workerMatViews *WorkerMatViews
+	matViewsWorker *MatViewsWorker
 	loaderTmdb     *LoaderTmdb
 }
 
@@ -23,7 +23,7 @@ func NewWorker(db *sql.DB, client *tmdbAPI.Client, logger *slog.Logger) (*Worker
 		return nil, err
 	}
 
-	workerMatViews := NewWorkerMatViews(db, logger)
+	matViewsWorker := NewMatViewsWorker(db, logger)
 
 	loaderTmdb := NewLoaderTmdb(logger, db, upsertEntity, client)
 
@@ -32,7 +32,7 @@ func NewWorker(db *sql.DB, client *tmdbAPI.Client, logger *slog.Logger) (*Worker
 		tmdbClient:     client,
 		Logger:         logger,
 		upsertEntity:   upsertEntity,
-		workerMatViews: workerMatViews,
+		matViewsWorker: matViewsWorker,
 		loaderTmdb:     loaderTmdb,
 	}, nil
 }
@@ -48,7 +48,7 @@ func (w *Worker) Start() chan struct{} {
 	w.Logger.Info("starting media worker")
 
 	doneTmdb := w.loaderTmdb.Start()
-	doneRefreshMatViews := w.workerMatViews.Start()
+	doneRefreshMatViews := w.matViewsWorker.Start()
 
 	done := make(chan struct{})
 

@@ -190,6 +190,7 @@ CREATE VIEW public.media_denormalized_v AS
     title,
     description,
     popularity,
+    is_adult,
     COALESCE(( SELECT media_images_mv.url
            FROM public.media_images_mv
           WHERE ((media_images_mv.media_id = m.id) AND (media_images_mv.image_type = 'poster'::text))
