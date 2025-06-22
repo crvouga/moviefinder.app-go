@@ -116,6 +116,33 @@ CREATE INDEX idx_media_genres_mv_media_id ON media_genres_mv (media_id);
 CREATE INDEX idx_media_genres_mv_genre_id ON media_genres_mv (genre_id);
 CREATE UNIQUE INDEX idx_media_genres_mv_pkey ON media_genres_mv (media_id, genre_id);
 
+
+-- Create denormalized media view
+CREATE VIEW media_denormalized_v AS
+SELECT
+  m.id,
+  m.title,
+  m.description,
+  m.popularity,
+  m.is_adult,
+  COALESCE((
+    SELECT url 
+    FROM media_images_mv
+    WHERE media_id = m.id
+      AND image_type = 'poster'
+    ORDER BY resolution_order DESC
+    LIMIT 1
+  ), '') AS poster_url,
+  COALESCE((
+    SELECT url
+    FROM media_images_mv
+    WHERE media_id = m.id
+      AND image_type = 'backdrop'
+    ORDER BY resolution_order DESC
+    LIMIT 1
+  ), '') AS backdrop_url
+FROM media_mv m;
+
 -- Refresh function to update all materialized views
 CREATE OR REPLACE FUNCTION refresh_media_mv() 
 RETURNS void AS $$
@@ -150,6 +177,7 @@ $$ LANGUAGE plpgsql;
 -- migrate:down
 
 DROP FUNCTION IF EXISTS refresh_media_mv();
+DROP VIEW IF EXISTS media_denormalized_v;
 DROP MATERIALIZED VIEW IF EXISTS media_genres_mv;
 DROP MATERIALIZED VIEW IF EXISTS genres_mv;  
 DROP MATERIALIZED VIEW IF EXISTS media_images_mv;

@@ -100,19 +100,6 @@ CREATE MATERIALIZED VIEW public.genres_mv AS
 
 
 --
--- Name: media_genres_mv; Type: MATERIALIZED VIEW; Schema: public; Owner: -
---
-
-CREATE MATERIALIZED VIEW public.media_genres_mv AS
- SELECT (ed.data ->> 'id'::text) AS media_id,
-    (genre_id.value)::text AS genre_id
-   FROM (public.entities ed
-     CROSS JOIN LATERAL jsonb_array_elements((ed.data -> 'genre_ids'::text)) genre_id(value))
-  WHERE ((ed.type = 'tmdb/movie'::text) AND (ed.data ? 'genre_ids'::text) AND (jsonb_typeof((ed.data -> 'genre_ids'::text)) = 'array'::text))
-  WITH NO DATA;
-
-
---
 -- Name: media_images_mv; Type: MATERIALIZED VIEW; Schema: public; Owner: -
 --
 
@@ -191,6 +178,41 @@ CREATE MATERIALIZED VIEW public.media_mv AS
     COALESCE(((data ->> 'adult'::text))::boolean, false) AS is_adult
    FROM public.entities
   WHERE ((type = 'tmdb/movie'::text) AND (data ? 'id'::text))
+  WITH NO DATA;
+
+
+--
+-- Name: media_denormalized_v; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.media_denormalized_v AS
+ SELECT id,
+    title,
+    description,
+    popularity,
+    COALESCE(( SELECT media_images_mv.url
+           FROM public.media_images_mv
+          WHERE ((media_images_mv.media_id = m.id) AND (media_images_mv.image_type = 'poster'::text))
+          ORDER BY media_images_mv.resolution_order DESC
+         LIMIT 1), ''::text) AS poster_url,
+    COALESCE(( SELECT media_images_mv.url
+           FROM public.media_images_mv
+          WHERE ((media_images_mv.media_id = m.id) AND (media_images_mv.image_type = 'backdrop'::text))
+          ORDER BY media_images_mv.resolution_order DESC
+         LIMIT 1), ''::text) AS backdrop_url
+   FROM public.media_mv m;
+
+
+--
+-- Name: media_genres_mv; Type: MATERIALIZED VIEW; Schema: public; Owner: -
+--
+
+CREATE MATERIALIZED VIEW public.media_genres_mv AS
+ SELECT (ed.data ->> 'id'::text) AS media_id,
+    (genre_id.value)::text AS genre_id
+   FROM (public.entities ed
+     CROSS JOIN LATERAL jsonb_array_elements((ed.data -> 'genre_ids'::text)) genre_id(value))
+  WHERE ((ed.type = 'tmdb/movie'::text) AND (ed.data ? 'genre_ids'::text) AND (jsonb_typeof((ed.data -> 'genre_ids'::text)) = 'array'::text))
   WITH NO DATA;
 
 
