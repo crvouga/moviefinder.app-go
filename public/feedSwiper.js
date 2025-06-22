@@ -30,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
       currentSlide?.getAttribute("data-feed-index"),
       10
     );
+    window.requestCacheUpdateCurrentPage();
     await fetch(`${SLIDE_CHANGED_URL}?feedIndex=${currentFeedIndex}`, {
       method: "POST",
     });

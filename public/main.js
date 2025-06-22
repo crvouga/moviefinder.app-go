@@ -17,10 +17,11 @@ const onLoad = () => {
   });
 };
 document.addEventListener("DOMContentLoaded", onLoad);
-const onNavigation = () => {
+const requestCacheUpdateCurrentPage = () => {
   requestCacheUpdate(window.location.href);
 };
-window.addEventListener("popstate", onNavigation);
-window.addEventListener("pushstate", onNavigation);
-window.addEventListener("replacestate", onNavigation);
-window.addEventListener("hashchange", onNavigation);
+window.requestCacheUpdateCurrentPage = requestCacheUpdateCurrentPage;
+window.addEventListener("popstate", requestCacheUpdateCurrentPage);
+window.addEventListener("pushstate", requestCacheUpdateCurrentPage);
+window.addEventListener("replacestate", requestCacheUpdateCurrentPage);
+window.addEventListener("hashchange", requestCacheUpdateCurrentPage);
