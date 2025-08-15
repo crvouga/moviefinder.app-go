@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"testing"
 
-	"movieFinder/app/appDb"
+	"movieFinder/app/appDB"
 	"movieFinder/lib/uow"
 )
 
@@ -15,7 +15,7 @@ type Fixture struct {
 
 func newFixtures() []*Fixture {
 	logger := slog.Default().WithGroup("app")
-	postgres := appDb.New(logger)
+	postgres := appDB.New(logger)
 
 	fixtures := make([]*Fixture, 0)
 

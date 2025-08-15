@@ -3,7 +3,7 @@ package mediaDB
 import (
 	"database/sql"
 	"log/slog"
-	"movieFinder/app/appDb"
+	"movieFinder/app/appDB"
 	"movieFinder/lib/tmdbAPI"
 )
 
@@ -13,7 +13,7 @@ type Fixture struct {
 }
 
 func NewFixture() *Fixture {
-	postgres := appDb.New(slog.Default())
+	postgres := appDB.New(slog.Default())
 
 	client, err := tmdbAPI.NewFromEnv(slog.Default())
 	if err != nil {

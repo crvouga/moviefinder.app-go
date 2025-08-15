@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"movieFinder/app/appDb"
+	"movieFinder/app/appDB"
 	"movieFinder/app/users/userID"
 	"movieFinder/app/users/userSession"
 	"movieFinder/app/users/userSession/userSessionID"
@@ -21,7 +21,7 @@ type Fixture struct {
 
 func newFixture() *Fixture {
 	logger := slog.Default().WithGroup("app")
-	postgres := appDb.New(logger)
+	postgres := appDB.New(logger)
 
 	return &Fixture{
 		SessionDB:  NewImplKeyValueDB(keyValueDB.NewImplHashMap()),

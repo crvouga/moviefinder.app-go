@@ -1,4 +1,4 @@
-package appDb
+package appDB
 
 import (
 	"log/slog"

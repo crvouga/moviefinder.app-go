@@ -3,7 +3,7 @@ package appCtx
 import (
 	"database/sql"
 	"log/slog"
-	"movieFinder/app/appDb"
+	"movieFinder/app/appDB"
 	"movieFinder/app/users/userAccount/userAccountDB"
 	"movieFinder/app/users/userSession/userSessionDB"
 	"movieFinder/lib/email/emailOutbox"
@@ -36,7 +36,7 @@ func New() AppCtx {
 	MAX_LOG_LEVEL := slog.LevelInfo
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: MAX_LOG_LEVEL})).WithGroup("app")
 
-	postgres := appDb.New(logger)
+	postgres := appDB.New(logger)
 
 	keyValueDBFs := keyValueDB.NewImplFs("keyValueDB.json")
 
@@ -65,7 +65,7 @@ func New() AppCtx {
 
 func NewTest() AppCtx {
 	logger := slog.Default().WithGroup("app")
-	postgres := appDb.New(logger)
+	postgres := appDB.New(logger)
 	keyValueDBHashMap := keyValueDB.ImplHashMap{}
 	return AppCtx{
 		Postgres:      postgres,
