@@ -22,11 +22,7 @@ import (
 func Handler(ac *appCtx.AppCtx) http.Handler {
 	ac.Logger.Debug("initializing application handler")
 
-	worker := Worker{
-		DB:         ac.DB,
-		TmdbClient: ac.TmdbClient,
-		Logger:     ac.Logger,
-	}
+	worker := NewWorker(ac.DB, ac.TmdbClient, ac.Logger)
 
 	matViews := mediaDB.NewMatViews(ac.DB, ac.Logger)
 	matViews.Init()

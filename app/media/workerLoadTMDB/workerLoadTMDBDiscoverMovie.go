@@ -1,4 +1,4 @@
-package mediaDB
+package workerLoadTMDB
 
 import (
 	"database/sql"
@@ -12,7 +12,7 @@ import (
 
 const TMDB_DISCOVER_MOVIE_HARD_MAX_PAGES = 500
 
-type LoaderTmdbDiscoverMovie struct {
+type WorkerLoadTMDBDiscoverMovie struct {
 	Logger       *slog.Logger
 	DB           *sql.DB
 	UpsertEntity *entityDB.UpsertEntity
@@ -20,8 +20,8 @@ type LoaderTmdbDiscoverMovie struct {
 	MaxPages     int
 }
 
-func NewLoaderTmdbDiscoverMovie(logger *slog.Logger, db *sql.DB, upsertEntity *entityDB.UpsertEntity, tmdbClient *tmdbAPI.Client) *LoaderTmdbDiscoverMovie {
-	return &LoaderTmdbDiscoverMovie{
+func newWorkerLoadTMDBDiscoverMovie(logger *slog.Logger, db *sql.DB, upsertEntity *entityDB.UpsertEntity, tmdbClient *tmdbAPI.Client) *WorkerLoadTMDBDiscoverMovie {
+	return &WorkerLoadTMDBDiscoverMovie{
 		Logger:       logger.WithGroup("loaderTmdbDiscoverMovie"),
 		DB:           db,
 		UpsertEntity: upsertEntity,
@@ -30,13 +30,13 @@ func NewLoaderTmdbDiscoverMovie(logger *slog.Logger, db *sql.DB, upsertEntity *e
 	}
 }
 
-func (l *LoaderTmdbDiscoverMovie) Run() chan struct{} {
+func (l *WorkerLoadTMDBDiscoverMovie) Run() chan struct{} {
 	params := tmdbAPI.DiscoverMovieParams{Page: 0}
 	done := l.startLoader(params)
 	return done
 }
 
-func (l *LoaderTmdbDiscoverMovie) startLoader(params tmdbAPI.DiscoverMovieParams) chan struct{} {
+func (l *WorkerLoadTMDBDiscoverMovie) startLoader(params tmdbAPI.DiscoverMovieParams) chan struct{} {
 	page := 0
 	done := make(chan struct{})
 
@@ -79,7 +79,7 @@ func (l *LoaderTmdbDiscoverMovie) startLoader(params tmdbAPI.DiscoverMovieParams
 	return done
 }
 
-func (l *LoaderTmdbDiscoverMovie) loadPage(params tmdbAPI.DiscoverMovieParams) (bool, error) {
+func (l *WorkerLoadTMDBDiscoverMovie) loadPage(params tmdbAPI.DiscoverMovieParams) (bool, error) {
 	l.Logger.Debug("Fetching page of movies from TMDB API", "page", params.Page)
 
 	response, err := l.TmdbClient.DiscoverMovie(params)
@@ -116,7 +116,7 @@ func (l *LoaderTmdbDiscoverMovie) loadPage(params tmdbAPI.DiscoverMovieParams) (
 	return params.Page >= response.TotalPages, nil
 }
 
-func (l *LoaderTmdbDiscoverMovie) upsertMovie(tx *sql.Tx, movie tmdbAPI.DiscoverMovieResponseResult) error {
+func (l *WorkerLoadTMDBDiscoverMovie) upsertMovie(tx *sql.Tx, movie tmdbAPI.DiscoverMovieResponseResult) error {
 	l.Logger.Debug("Processing movie", "title", movie.Title, "id", movie.ID)
 
 	l.Logger.Debug("Movie details", "title", movie.Title, "popularity", movie.Popularity, "releaseDate", movie.ReleaseDate)

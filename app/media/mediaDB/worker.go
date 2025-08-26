@@ -3,7 +3,6 @@ package mediaDB
 import (
 	"database/sql"
 	"log/slog"
-	"movieFinder/app/entityDB"
 	"movieFinder/lib/tmdbAPI"
 )
 
@@ -11,49 +10,30 @@ type Worker struct {
 	DB             *sql.DB
 	tmdbClient     *tmdbAPI.Client
 	Logger         *slog.Logger
-	upsertEntity   *entityDB.UpsertEntity
 	matViewsWorker *MatViewsWorker
-	loaderTmdb     *LoaderTmdb
 }
 
-func NewWorker(db *sql.DB, client *tmdbAPI.Client, logger *slog.Logger) (*Worker, error) {
-	upsertEntity, err := entityDB.NewUpsertEntity(db)
-
-	if err != nil {
-		return nil, err
-	}
-
-	matViewsWorker := NewMatViewsWorker(db, logger)
-
-	loaderTmdb := NewLoaderTmdb(logger, db, upsertEntity, client)
-
-	return &Worker{
+func NewWorker(db *sql.DB, client *tmdbAPI.Client, logger *slog.Logger) Worker {
+	matViewsWorker := newMatViewsWorker(db, logger)
+	return Worker{
 		DB:             db,
 		tmdbClient:     client,
 		Logger:         logger,
-		upsertEntity:   upsertEntity,
 		matViewsWorker: matViewsWorker,
-		loaderTmdb:     loaderTmdb,
-	}, nil
+	}
 }
 
 func (w *Worker) Close() error {
-	if w.upsertEntity != nil {
-		return w.upsertEntity.Close()
-	}
 	return nil
 }
 
 func (w *Worker) Start() chan struct{} {
 	w.Logger.Info("starting media worker")
-
-	doneTmdb := w.loaderTmdb.Start()
 	doneRefreshMatViews := w.matViewsWorker.Start()
 
 	done := make(chan struct{})
 
 	go func() {
-		<-doneTmdb
 		<-doneRefreshMatViews
 		w.Logger.Info("media worker completed successfully")
 		close(done)

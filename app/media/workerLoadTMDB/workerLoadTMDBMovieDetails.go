@@ -1,4 +1,4 @@
-package mediaDB
+package workerLoadTMDB
 
 import (
 	"database/sql"
@@ -7,15 +7,15 @@ import (
 	"movieFinder/lib/tmdbAPI"
 )
 
-type LoaderTmdbMovieDetails struct {
+type WorkerLoadTMDBMovieDetails struct {
 	Logger       *slog.Logger
 	DB           *sql.DB
 	UpsertEntity *entityDB.UpsertEntity
 	TmdbClient   *tmdbAPI.Client
 }
 
-func NewLoaderTmdbMovieDetails(logger *slog.Logger, db *sql.DB, upsertEntity *entityDB.UpsertEntity, tmdbClient *tmdbAPI.Client) *LoaderTmdbMovieDetails {
-	return &LoaderTmdbMovieDetails{
+func NewWorkerLoadTMDBMovieDetails(logger *slog.Logger, db *sql.DB, upsertEntity *entityDB.UpsertEntity, tmdbClient *tmdbAPI.Client) *WorkerLoadTMDBMovieDetails {
+	return &WorkerLoadTMDBMovieDetails{
 		Logger:       logger.WithGroup("loaderTmdbMovieDetails"),
 		DB:           db,
 		UpsertEntity: upsertEntity,
@@ -23,7 +23,7 @@ func NewLoaderTmdbMovieDetails(logger *slog.Logger, db *sql.DB, upsertEntity *en
 	}
 }
 
-func (l *LoaderTmdbMovieDetails) Run() chan struct{} {
+func (l *WorkerLoadTMDBMovieDetails) Run() chan struct{} {
 	done := make(chan struct{})
 
 	return done

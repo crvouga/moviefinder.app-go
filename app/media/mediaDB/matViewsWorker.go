@@ -13,7 +13,7 @@ type MatViewsWorker struct {
 	matViews *MatViews
 }
 
-func NewMatViewsWorker(db *sql.DB, logger *slog.Logger) *MatViewsWorker {
+func newMatViewsWorker(db *sql.DB, logger *slog.Logger) *MatViewsWorker {
 	return &MatViewsWorker{
 		db:       db,
 		logger:   logger.WithGroup("workerMatViews"),

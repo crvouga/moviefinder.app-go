@@ -1,4 +1,4 @@
-package mediaDB
+package workerLoadTMDB
 
 import (
 	"database/sql"
@@ -8,18 +8,18 @@ import (
 	"strconv"
 )
 
-type LoaderTmdbGenresMovie struct {
+type WorkerLoadTMDBGenresMovie struct {
 	Logger       *slog.Logger
 	DB           *sql.DB
 	UpsertEntity *entityDB.UpsertEntity
 	TmdbClient   *tmdbAPI.Client
 }
 
-func NewLoaderTmdbGenresMovie(logger *slog.Logger, db *sql.DB, upsertEntity *entityDB.UpsertEntity, tmdbClient *tmdbAPI.Client) *LoaderTmdbGenresMovie {
-	return &LoaderTmdbGenresMovie{Logger: logger.WithGroup("loaderTmdbGenresMovie"), DB: db, UpsertEntity: upsertEntity, TmdbClient: tmdbClient}
+func newWorkerLoadTMDBGenresMovie(logger *slog.Logger, db *sql.DB, upsertEntity *entityDB.UpsertEntity, tmdbClient *tmdbAPI.Client) *WorkerLoadTMDBGenresMovie {
+	return &WorkerLoadTMDBGenresMovie{Logger: logger.WithGroup("loaderTmdbGenresMovie"), DB: db, UpsertEntity: upsertEntity, TmdbClient: tmdbClient}
 }
 
-func (l *LoaderTmdbGenresMovie) Run() chan struct{} {
+func (l *WorkerLoadTMDBGenresMovie) Run() chan struct{} {
 	done := make(chan struct{})
 	go func() {
 		genres, err := l.get()
@@ -38,7 +38,7 @@ func (l *LoaderTmdbGenresMovie) Run() chan struct{} {
 	return done
 }
 
-func (l *LoaderTmdbGenresMovie) get() (*tmdbAPI.GenresMovieResponse, error) {
+func (l *WorkerLoadTMDBGenresMovie) get() (*tmdbAPI.GenresMovieResponse, error) {
 	genres, err := l.TmdbClient.GenresMovie()
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (l *LoaderTmdbGenresMovie) get() (*tmdbAPI.GenresMovieResponse, error) {
 	return &genres, nil
 }
 
-func (l *LoaderTmdbGenresMovie) upsert(genres *tmdbAPI.GenresMovieResponse) error {
+func (l *WorkerLoadTMDBGenresMovie) upsert(genres *tmdbAPI.GenresMovieResponse) error {
 	l.Logger.Info("Got TMDB movie genres", "count", len(genres.Genres))
 
 	tx, err := l.DB.Begin()
