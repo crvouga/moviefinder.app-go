@@ -37,40 +37,74 @@ func (l *WorkerLoadTMDBDiscoverMovie) Run() chan struct{} {
 }
 
 func (l *WorkerLoadTMDBDiscoverMovie) startLoader(params tmdbAPI.DiscoverMovieParams) chan struct{} {
-	page := 0
 	done := make(chan struct{})
+	currentPage := 0
+	startTime := time.Now()
 
 	go func() {
-		for page = 1; page <= l.MaxPages && page <= TMDB_DISCOVER_MOVIE_HARD_MAX_PAGES; page++ {
+		defer close(done)
 
+		for page := 1; page <= l.MaxPages && page <= TMDB_DISCOVER_MOVIE_HARD_MAX_PAGES; page++ {
+			currentPage = page
 			params.Page = page
+			pageStartTime := time.Now()
 
-			isLastPage, err := l.loadPage(params)
+			l.Logger.Info("Starting to process page", "page", page, "maxPages", l.MaxPages, "hardMaxPages", TMDB_DISCOVER_MOVIE_HARD_MAX_PAGES, "elapsed", time.Since(startTime))
+
+			// Add timeout for individual page processing
+			pageDone := make(chan struct{})
+			var isLastPage bool
+			var err error
+
+			go func() {
+				isLastPage, err = l.loadPage(params)
+				close(pageDone)
+			}()
+
+			select {
+			case <-pageDone:
+				// Page completed successfully
+			case <-time.After(5 * time.Minute): // 5 minute timeout per page
+				l.Logger.Error("Page processing timeout", "page", page, "timeout", "5 minutes")
+				return
+			}
 
 			if err != nil {
 				l.Logger.Error("Failed to process page", "page", page, "error", err)
-				close(done)
 				return
 			}
 
+			l.Logger.Info("Completed page", "page", page, "duration", time.Since(pageStartTime), "isLastPage", isLastPage)
+
 			if isLastPage {
-				l.Logger.Debug("Reached last page, media loader complete")
-				close(done)
+				l.Logger.Info("Reached last page, media loader complete", "page", page, "totalPages", params.Page, "totalDuration", time.Since(startTime))
 				return
 			}
 		}
-		l.Logger.Debug("TMDB Discover Movie loader completed")
+		l.Logger.Info("TMDB Discover Movie loader completed", "maxPages", l.MaxPages, "hardMaxPages", TMDB_DISCOVER_MOVIE_HARD_MAX_PAGES, "finalPage", currentPage, "totalDuration", time.Since(startTime))
+	}()
+
+	go func() {
+		timeout := time.After(30 * time.Minute)
+		select {
+		case <-timeout:
+			l.Logger.Error("Worker timeout reached, forcing shutdown")
+			close(done)
+		case <-done:
+			break
+		}
 	}()
 
 	go func() {
 		ticker := time.NewTicker(3 * time.Second)
-		l.Logger.Info("Loader status", "currentPage", params.Page)
+		defer ticker.Stop()
+		l.Logger.Info("Loader status", "currentPage", currentPage)
 		for {
 			select {
 			case <-ticker.C:
-				l.Logger.Info("Loader status", "currentPage", params.Page)
+				l.Logger.Info("Loader status", "currentPage", currentPage)
 			case <-done:
-				ticker.Stop()
+				l.Logger.Info("Status logger shutting down")
 				return
 			}
 		}
@@ -90,6 +124,16 @@ func (l *WorkerLoadTMDBDiscoverMovie) loadPage(params tmdbAPI.DiscoverMovieParam
 	}
 
 	l.Logger.Debug("Retrieved movies", "count", len(response.Results), "page", params.Page, "totalPages", response.TotalPages)
+
+	// Safety check: if we get no results, this might be the last page
+	if len(response.Results) == 0 {
+		l.Logger.Warn("Received empty page results", "page", params.Page, "totalPages", response.TotalPages)
+		return true, nil
+	}
+
+	// Check if this is the last page
+	isLastPage := params.Page >= response.TotalPages
+	l.Logger.Debug("Page analysis", "currentPage", params.Page, "totalPages", response.TotalPages, "isLastPage", isLastPage)
 
 	tx, err := l.DB.Begin()
 
@@ -113,7 +157,7 @@ func (l *WorkerLoadTMDBDiscoverMovie) loadPage(params tmdbAPI.DiscoverMovieParam
 
 	l.Logger.Debug("Successfully processed page", "page", params.Page, "movieCount", len(response.Results))
 
-	return params.Page >= response.TotalPages, nil
+	return isLastPage, nil
 }
 
 func (l *WorkerLoadTMDBDiscoverMovie) upsertMovie(tx *sql.Tx, movie tmdbAPI.DiscoverMovieResponseResult) error {
