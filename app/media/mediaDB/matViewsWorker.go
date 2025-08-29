@@ -21,9 +21,17 @@ func newMatViewsWorker(db *sql.DB, logger *slog.Logger) *MatViewsWorker {
 	}
 }
 
+var DISABLED = true
+
 func (w *MatViewsWorker) Start() chan struct{} {
 	done := make(chan struct{})
 	logger := w.logger.WithGroup("workerMatViews")
+
+	if DISABLED {
+		logger.Info("MatViewsWorker is disabled")
+		close(done)
+		return done
+	}
 
 	go func() {
 		logger.Info("Starting materialized views refresh worker")
