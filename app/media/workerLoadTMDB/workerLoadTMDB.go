@@ -11,10 +11,12 @@ import (
 	"movieFinder/app/media/workerLoadTMDB/workerLoadTMDBMovieDetails"
 	"movieFinder/lib/tmdbAPI"
 	"sync"
+	"time"
 )
 
 type Worker struct {
 	logger                      *slog.Logger
+	db                          *sql.DB
 	workerLoadTMDBConfiguration *workerLoadTMDBConfiguration.Worker
 	workerLoadTMDBGenresMovie   *workerLoadTMDBGenresMovie.Worker
 	workerLoadTMDBMovieDetails  *workerLoadTMDBMovieDetails.Worker
@@ -26,10 +28,42 @@ func New(logger *slog.Logger, db *sql.DB, upsertEntity *entityDB.UpsertEntity, t
 	logger = logger.WithGroup("loaderTmdb")
 	return &Worker{
 		logger:                      logger,
+		db:                          db,
 		workerLoadTMDBConfiguration: workerLoadTMDBConfiguration.New(logger, db, upsertEntity, tmdbClient),
 		workerLoadTMDBGenresMovie:   workerLoadTMDBGenresMovie.New(logger, db, upsertEntity, tmdbClient),
 		workerLoadTMDBDiscoverMovie: workerLoadTMDBDiscoverMovie.New(logger, db, upsertEntity, tmdbClient),
 		workerLoadTMDBMovieDetails:  workerLoadTMDBMovieDetails.New(logger, db, upsertEntity, tmdbClient),
+	}
+}
+
+func (l *Worker) waitForMediaView(ctx context.Context) error {
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			var exists bool
+			err := l.db.QueryRowContext(ctx, `
+				SELECT EXISTS (
+					SELECT 1 
+					FROM information_schema.views 
+					WHERE table_name = 'media_denormalized_v'
+				)
+			`).Scan(&exists)
+
+			if err != nil {
+				l.logger.Error("Error checking for media_denormalized_v view", "error", err)
+				return err
+			}
+
+			if exists {
+				l.logger.Info("media_denormalized_v view is ready")
+				return nil
+			}
+
+			l.logger.Info("Waiting for media_denormalized_v view to be created...")
+			time.Sleep(5 * time.Second)
+		}
 	}
 }
 
@@ -40,6 +74,11 @@ func (l *Worker) Start(ctx context.Context) chan struct{} {
 	go func() {
 		defer close(done)
 		l.logger.Info("Starting TMDB data loading")
+
+		if err := l.waitForMediaView(ctx); err != nil {
+			l.logger.Error("Failed waiting for media view", "error", err)
+			return
+		}
 
 		var wg sync.WaitGroup
 

@@ -18,9 +18,6 @@ check:
 	make tc
 	make test
 
-build:
-	go build -o main main.go
-
 clean:
 	rm -f main
 	rm -rf tmp
