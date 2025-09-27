@@ -12,6 +12,7 @@ SELECT
     COALESCE((data->>'vote_count')::integer, 0) as vote_count,
     COALESCE(NULLIF((data->>'runtime')::integer, 0), 0) as runtime,
     COALESCE((data->>'adult')::boolean, false) as is_adult
+    COALESCE((data->>'id')::integer, 0) as tmdb_id,
 FROM entities 
 WHERE type = 'tmdb/movie'
 AND data ? 'id';

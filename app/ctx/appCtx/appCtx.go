@@ -15,13 +15,12 @@ import (
 )
 
 type AppCtx struct {
-	Postgres   *postgres.Postgres
-	DB         *sql.DB
-	DBDurable  *sql.DB
-	TmdbClient *tmdbAPI.Client
-	Logger     *slog.Logger
-	UowFactory uow.UowFactory
-
+	Postgres      *postgres.Postgres
+	DB            *sql.DB
+	DBDurable     *sql.DB
+	TmdbClient    *tmdbAPI.Client
+	Logger        *slog.Logger
+	UowFactory    uow.UowFactory
 	EmailOutbox   emailOutbox.EmailOutbox
 	KeyValueDB    keyValueDB.KeyValueDB
 	UserSessionDB userSessionDB.UserSessionDB

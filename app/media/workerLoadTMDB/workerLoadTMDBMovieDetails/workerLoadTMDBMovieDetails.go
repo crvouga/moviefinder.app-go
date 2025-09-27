@@ -25,15 +25,16 @@ func New(logger *slog.Logger, db *sql.DB, upsertEntity *entityDB.UpsertEntity, t
 	}
 }
 
-func (l *Worker) Start(ctx context.Context) chan struct{} {
-	ctx, l.cancel = context.WithCancel(ctx)
+func (self *Worker) Start(ctx context.Context) chan struct{} {
+	ctx, self.cancel = context.WithCancel(ctx)
 	done := make(chan struct{})
+
 	close(done)
 	return done
 }
 
-func (l *Worker) Stop() {
-	if l.cancel != nil {
-		l.cancel()
+func (self *Worker) Stop() {
+	if self.cancel != nil {
+		self.cancel()
 	}
 }
