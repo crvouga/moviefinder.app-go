@@ -23,8 +23,6 @@ func NewDBMaintenanceWorker(db *sql.DB, logger *slog.Logger) *DBMaintenanceWorke
 	}
 }
 
-var DISABLED = true
-
 func (w *DBMaintenanceWorker) Start() chan struct{} {
 	done := make(chan struct{})
 	logger := w.logger.WithGroup("workerDBMaintenance")
@@ -46,6 +44,9 @@ func (w *DBMaintenanceWorker) Start() chan struct{} {
 			case <-ticker.C:
 				if err := w.dbMaintenance.vacuumAnalyze(); err != nil {
 					logger.Error("Failed to run database maintenance", "error", err)
+				}
+				if err := w.dbMaintenance.reindexConcurrently(); err != nil {
+					logger.Error("Failed to run database reindexing", "error", err)
 				}
 			case <-done:
 				logger.Info("Stopping database maintenance worker")

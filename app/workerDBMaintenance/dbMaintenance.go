@@ -29,5 +29,20 @@ func (m *DBMaintenance) vacuumAnalyze() error {
 		return err
 	}
 	m.logger.Info("Successfully ran VACUUM ANALYZE", "duration", fmt.Sprintf("%.2fs", duration.Seconds()))
-	return err
+	return nil
+}
+
+func (m *DBMaintenance) reindexConcurrently() error {
+	m.logger.Info("Running REINDEX SCHEMA CONCURRENTLY public")
+	start := time.Now()
+	// NOTE: REINDEX SCHEMA CONCURRENTLY requires PostgreSQL 12+
+	// It cannot be run inside a transaction
+	_, err := m.db.Exec("REINDEX SCHEMA CONCURRENTLY public")
+	duration := time.Since(start)
+	if err != nil {
+		m.logger.Error("Failed to run REINDEX SCHEMA CONCURRENTLY", "error", err, "duration", fmt.Sprintf("%.2fs", duration.Seconds()))
+		return err
+	}
+	m.logger.Info("Successfully ran REINDEX SCHEMA CONCURRENTLY", "duration", fmt.Sprintf("%.2fs", duration.Seconds()))
+	return nil
 }
