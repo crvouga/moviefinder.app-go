@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	_ "embed"
 	"log/slog"
+	"os"
+	"strconv"
 	"time"
 )
 
@@ -21,13 +23,13 @@ func NewMatViewsWorker(db *sql.DB, logger *slog.Logger) *MatViewsWorker {
 	}
 }
 
-var DISABLED = false
+var DISABLED = true
 
 func (w *MatViewsWorker) Start() chan struct{} {
 	done := make(chan struct{})
 	logger := w.logger.WithGroup("workerMatViews")
 
-	if DISABLED {
+	if workerDisabled, _ := strconv.ParseBool(os.Getenv("MAT_VIEWS_WORKER_DISABLED")); workerDisabled {
 		logger.Info("MatViewsWorker is disabled")
 		close(done)
 		return done
@@ -35,6 +37,11 @@ func (w *MatViewsWorker) Start() chan struct{} {
 
 	go func() {
 		logger.Info("Starting materialized views refresh worker")
+
+		if err := w.matViews.refresh(); err != nil {
+			logger.Error("Failed to refresh materialized views", "error", err)
+		}
+
 		ticker := time.NewTicker(30 * time.Second)
 		defer ticker.Stop()
 

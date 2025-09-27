@@ -6,6 +6,7 @@ import (
 	"movieFinder/app/entityDB"
 	"movieFinder/app/media/workerLoadTMDB"
 	"movieFinder/app/media/workerMediaDB"
+	"movieFinder/app/workerDBMaintenance"
 	"movieFinder/lib/tmdbAPI"
 )
 
@@ -36,10 +37,12 @@ func (w *Worker) Run() (chan struct{}, error) {
 	w.logger.Debug("creating workers")
 	mediaWorker := workerMediaDB.New(w.db, w.tmdbClient, w.logger)
 	workerLoadTMDB := workerLoadTMDB.New(w.logger, w.db, upsertEntity, w.tmdbClient)
+	dbMaintenanceWorker := workerDBMaintenance.NewDBMaintenanceWorker(w.db, w.logger)
 
 	w.logger.Debug("starting workers")
 	doneMediaDB := mediaWorker.Start()
 	doneLoadTMDB := workerLoadTMDB.Run()
+	doneDBMaintenance := dbMaintenanceWorker.Start()
 	done := make(chan struct{})
 
 	go func() {
@@ -48,6 +51,8 @@ func (w *Worker) Run() (chan struct{}, error) {
 		w.logger.Debug("mediaDB worker completed")
 		<-doneLoadTMDB
 		w.logger.Debug("loadTMDB worker completed")
+		<-doneDBMaintenance
+		w.logger.Debug("dbMaintenance worker completed")
 
 		w.logger.Debug("closing mediaDB worker")
 		if closeErr := mediaWorker.Close(); closeErr != nil {
