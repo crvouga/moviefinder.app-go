@@ -21,7 +21,7 @@ func NewMatViewsWorker(db *sql.DB, logger *slog.Logger) *MatViewsWorker {
 	}
 }
 
-var DISABLED = true
+var DISABLED = false
 
 func (w *MatViewsWorker) Start() chan struct{} {
 	done := make(chan struct{})
@@ -35,7 +35,7 @@ func (w *MatViewsWorker) Start() chan struct{} {
 
 	go func() {
 		logger.Info("Starting materialized views refresh worker")
-		ticker := time.NewTicker(10 * time.Second)
+		ticker := time.NewTicker(30 * time.Second)
 		defer ticker.Stop()
 
 		for {
