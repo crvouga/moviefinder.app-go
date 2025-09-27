@@ -14,7 +14,7 @@ type WorkerLoadTMDBMovieDetails struct {
 	TmdbClient   *tmdbAPI.Client
 }
 
-func NewWorkerLoadTMDBMovieDetails(logger *slog.Logger, db *sql.DB, upsertEntity *entityDB.UpsertEntity, tmdbClient *tmdbAPI.Client) *WorkerLoadTMDBMovieDetails {
+func newWorkerLoadTMDBMovieDetails(logger *slog.Logger, db *sql.DB, upsertEntity *entityDB.UpsertEntity, tmdbClient *tmdbAPI.Client) *WorkerLoadTMDBMovieDetails {
 	return &WorkerLoadTMDBMovieDetails{
 		Logger:       logger.WithGroup("loaderTmdbMovieDetails"),
 		DB:           db,
@@ -23,7 +23,7 @@ func NewWorkerLoadTMDBMovieDetails(logger *slog.Logger, db *sql.DB, upsertEntity
 	}
 }
 
-func (l *WorkerLoadTMDBMovieDetails) Run() chan struct{} {
+func (l *WorkerLoadTMDBMovieDetails) run() chan struct{} {
 	done := make(chan struct{})
 
 	return done

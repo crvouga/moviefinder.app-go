@@ -1,4 +1,4 @@
-package mediaDB
+package workerMediaDB
 
 import (
 	"database/sql"
@@ -6,16 +6,16 @@ import (
 	"movieFinder/lib/tmdbAPI"
 )
 
-type Worker struct {
+type WorkerMediaDB struct {
 	DB             *sql.DB
 	tmdbClient     *tmdbAPI.Client
 	Logger         *slog.Logger
 	matViewsWorker *MatViewsWorker
 }
 
-func NewWorker(db *sql.DB, client *tmdbAPI.Client, logger *slog.Logger) Worker {
-	matViewsWorker := newMatViewsWorker(db, logger)
-	return Worker{
+func New(db *sql.DB, client *tmdbAPI.Client, logger *slog.Logger) WorkerMediaDB {
+	matViewsWorker := NewMatViewsWorker(db, logger)
+	return WorkerMediaDB{
 		DB:             db,
 		tmdbClient:     client,
 		Logger:         logger,
@@ -23,11 +23,11 @@ func NewWorker(db *sql.DB, client *tmdbAPI.Client, logger *slog.Logger) Worker {
 	}
 }
 
-func (w *Worker) Close() error {
+func (w *WorkerMediaDB) Close() error {
 	return nil
 }
 
-func (w *Worker) Start() chan struct{} {
+func (w *WorkerMediaDB) Start() chan struct{} {
 	w.Logger.Info("starting media worker")
 	doneRefreshMatViews := w.matViewsWorker.Start()
 
@@ -40,4 +40,12 @@ func (w *Worker) Start() chan struct{} {
 	}()
 
 	return done
+}
+
+func InitMatViews(db *sql.DB, logger *slog.Logger) {
+	matViews := NewMatViews(db, logger)
+	err := matViews.Init()
+	if err != nil {
+		logger.Error("failed to init mat views", "err", err)
+	}
 }

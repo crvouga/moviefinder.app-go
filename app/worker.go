@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"log/slog"
 	"movieFinder/app/entityDB"
-	"movieFinder/app/media/mediaDB"
 	"movieFinder/app/media/workerLoadTMDB"
+	"movieFinder/app/media/workerMediaDB"
 	"movieFinder/lib/tmdbAPI"
 )
 
@@ -34,12 +34,12 @@ func (w *Worker) Run() (chan struct{}, error) {
 	}
 
 	w.logger.Debug("creating workers")
-	workerMediaDB := mediaDB.NewWorker(w.db, w.tmdbClient, w.logger)
-	workerLoadTMDB := workerLoadTMDB.NewWorker(w.logger, w.db, upsertEntity, w.tmdbClient)
+	mediaWorker := workerMediaDB.New(w.db, w.tmdbClient, w.logger)
+	workerLoadTMDB := workerLoadTMDB.New(w.logger, w.db, upsertEntity, w.tmdbClient)
 
 	w.logger.Debug("starting workers")
-	doneMediaDB := workerMediaDB.Start()
-	doneLoadTMDB := workerLoadTMDB.Start()
+	doneMediaDB := mediaWorker.Start()
+	doneLoadTMDB := workerLoadTMDB.Run()
 	done := make(chan struct{})
 
 	go func() {
@@ -50,7 +50,7 @@ func (w *Worker) Run() (chan struct{}, error) {
 		w.logger.Debug("loadTMDB worker completed")
 
 		w.logger.Debug("closing mediaDB worker")
-		if closeErr := workerMediaDB.Close(); closeErr != nil {
+		if closeErr := mediaWorker.Close(); closeErr != nil {
 			w.logger.Error("Failed to close mediaDB worker", "error", closeErr)
 		}
 		w.logger.Info("worker completed successfully")

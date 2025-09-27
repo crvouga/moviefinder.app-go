@@ -1,4 +1,4 @@
-package mediaDB
+package workerMediaDB
 
 import (
 	"database/sql"
@@ -13,7 +13,7 @@ type MatViewsWorker struct {
 	matViews *MatViews
 }
 
-func newMatViewsWorker(db *sql.DB, logger *slog.Logger) *MatViewsWorker {
+func NewMatViewsWorker(db *sql.DB, logger *slog.Logger) *MatViewsWorker {
 	return &MatViewsWorker{
 		db:       db,
 		logger:   logger.WithGroup("workerMatViews"),
@@ -41,7 +41,7 @@ func (w *MatViewsWorker) Start() chan struct{} {
 		for {
 			select {
 			case <-ticker.C:
-				if err := w.matViews.Refresh(); err != nil {
+				if err := w.matViews.refresh(); err != nil {
 					logger.Error("Failed to refresh materialized views", "error", err)
 				}
 			case <-done:

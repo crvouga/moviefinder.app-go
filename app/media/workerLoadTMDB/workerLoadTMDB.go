@@ -12,12 +12,12 @@ type WorkerLoadTMDB struct {
 	db                          *sql.DB
 	upsertEntity                *entityDB.UpsertEntity
 	tmdbClient                  *tmdbAPI.Client
-	workerLoadTMDBConfiguration *WorkerLoadTMDBConfiguration
-	workerLoadTMDBGenresMovie   *WorkerLoadTMDBGenresMovie
-	workerLoadTMDBDiscoverMovie *WorkerLoadTMDBDiscoverMovie
+	workerLoadTMDBConfiguration *workerLoadTMDBConfiguration
+	workerLoadTMDBGenresMovie   *workerLoadTMDBGenresMovie
+	workerLoadTMDBDiscoverMovie *workerLoadTMDBDiscoverMovie
 }
 
-func NewWorker(logger *slog.Logger, db *sql.DB, upsertEntity *entityDB.UpsertEntity, tmdbClient *tmdbAPI.Client) *WorkerLoadTMDB {
+func New(logger *slog.Logger, db *sql.DB, upsertEntity *entityDB.UpsertEntity, tmdbClient *tmdbAPI.Client) *WorkerLoadTMDB {
 	logger = logger.WithGroup("loaderTmdb")
 	loaderTmdbConfiguration := newWorkerLoadTMDBConfiguration(logger, db, upsertEntity, tmdbClient)
 	loaderTmdbGenresMovie := newWorkerLoadTMDBGenresMovie(logger, db, upsertEntity, tmdbClient)
@@ -33,15 +33,15 @@ func NewWorker(logger *slog.Logger, db *sql.DB, upsertEntity *entityDB.UpsertEnt
 	}
 }
 
-func (l *WorkerLoadTMDB) Start() chan struct{} {
+func (l *WorkerLoadTMDB) Run() chan struct{} {
 	done := make(chan struct{})
 
 	go func() {
-		doneConfiguration := l.workerLoadTMDBConfiguration.Run()
-		doneGenresMovie := l.workerLoadTMDBGenresMovie.Run()
+		doneConfiguration := l.workerLoadTMDBConfiguration.run()
+		doneGenresMovie := l.workerLoadTMDBGenresMovie.run()
 		<-doneConfiguration
 		<-doneGenresMovie
-		doneDiscoverMovie := l.workerLoadTMDBDiscoverMovie.Run()
+		doneDiscoverMovie := l.workerLoadTMDBDiscoverMovie.run()
 		<-doneDiscoverMovie
 		l.logger.Info("TMDB loader completed successfully")
 		close(done)

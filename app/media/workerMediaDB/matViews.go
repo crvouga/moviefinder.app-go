@@ -1,4 +1,4 @@
-package mediaDB
+package workerMediaDB
 
 import (
 	"database/sql"
@@ -60,7 +60,7 @@ func (m *MatViews) Down() error {
 	return err
 }
 
-func (m *MatViews) Refresh() error {
+func (m *MatViews) refresh() error {
 	m.logger.Info("Refreshing materialized views")
 	start := time.Now()
 	_, err := m.db.Exec("SELECT refresh_media_mv()")
@@ -83,7 +83,7 @@ func (m *MatViews) Init() error {
 		m.logger.Error("Failed to run up migration during init", "error", err)
 		return err
 	}
-	if err := m.Refresh(); err != nil {
+	if err := m.refresh(); err != nil {
 		m.logger.Error("Failed to refresh views during init", "error", err)
 		return err
 	}

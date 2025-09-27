@@ -7,18 +7,18 @@ import (
 	"movieFinder/lib/tmdbAPI"
 )
 
-type WorkerLoadTMDBConfiguration struct {
+type workerLoadTMDBConfiguration struct {
 	Logger       *slog.Logger
 	DB           *sql.DB
 	UpsertEntity *entityDB.UpsertEntity
 	TmdbClient   *tmdbAPI.Client
 }
 
-func newWorkerLoadTMDBConfiguration(logger *slog.Logger, db *sql.DB, upsertEntity *entityDB.UpsertEntity, tmdbClient *tmdbAPI.Client) *WorkerLoadTMDBConfiguration {
-	return &WorkerLoadTMDBConfiguration{Logger: logger.WithGroup("loaderTmdbConfiguration"), DB: db, UpsertEntity: upsertEntity, TmdbClient: tmdbClient}
+func newWorkerLoadTMDBConfiguration(logger *slog.Logger, db *sql.DB, upsertEntity *entityDB.UpsertEntity, tmdbClient *tmdbAPI.Client) *workerLoadTMDBConfiguration {
+	return &workerLoadTMDBConfiguration{Logger: logger.WithGroup("loaderTmdbConfiguration"), DB: db, UpsertEntity: upsertEntity, TmdbClient: tmdbClient}
 }
 
-func (l *WorkerLoadTMDBConfiguration) Run() chan struct{} {
+func (l *workerLoadTMDBConfiguration) run() chan struct{} {
 	done := make(chan struct{})
 	go func() {
 		configuration, err := l.get()
@@ -37,7 +37,7 @@ func (l *WorkerLoadTMDBConfiguration) Run() chan struct{} {
 	return done
 }
 
-func (l *WorkerLoadTMDBConfiguration) get() (*tmdbAPI.ConfigurationResponse, error) {
+func (l *workerLoadTMDBConfiguration) get() (*tmdbAPI.ConfigurationResponse, error) {
 	configuration, err := l.TmdbClient.Configuration()
 
 	if err != nil {
@@ -51,7 +51,7 @@ func (l *WorkerLoadTMDBConfiguration) get() (*tmdbAPI.ConfigurationResponse, err
 	return &configuration, nil
 }
 
-func (l *WorkerLoadTMDBConfiguration) upsert(configuration *tmdbAPI.ConfigurationResponse) error {
+func (l *workerLoadTMDBConfiguration) upsert(configuration *tmdbAPI.ConfigurationResponse) error {
 	l.Logger.Debug("Got TMDB configuration", "baseURL", configuration)
 
 	tx, err := l.DB.Begin()
