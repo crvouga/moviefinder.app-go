@@ -4,46 +4,50 @@ import (
 	"database/sql"
 	"log/slog"
 	"movieFinder/app/entityDB"
+	"movieFinder/app/media/workerLoadTMDB/workerLoadTMDBConfiguration"
+	"movieFinder/app/media/workerLoadTMDB/workerLoadTMDBDiscoverMovie"
+	"movieFinder/app/media/workerLoadTMDB/workerLoadTMDBGenresMovie"
+	"movieFinder/app/media/workerLoadTMDB/workerLoadTMDBMovieDetails"
 	"movieFinder/lib/tmdbAPI"
 )
 
-type WorkerLoadTMDB struct {
+type Worker struct {
 	logger                      *slog.Logger
-	db                          *sql.DB
-	upsertEntity                *entityDB.UpsertEntity
-	tmdbClient                  *tmdbAPI.Client
-	workerLoadTMDBConfiguration *workerLoadTMDBConfiguration
-	workerLoadTMDBGenresMovie   *workerLoadTMDBGenresMovie
-	workerLoadTMDBDiscoverMovie *workerLoadTMDBDiscoverMovie
+	workerLoadTMDBConfiguration *workerLoadTMDBConfiguration.Worker
+	workerLoadTMDBGenresMovie   *workerLoadTMDBGenresMovie.Worker
+	workerLoadTMDBMovieDetails  *workerLoadTMDBMovieDetails.Worker
+	workerLoadTMDBDiscoverMovie *workerLoadTMDBDiscoverMovie.Worker
 }
 
-func New(logger *slog.Logger, db *sql.DB, upsertEntity *entityDB.UpsertEntity, tmdbClient *tmdbAPI.Client) *WorkerLoadTMDB {
+func New(logger *slog.Logger, db *sql.DB, upsertEntity *entityDB.UpsertEntity, tmdbClient *tmdbAPI.Client) *Worker {
 	logger = logger.WithGroup("loaderTmdb")
-	loaderTmdbConfiguration := newWorkerLoadTMDBConfiguration(logger, db, upsertEntity, tmdbClient)
-	loaderTmdbGenresMovie := newWorkerLoadTMDBGenresMovie(logger, db, upsertEntity, tmdbClient)
-	loaderTmdbDiscoverMovie := newWorkerLoadTMDBDiscoverMovie(logger, db, upsertEntity, tmdbClient)
-	return &WorkerLoadTMDB{
+	return &Worker{
 		logger:                      logger,
-		db:                          db,
-		upsertEntity:                upsertEntity,
-		tmdbClient:                  tmdbClient,
-		workerLoadTMDBConfiguration: loaderTmdbConfiguration,
-		workerLoadTMDBGenresMovie:   loaderTmdbGenresMovie,
-		workerLoadTMDBDiscoverMovie: loaderTmdbDiscoverMovie,
+		workerLoadTMDBConfiguration: workerLoadTMDBConfiguration.New(logger, db, upsertEntity, tmdbClient),
+		workerLoadTMDBGenresMovie:   workerLoadTMDBGenresMovie.New(logger, db, upsertEntity, tmdbClient),
+		workerLoadTMDBDiscoverMovie: workerLoadTMDBDiscoverMovie.New(logger, db, upsertEntity, tmdbClient),
+		workerLoadTMDBMovieDetails:  workerLoadTMDBMovieDetails.New(logger, db, upsertEntity, tmdbClient),
 	}
 }
 
-func (l *WorkerLoadTMDB) Run() chan struct{} {
+func (l *Worker) Start() chan struct{} {
 	done := make(chan struct{})
 
 	go func() {
-		doneConfiguration := l.workerLoadTMDBConfiguration.run()
-		doneGenresMovie := l.workerLoadTMDBGenresMovie.run()
+		l.logger.Info("Starting TMDB data loading")
+
+		doneConfiguration := l.workerLoadTMDBConfiguration.Start()
+		doneGenresMovie := l.workerLoadTMDBGenresMovie.Start()
+		doneMovieDetails := l.workerLoadTMDBMovieDetails.Start()
+		doneDiscoverMovie := l.workerLoadTMDBDiscoverMovie.Start()
+
 		<-doneConfiguration
 		<-doneGenresMovie
-		doneDiscoverMovie := l.workerLoadTMDBDiscoverMovie.run()
+		<-doneMovieDetails
 		<-doneDiscoverMovie
-		l.logger.Info("TMDB loader completed successfully")
+		<-doneMovieDetails
+
+		l.logger.Info("TMDB data loading completed")
 		close(done)
 	}()
 
