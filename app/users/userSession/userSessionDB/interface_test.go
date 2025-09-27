@@ -29,7 +29,7 @@ func newFixture() *Fixture {
 	}
 }
 
-func Test_GetBySessionID(t *testing.T) {
+func TestGetBySessionID(t *testing.T) {
 	f := newFixture()
 	uow, _ := f.UowFactory.Begin()
 
@@ -68,7 +68,7 @@ func Test_GetBySessionID(t *testing.T) {
 	uow.Commit()
 }
 
-func Test_GetByIDNonExistent(t *testing.T) {
+func TestGetByIDNonExistent(t *testing.T) {
 	f := newFixture()
 
 	// Try to get a session that doesn't exist
@@ -85,7 +85,7 @@ func Test_GetByIDNonExistent(t *testing.T) {
 	}
 }
 
-func Test_UpsertNewSession(t *testing.T) {
+func TestUpsertNewSession(t *testing.T) {
 	f := newFixture()
 	uow, _ := f.UowFactory.Begin()
 
@@ -120,7 +120,7 @@ func Test_UpsertNewSession(t *testing.T) {
 	uow.Commit()
 }
 
-func Test_UpsertUpdateSession(t *testing.T) {
+func TestUpsertUpdateSession(t *testing.T) {
 	f := newFixture()
 	uow, _ := f.UowFactory.Begin()
 

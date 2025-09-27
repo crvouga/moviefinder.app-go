@@ -1,6 +1,7 @@
 package workerLoadTMDBConfiguration
 
 import (
+	"context"
 	"database/sql"
 	"log/slog"
 	"movieFinder/app/entityDB"
@@ -12,29 +13,40 @@ type Worker struct {
 	db           *sql.DB
 	upsertEntity *entityDB.UpsertEntity
 	tmdbClient   *tmdbAPI.Client
+	cancel       context.CancelFunc
 }
 
 func New(logger *slog.Logger, db *sql.DB, upsertEntity *entityDB.UpsertEntity, tmdbClient *tmdbAPI.Client) *Worker {
 	return &Worker{logger: logger.WithGroup("configuration"), db: db, upsertEntity: upsertEntity, tmdbClient: tmdbClient}
 }
 
-func (l *Worker) Start() chan struct{} {
+func (l *Worker) Start(ctx context.Context) chan struct{} {
+	ctx, l.cancel = context.WithCancel(ctx)
 	done := make(chan struct{})
 	go func() {
-		configuration, err := l.get()
-		if err != nil {
-			l.logger.Error("Failed to get configuration", "error", err)
-			close(done)
+		defer close(done)
+		select {
+		case <-ctx.Done():
 			return
+		default:
+			configuration, err := l.get()
+			if err != nil {
+				l.logger.Error("Failed to get configuration", "error", err)
+				return
+			}
+			if err := l.upsert(configuration); err != nil {
+				l.logger.Error("Failed to upsert configuration", "error", err)
+				return
+			}
 		}
-		if err := l.upsert(configuration); err != nil {
-			l.logger.Error("Failed to upsert configuration", "error", err)
-			close(done)
-			return
-		}
-		close(done)
 	}()
 	return done
+}
+
+func (l *Worker) Stop() {
+	if l.cancel != nil {
+		l.cancel()
+	}
 }
 
 func (l *Worker) get() (*tmdbAPI.ConfigurationResponse, error) {

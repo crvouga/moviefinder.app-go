@@ -30,7 +30,7 @@ func newFixture() *Fixture {
 	}
 }
 
-func Test_GetByUserID(t *testing.T) {
+func TestGetByUserID(t *testing.T) {
 	f := newFixture()
 	uow, _ := f.UowFactory.Begin()
 
@@ -69,7 +69,7 @@ func Test_GetByUserID(t *testing.T) {
 	uow.Commit()
 }
 
-func Test_GetByIDNonExistent(t *testing.T) {
+func TestGetByIDNonExistent(t *testing.T) {
 	f := newFixture()
 
 	// Try to get a session that doesn't exist
@@ -84,7 +84,7 @@ func Test_GetByIDNonExistent(t *testing.T) {
 	}
 }
 
-func Test_UpsertNewSession(t *testing.T) {
+func TestUpsertNewSession(t *testing.T) {
 	f := newFixture()
 	uow, _ := f.UowFactory.Begin()
 
@@ -119,7 +119,7 @@ func Test_UpsertNewSession(t *testing.T) {
 	uow.Commit()
 }
 
-func Test_UpsertUpdateSession(t *testing.T) {
+func TestUpsertUpdateSession(t *testing.T) {
 	f := newFixture()
 	uow, _ := f.UowFactory.Begin()
 
@@ -168,7 +168,7 @@ func Test_UpsertUpdateSession(t *testing.T) {
 	uow.Commit()
 }
 
-func Test_GetByEmailAddress(t *testing.T) {
+func TestGetByEmailAddress(t *testing.T) {
 	f := newFixture()
 	uow, _ := f.UowFactory.Begin()
 
@@ -203,7 +203,7 @@ func Test_GetByEmailAddress(t *testing.T) {
 	uow.Commit()
 }
 
-func Test_GetByRole(t *testing.T) {
+func TestGetByRole(t *testing.T) {
 	f := newFixture()
 	uow, _ := f.UowFactory.Begin()
 

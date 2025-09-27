@@ -1,6 +1,7 @@
 package appWorker
 
 import (
+	"context"
 	"database/sql"
 	"log/slog"
 	"movieFinder/app/entityDB"
@@ -8,12 +9,16 @@ import (
 	"movieFinder/app/media/workerMediaDB"
 	"movieFinder/app/workerDBMaintenance"
 	"movieFinder/lib/tmdbAPI"
+	"sync"
 )
 
 type Worker struct {
-	db         *sql.DB
-	tmdbClient *tmdbAPI.Client
-	logger     *slog.Logger
+	db                  *sql.DB
+	tmdbClient          *tmdbAPI.Client
+	logger              *slog.Logger
+	workerMediaDB       workerMediaDB.WorkerMediaDB
+	workerLoadTMDB      *workerLoadTMDB.Worker
+	workerDbMaintenance *workerDBMaintenance.Worker
 }
 
 func New(db *sql.DB, tmdbClient *tmdbAPI.Client, logger *slog.Logger) *Worker {
@@ -24,7 +29,7 @@ func New(db *sql.DB, tmdbClient *tmdbAPI.Client, logger *slog.Logger) *Worker {
 	}
 }
 
-func (w *Worker) Run() (chan struct{}, error) {
+func (w *Worker) Run(ctx context.Context) (chan struct{}, error) {
 	w.logger.Info("starting worker")
 
 	upsertEntity, err := entityDB.NewUpsertEntity(w.db)
@@ -33,22 +38,50 @@ func (w *Worker) Run() (chan struct{}, error) {
 		return nil, err
 	}
 
-	workerMediaDB := workerMediaDB.New(w.db, w.logger)
-	workerLoadTMDB := workerLoadTMDB.New(w.logger, w.db, upsertEntity, w.tmdbClient)
-	workerDbMaintenance := workerDBMaintenance.New(w.db, w.logger)
-
-	doneMediaDB := workerMediaDB.Start()
-	doneLoadTMDB := workerLoadTMDB.Start()
-	doneDBMaintenance := workerDbMaintenance.Start()
+	w.workerMediaDB = workerMediaDB.New(w.db, w.logger)
+	w.workerLoadTMDB = workerLoadTMDB.New(w.logger, w.db, upsertEntity, w.tmdbClient)
+	w.workerDbMaintenance = workerDBMaintenance.New(w.db, w.logger)
 
 	done := make(chan struct{})
 	go func() {
-		<-doneMediaDB
-		<-doneLoadTMDB
-		<-doneDBMaintenance
-		w.logger.Info("all workers completed")
-		close(done)
+		defer close(done)
+		var wg sync.WaitGroup
+
+		startWorker := func(start func(ctx context.Context) chan struct{}) {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				doneWorker := start(ctx)
+				select {
+				case <-doneWorker:
+				case <-ctx.Done():
+				}
+			}()
+		}
+
+		startWorker(w.workerMediaDB.Start)
+		startWorker(w.workerLoadTMDB.Start)
+		startWorker(w.workerDbMaintenance.Start)
+
+		waitDone := make(chan struct{})
+		go func() {
+			wg.Wait()
+			close(waitDone)
+		}()
+
+		select {
+		case <-waitDone:
+			w.logger.Info("all workers completed")
+		case <-ctx.Done():
+			w.logger.Info("workers cancelled")
+		}
 	}()
 
 	return done, nil
+}
+
+func (w *Worker) Stop() {
+	w.workerLoadTMDB.Stop()
+	w.workerMediaDB.Stop()
+	w.workerDbMaintenance.Stop()
 }

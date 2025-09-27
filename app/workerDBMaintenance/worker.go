@@ -1,9 +1,11 @@
 package workerDBMaintenance
 
 import (
+	"context"
 	"database/sql"
 	_ "embed"
 	"log/slog"
+	"movieFinder/app/workerDBMaintenance/dbMaintenance"
 	"os"
 	"strconv"
 	"time"
@@ -12,18 +14,20 @@ import (
 type Worker struct {
 	db            *sql.DB
 	logger        *slog.Logger
-	dbMaintenance *DBMaintenance
+	dbMaintenance dbMaintenance.DBMaintenance
+	cancel        context.CancelFunc
 }
 
 func New(db *sql.DB, logger *slog.Logger) *Worker {
 	return &Worker{
 		db:            db,
 		logger:        logger.WithGroup("workerDBMaintenance"),
-		dbMaintenance: NewDBMaintenance(db, logger),
+		dbMaintenance: dbMaintenance.New(db, logger),
 	}
 }
 
-func (w *Worker) Start() chan struct{} {
+func (w *Worker) Start(ctx context.Context) chan struct{} {
+	ctx, w.cancel = context.WithCancel(ctx)
 	done := make(chan struct{})
 	logger := w.logger.WithGroup("workerDBMaintenance")
 
@@ -34,6 +38,7 @@ func (w *Worker) Start() chan struct{} {
 	}
 
 	go func() {
+		defer close(done)
 		logger.Info("Starting database maintenance worker")
 		// Run once a day
 		ticker := time.NewTicker(24 * time.Hour)
@@ -42,13 +47,13 @@ func (w *Worker) Start() chan struct{} {
 		for {
 			select {
 			case <-ticker.C:
-				if err := w.dbMaintenance.vacuumAnalyze(); err != nil {
+				if err := w.dbMaintenance.VacuumAnalyze(); err != nil {
 					logger.Error("Failed to run database maintenance", "error", err)
 				}
-				if err := w.dbMaintenance.reindexConcurrently(); err != nil {
+				if err := w.dbMaintenance.ReindexConcurrently(); err != nil {
 					logger.Error("Failed to run database reindexBin", "error", err)
 				}
-			case <-done:
+			case <-ctx.Done():
 				logger.Info("Stopping database maintenance worker")
 				return
 			}
@@ -56,4 +61,10 @@ func (w *Worker) Start() chan struct{} {
 	}()
 
 	return done
+}
+
+func (w *Worker) Stop() {
+	if w.cancel != nil {
+		w.cancel()
+	}
 }

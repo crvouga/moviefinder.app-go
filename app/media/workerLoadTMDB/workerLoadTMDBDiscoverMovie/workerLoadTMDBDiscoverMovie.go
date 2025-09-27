@@ -1,6 +1,7 @@
 package workerLoadTMDBDiscoverMovie
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log/slog"
@@ -16,6 +17,7 @@ type Worker struct {
 	upsertEntity *entityDB.UpsertEntity
 	tmdbClient   *tmdbAPI.Client
 	maxPages     int
+	cancel       context.CancelFunc
 }
 
 func New(logger *slog.Logger, db *sql.DB, upsertEntity *entityDB.UpsertEntity, tmdbClient *tmdbAPI.Client) *Worker {
@@ -28,13 +30,20 @@ func New(logger *slog.Logger, db *sql.DB, upsertEntity *entityDB.UpsertEntity, t
 	}
 }
 
-func (l *Worker) Start() chan struct{} {
+func (l *Worker) Start(ctx context.Context) chan struct{} {
+	ctx, l.cancel = context.WithCancel(ctx)
 	params := tmdbAPI.DiscoverMovieParams{Page: 0}
-	done := l.startLoader(params)
+	done := l.startLoader(ctx, params)
 	return done
 }
 
-func (l *Worker) startLoader(params tmdbAPI.DiscoverMovieParams) chan struct{} {
+func (l *Worker) Stop() {
+	if l.cancel != nil {
+		l.cancel()
+	}
+}
+
+func (l *Worker) startLoader(ctx context.Context, params tmdbAPI.DiscoverMovieParams) chan struct{} {
 	done := make(chan struct{})
 	currentPage := 0
 	startTime := time.Now()
@@ -43,6 +52,12 @@ func (l *Worker) startLoader(params tmdbAPI.DiscoverMovieParams) chan struct{} {
 		defer close(done)
 
 		for page := 1; page <= l.maxPages; page++ {
+			select {
+			case <-ctx.Done():
+				l.logger.Info("Worker cancelled")
+				return
+			default:
+			}
 			currentPage = page
 			params.Page = page
 			pageStartTime := time.Now()
@@ -62,6 +77,9 @@ func (l *Worker) startLoader(params tmdbAPI.DiscoverMovieParams) chan struct{} {
 			case <-pageDone:
 			case <-time.After(5 * time.Minute):
 				l.logger.Error("Page processing timeout", "page", page, "timeout", "5 minutes")
+				return
+			case <-ctx.Done():
+				l.logger.Info("Page processing cancelled")
 				return
 			}
 
@@ -88,6 +106,9 @@ func (l *Worker) startLoader(params tmdbAPI.DiscoverMovieParams) chan struct{} {
 			close(done)
 		case <-done:
 			break
+		case <-ctx.Done():
+			l.logger.Info("Worker cancelled, shutting down")
+			return
 		}
 	}()
 
@@ -101,6 +122,9 @@ func (l *Worker) startLoader(params tmdbAPI.DiscoverMovieParams) chan struct{} {
 				l.logger.Info("Loader status", "currentPage", currentPage)
 			case <-done:
 				l.logger.Info("Status logger shutting down")
+				return
+			case <-ctx.Done():
+				l.logger.Info("Status logger cancelled")
 				return
 			}
 		}

@@ -1,6 +1,7 @@
 package workerLoadTMDBGenresMovie
 
 import (
+	"context"
 	"database/sql"
 	"log/slog"
 	"movieFinder/app/entityDB"
@@ -13,29 +14,40 @@ type Worker struct {
 	db           *sql.DB
 	upsertEntity *entityDB.UpsertEntity
 	tmdbClient   *tmdbAPI.Client
+	cancel       context.CancelFunc
 }
 
 func New(logger *slog.Logger, db *sql.DB, upsertEntity *entityDB.UpsertEntity, tmdbClient *tmdbAPI.Client) *Worker {
 	return &Worker{logger: logger.WithGroup("genresMovie"), db: db, upsertEntity: upsertEntity, tmdbClient: tmdbClient}
 }
 
-func (l *Worker) Start() chan struct{} {
+func (l *Worker) Start(ctx context.Context) chan struct{} {
+	ctx, l.cancel = context.WithCancel(ctx)
 	done := make(chan struct{})
 	go func() {
-		genres, err := l.get()
-		if err != nil {
-			l.logger.Error("Failed to get movie genres", "error", err)
-			close(done)
+		defer close(done)
+		select {
+		case <-ctx.Done():
 			return
+		default:
+			genres, err := l.get()
+			if err != nil {
+				l.logger.Error("Failed to get movie genres", "error", err)
+				return
+			}
+			if err := l.upsert(genres); err != nil {
+				l.logger.Error("Failed to upsert movie genres", "error", err)
+				return
+			}
 		}
-		if err := l.upsert(genres); err != nil {
-			l.logger.Error("Failed to upsert movie genres", "error", err)
-			close(done)
-			return
-		}
-		close(done)
 	}()
 	return done
+}
+
+func (l *Worker) Stop() {
+	if l.cancel != nil {
+		l.cancel()
+	}
 }
 
 func (l *Worker) get() (*tmdbAPI.GenresMovieResponse, error) {

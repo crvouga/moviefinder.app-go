@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func Test_QueryFeedBySessionID(t *testing.T) {
+func TestQueryFeedBySessionID(t *testing.T) {
 
 	ctx := appCtx.NewTest()
 	defer ctx.DB.Close()

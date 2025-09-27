@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func Test_Configuration(t *testing.T) {
+func TestConfiguration(t *testing.T) {
 	f := NewFixture()
 
 	response, err := f.tmdbAPI.Configuration()

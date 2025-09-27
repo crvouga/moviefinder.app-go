@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func Test_DiscoverMovie(t *testing.T) {
+func TestDiscoverMovie(t *testing.T) {
 	f := NewFixture()
 
 	params := DiscoverMovieParams{

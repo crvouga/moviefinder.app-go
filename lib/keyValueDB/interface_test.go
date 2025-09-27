@@ -35,7 +35,7 @@ func newFixtures() []*Fixture {
 	return fixtures
 }
 
-func Test_NewFixtures(t *testing.T) {
+func TestNewFixtures(t *testing.T) {
 	fixtures := newFixtures()
 
 	if len(fixtures) == 0 {
@@ -44,7 +44,7 @@ func Test_NewFixtures(t *testing.T) {
 
 }
 
-func Test_Interface(t *testing.T) {
+func TestInterface(t *testing.T) {
 	fixtures := newFixtures()
 
 	for _, f := range fixtures {
@@ -69,7 +69,7 @@ func Test_Interface(t *testing.T) {
 	}
 }
 
-func Test_UpdateValue(t *testing.T) {
+func TestUpdateValue(t *testing.T) {
 	fixtures := newFixtures()
 
 	for _, f := range fixtures {
@@ -95,7 +95,7 @@ func Test_UpdateValue(t *testing.T) {
 	}
 }
 
-func Test_GetNonExistentKey(t *testing.T) {
+func TestGetNonExistentKey(t *testing.T) {
 	fixtures := newFixtures()
 
 	for _, f := range fixtures {
@@ -112,7 +112,7 @@ func Test_GetNonExistentKey(t *testing.T) {
 	}
 }
 
-func Test_ZapKey(t *testing.T) {
+func TestZapKey(t *testing.T) {
 	fixtures := newFixtures()
 
 	for _, f := range fixtures {
@@ -152,7 +152,7 @@ func Test_ZapKey(t *testing.T) {
 	}
 }
 
-func Test_ZapNonExistentKey(t *testing.T) {
+func TestZapNonExistentKey(t *testing.T) {
 	fixtures := newFixtures()
 
 	for _, f := range fixtures {

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"movieFinder/app/appWorker"
 	"movieFinder/app/ctx/appCtx"
 	"movieFinder/app/ctx/reqCtx"
@@ -19,12 +20,12 @@ import (
 )
 
 // Handler is the main handler for the application.
-func Handler(ac *appCtx.AppCtx) http.Handler {
+func Handler(ac *appCtx.AppCtx, ctx context.Context) (http.Handler, func()) {
 	ac.Logger.Debug("initializing application handler")
 
 	worker := appWorker.New(ac.DB, ac.TmdbClient, ac.Logger)
 
-	done, err := worker.Run()
+	done, err := worker.Run(ctx)
 	if err != nil {
 		ac.Logger.Error("Failed to start worker", "error", err)
 	} else {
@@ -44,7 +45,7 @@ func Handler(ac *appCtx.AppCtx) http.Handler {
 	handler = httpExt.GzipMiddleware(handler)
 	ac.Logger.Debug("handler setup complete")
 
-	return handler
+	return handler, worker.Stop
 }
 
 // router is the router for the application.

@@ -1,17 +1,25 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"movieFinder/app"
 	"movieFinder/app/ctx/appCtx"
 	"movieFinder/db"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	_ "embed"
 )
 
 func main() {
 	ac := appCtx.New()
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
 	err := ac.Postgres.MigrateUp(db.MigrationsFs, db.MigrationsDir)
 
@@ -20,14 +28,34 @@ func main() {
 		os.Exit(1)
 	}
 
-	handler := app.Handler(&ac)
+	handler, stopWorkers := app.Handler(&ac, ctx)
+	defer stopWorkers()
 
 	addr := ":8080"
 
-	ac.Logger.Info("Server live", "url", "http://localhost"+addr+"/")
-
-	if err := http.ListenAndServe(addr, handler); err != nil {
-		ac.Logger.Error("Failed to start server", "error", err)
-		os.Exit(1)
+	server := &http.Server{
+		Addr:    addr,
+		Handler: handler,
 	}
+
+	go func() {
+		ac.Logger.Info("Server live", "url", "http://localhost"+addr+"/")
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			ac.Logger.Error("Failed to start server", "error", err)
+			os.Exit(1)
+		}
+	}()
+
+	<-ctx.Done()
+
+	ac.Logger.Info("Shutting down server...")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		ac.Logger.Error("Server shutdown failed", "error", err)
+	}
+
+	ac.Logger.Info("Server gracefully stopped")
 }

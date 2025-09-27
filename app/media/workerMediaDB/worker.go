@@ -1,6 +1,7 @@
 package workerMediaDB
 
 import (
+	"context"
 	"database/sql"
 	"log/slog"
 )
@@ -21,9 +22,9 @@ func New(db *sql.DB, logger *slog.Logger) WorkerMediaDB {
 	}
 }
 
-func (w *WorkerMediaDB) Start() chan struct{} {
+func (w *WorkerMediaDB) Start(ctx context.Context) chan struct{} {
 	w.logger.Info("starting media worker")
-	doneRefreshMatViews := w.matViewsWorker.Start()
+	doneRefreshMatViews := w.matViewsWorker.Start(ctx)
 
 	done := make(chan struct{})
 
@@ -34,10 +35,18 @@ func (w *WorkerMediaDB) Start() chan struct{} {
 	}
 
 	go func() {
-		<-doneRefreshMatViews
-		w.logger.Info("media worker completed successfully")
-		close(done)
+		defer close(done)
+		select {
+		case <-doneRefreshMatViews:
+			w.logger.Info("media worker completed successfully")
+		case <-ctx.Done():
+			w.logger.Info("media worker cancelled")
+		}
 	}()
 
 	return done
+}
+
+func (w *WorkerMediaDB) Stop() {
+	w.matViewsWorker.Stop()
 }
