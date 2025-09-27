@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestResize(t *testing.T) {
+func Test_Resize(t *testing.T) {
 	// Create a test image
 	width, height := 100, 80
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
@@ -63,7 +63,7 @@ func TestResize(t *testing.T) {
 	}
 }
 
-func TestResizeWithAlgorithm(t *testing.T) {
+func Test_ResizeWithAlgorithm(t *testing.T) {
 	// Create a test image
 	width, height := 100, 80
 	img := image.NewRGBA(image.Rect(0, 0, width, height))

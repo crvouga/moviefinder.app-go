@@ -9,7 +9,7 @@ dev:
 	air
 
 test:
-	clear && go test ./... -v
+	clear && go test -v ./... | grep -E -e "--- (PASS|FAIL)|_test.go:" | sed ''/---\ PASS:/s//"$$(printf "\033[32m✅ PASS:\033[0m")"/'' | sed ''/---\ FAIL:/s//"$$(printf "\033[31m❌ FAIL:\033[0m")"/''
 
 build:
 	go build -o main main.go
@@ -29,14 +29,14 @@ q:
 qw:
 	psql -P pager=off postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable < query.sql
 
-db-up:
+local-up:
 	docker compose -f db/docker-compose.yml up -d
 
-db-down:
+local-down:
 	docker compose -f db/docker-compose.yml down
 
-db-restart:
-	make db-down && make db-up
+local:
+	make local-down && make local-up
 
 dbmate-download:
 	curl -fsSL -o dbmate https://github.com/amacneil/dbmate/releases/latest/download/dbmate-macos-amd64
@@ -48,17 +48,16 @@ dbmate-download-cached:
 		make dbmate-download; \
 	fi
 
-dbmate-up:
+db-up:
 	make dbmate-download-cached
 	mkdir -p db && ./dbmate up
 
-db-mate:
+dbmate:
 	make dbmate-download-cached
 	mkdir -p db && ./dbmate new "$(filter-out $@,$(MAKECMDGOALS))"
 
-dbmate-down:
+db-down:
 	./dbmate down
-
 	mkdir -p db && ./dbmate down
 
 tw-download:
