@@ -31,10 +31,10 @@ preview:
 	docker build -t moviefinder . && docker run -p 8080:8080 moviefinder
 
 q:
-	psql postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable
+	psql postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable
 
 qw:
-	psql -P pager=off postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable < query.sql
+	psql -P pager=off postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable < query.sql
 
 local-up:
 	docker compose -f db/docker-compose.yml up -d
@@ -83,3 +83,6 @@ tw-download-cached:
 tw:
 	make tw-download-cached
 	./tailwindcss -i ./public/input.css -o ./public/output.css --minify --watch
+
+docker-stop-all:
+	docker stop $(docker ps -q) && docker rm $(docker ps -aq)
