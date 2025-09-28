@@ -24,15 +24,16 @@ func New(db *sql.DB, logger *slog.Logger) WorkerMediaDB {
 
 func (w *WorkerMediaDB) Start(ctx context.Context) chan struct{} {
 	w.logger.Info("starting media worker")
-	doneRefreshMatViews := w.matViewsWorker.Start(ctx)
-
-	done := make(chan struct{})
 
 	matViews := NewMatViews(w.db, w.logger)
 	err := matViews.Init()
 	if err != nil {
 		w.logger.Error("failed to init mat views", "err", err)
 	}
+
+	doneRefreshMatViews := w.matViewsWorker.Start(ctx)
+
+	done := make(chan struct{})
 
 	go func() {
 		defer close(done)

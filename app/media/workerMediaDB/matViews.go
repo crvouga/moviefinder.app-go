@@ -75,16 +75,8 @@ func (m *MatViews) refresh() error {
 
 func (m *MatViews) Init() error {
 	m.logger.Info("Initializing materialized views")
-	if err := m.Down(); err != nil {
-		m.logger.Error("Failed to run down migration during init", "error", err)
-		return err
-	}
 	if err := m.Up(); err != nil {
 		m.logger.Error("Failed to run up migration during init", "error", err)
-		return err
-	}
-	if err := m.refresh(); err != nil {
-		m.logger.Error("Failed to refresh views during init", "error", err)
 		return err
 	}
 	m.logger.Info("Successfully initialized materialized views")
