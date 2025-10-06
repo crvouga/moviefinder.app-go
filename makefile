@@ -28,16 +28,19 @@ preview:
 	docker build -t moviefinder . && docker run -p 8080:8080 moviefinder
 
 q:
-	psql postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable
+	psql postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable
 
 qw:
-	psql -P pager=off postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable < query.sql
+	psql -P pager=off postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable < query.sql
 
 local-up:
 	docker compose -f db/docker-compose.yml up -d
 
 local-down:
 	docker compose -f db/docker-compose.yml down
+
+local-destroy:
+	docker compose -f db/docker-compose.yml down --volumes --rmi all
 
 local:
 	make local-down && make local-up
@@ -55,6 +58,9 @@ dbmate-download-cached:
 db-up:
 	make dbmate-download-cached
 	mkdir -p db && ./dbmate up
+
+db-dump:
+	docker compose -f db/docker-compose.yml exec -T postgres pg_dump -U postgres -d postgres --no-owner --schema-only > db/schema.sql
 
 dbmate:
 	make dbmate-download-cached
