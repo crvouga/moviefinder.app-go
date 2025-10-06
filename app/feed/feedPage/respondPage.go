@@ -16,69 +16,55 @@ import (
 	"net/http"
 )
 
-func respondPage(ac *appCtx.AppCtx) http.HandlerFunc {
-	ac.Logger.Debug("initializing respondFeedPage handler")
+type Data struct {
+	Document        document.Data
+	Error           *string
+	FeedSwiper      feedSwiper.FeedSwiper
+	BottomButtons   bottomButtons.BottomButtons
+	LoadNextURL     string
+	SlideChangedURL string
+}
 
+func respondPage(ac *appCtx.AppCtx) http.HandlerFunc {
 	templPaths := []string{
 		static.GetSiblingPath("feedPage.html"),
 		document.TemplatePath,
 		bottomButtons.TemplatePath,
 	}
 	templPaths = append(templPaths, feedSwiper.TemplatePaths...)
-	ac.Logger.Debug("template paths", "paths", templPaths)
-
 	templ := templateExt.Combine(templPaths)
-	ac.Logger.Debug("combined templates")
-
-	type Data struct {
-		Document        document.Data
-		Error           *string
-		FeedSwiper      feedSwiper.FeedSwiper
-		BottomButtons   bottomButtons.BottomButtons
-		LoadNextURL     string
-		SlideChangedURL string
-	}
-
-	baseData := Data{
-		Error: nil,
-		Document: document.Data{
-			Preload: []document.Preload{
-				document.NewPreload(routes.USER_ACCOUNT),
-			},
-		},
-		FeedSwiper: feedSwiper.FeedSwiper{
-			Slides: []feedSwiperSlides.FeedSwiperSlide{},
-		},
-		BottomButtons:   appBottomButtons.AppBottomButtons(appBottomButtons.FeedPage),
-		LoadNextURL:     ROUTE_LOAD_NEXT,
-		SlideChangedURL: ROUTE_SLIDE_CHANGED,
-	}
-	ac.Logger.Debug("initialized base data")
 
 	queryPopularMedia, err := mediaDB.NewQueryPopularMedia(ac.DB)
 	if err != nil {
-		ac.Logger.Error("failed to create popular media query", "error", err)
 		panic(err)
 	}
-	ac.Logger.Debug("created popular media query")
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		rc := reqCtx.FromHttpRequest(ac, r)
-		rc.Logger.Debug("handling feed page request")
 
-		feed_, err := feedDB.GetElseInsertBySessionID(ac.DB, rc.SessionID.String(), rc.Logger)
+		feedRecord, err := feedDB.GetElseInsertBySessionID(ac.DB, rc.SessionID.String(), rc.Logger)
+
 		if err != nil {
-			rc.Logger.Error("failed to get/insert feed", "error", err, "sessionID", rc.SessionID.String())
+			rc.Logger.Error("failed to get/insert feed", "error", err)
 		}
-		rc.Logger.Debug("got feed instance", "feedID", feed_.ID, "currentIndex", feed_.CurrentFeedIndex)
 
-		found, err := queryPopularMedia.Query(FEED_SLIDE_BATCH_SIZE, int(feed_.CurrentFeedIndex))
-		rc.Logger.Debug("queried popular media", "count", len(found), "startIndex", feed_.CurrentFeedIndex)
+		found, err := queryPopularMedia.Query(FEED_SLIDE_BATCH_SIZE, int(feedRecord.CurrentFeedIndex))
 
-		data := baseData
+		data := Data{
+			Document: document.Data{
+				Preload: []document.Preload{
+					document.NewPreload(routes.USER_ACCOUNT),
+				},
+			},
+			FeedSwiper: feedSwiper.FeedSwiper{
+				Slides: []feedSwiperSlides.FeedSwiperSlide{},
+			},
+			BottomButtons:   appBottomButtons.AppBottomButtons(appBottomButtons.FeedPage),
+			LoadNextURL:     ROUTE_LOAD_NEXT,
+			SlideChangedURL: ROUTE_SLIDE_CHANGED,
+		}
 
 		if err != nil {
-			rc.Logger.Error("failed to query popular media", "error", err)
 			errStr := err.Error()
 			data.Error = &errStr
 			templateExt.Respond(templ, document.TemplateName, data, w)
@@ -86,15 +72,10 @@ func respondPage(ac *appCtx.AppCtx) http.HandlerFunc {
 		}
 
 		data.FeedSwiper.Slides = make([]feedSwiperSlides.FeedSwiperSlide, len(found))
-		rc.Logger.Debug("allocated slides array", "length", len(found))
-
 		for i, m := range found {
-			slide := feedSwiperSlides.FromMedia(m, feed_.CurrentFeedIndex+int64(i), int64(i))
-			data.FeedSwiper.Slides[i] = slide
+			data.FeedSwiper.Slides[i] = feedSwiperSlides.FromMedia(m, feedRecord.CurrentFeedIndex+int64(i), int64(i))
 		}
-		rc.Logger.Debug("populated slides")
 
 		templateExt.Respond(templ, document.TemplateName, data, w)
-		rc.Logger.Debug("responded with template")
 	}
 }
