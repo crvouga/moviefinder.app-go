@@ -13,7 +13,7 @@ import (
 )
 
 func Router(mux *http.ServeMux, ac *appCtx.AppCtx) {
-	mux.HandleFunc(routes.MEDIA_PAGE, respondMediaPage(ac))
+	mux.HandleFunc(routes.MEDIA_PAGE, HandlerMediaPage(ac))
 }
 
 type Data struct {
@@ -22,7 +22,7 @@ type Data struct {
 	Media    media.Media
 }
 
-func respondMediaPage(ac *appCtx.AppCtx) http.HandlerFunc {
+func HandlerMediaPage(ac *appCtx.AppCtx) http.HandlerFunc {
 	templ := templateExt.Combine([]string{
 		static.GetSiblingPath("mediaPage.html"),
 		document.TemplatePath,
