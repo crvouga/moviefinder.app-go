@@ -25,11 +25,8 @@ func New(db *sql.DB, logger *slog.Logger) WorkerMediaDB {
 func (w *WorkerMediaDB) Start(ctx context.Context) chan struct{} {
 	w.logger.Info("starting media worker")
 
-	matViews := NewMatViews(w.db, w.logger)
-	err := matViews.Init()
-	if err != nil {
-		w.logger.Error("failed to init mat views", "err", err)
-	}
+	// MatViews are initialized before the server starts in main.go
+	// We only need to start the refresh worker here
 
 	doneRefreshMatViews := w.matViewsWorker.Start(ctx)
 

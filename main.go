@@ -5,6 +5,7 @@ import (
 	"errors"
 	"movieFinder/app"
 	"movieFinder/app/ctx/appCtx"
+	"movieFinder/app/media/workerMediaDB"
 	"movieFinder/db"
 	"net/http"
 	"os"
@@ -27,6 +28,15 @@ func main() {
 		ac.Logger.Error("Failed to migrate up", "error", err)
 		os.Exit(1)
 	}
+
+	// Initialize materialized views before starting the server
+	ac.Logger.Info("Initializing materialized views...")
+	matViews := workerMediaDB.NewMatViews(ac.DB, ac.Logger)
+	if err := matViews.Init(); err != nil {
+		ac.Logger.Error("Failed to initialize materialized views", "error", err)
+		os.Exit(1)
+	}
+	ac.Logger.Info("Materialized views initialized successfully")
 
 	handler, stopWorkers := app.Handler(&ac, ctx)
 	defer stopWorkers()
