@@ -89,3 +89,10 @@ tw:
 
 docker-stop-all:
 	docker stop $(docker ps -q) && docker rm $(docker ps -aq)
+
+
+preview:
+	docker build -t moviefinder-app-go . && docker run --rm -it -p 8080:8080 --env-file .env moviefinder-app-go
+
+preview-fresh:
+	make local && make preview
