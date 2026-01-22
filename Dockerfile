@@ -14,10 +14,17 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main main.go
 
 # Runtime stage
-FROM alpine:latest
+FROM debian:bookworm-slim
 
-# Install ca-certificates for HTTPS requests and wget for healthcheck
-RUN apk --no-cache add ca-certificates wget
+# Install PostgreSQL, ca-certificates, wget, and gosu for running PostgreSQL as non-root
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    postgresql \
+    postgresql-client \
+    ca-certificates \
+    wget \
+    gosu \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -31,8 +38,15 @@ COPY --from=builder /build/app /build/app
 # Copy public directory with static assets
 COPY --from=builder /build/public ./public
 
-# Expose port (default 8080, but can be overridden via PORT env var)
-EXPOSE 8080
+# Copy startup script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Expose ports (8080 for app, 5432 for PostgreSQL - though PostgreSQL only listens on localhost)
+EXPOSE 8080 5432
+
+# Set entrypoint to startup script
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # Run the application
 CMD ["./main"]
