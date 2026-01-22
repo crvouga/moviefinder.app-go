@@ -211,9 +211,14 @@ $$ LANGUAGE plpgsql;
 
 -- migrate:down
 
-DROP FUNCTION IF EXISTS refresh_media_mv();
+DROP FUNCTION IF EXISTS refresh_media_mv ();
+
 DROP VIEW IF EXISTS media_denormalized_v;
+
 DROP MATERIALIZED VIEW IF EXISTS media_genres_mv;
-DROP MATERIALIZED VIEW IF EXISTS genres_mv;  
+
+DROP MATERIALIZED VIEW IF EXISTS genres_mv;
+
 DROP MATERIALIZED VIEW IF EXISTS media_images_mv;
-DROP MATERIALIZED VIEW IF EXISTS media_mv; 
+
+DROP MATERIALIZED VIEW IF EXISTS media_mv;
