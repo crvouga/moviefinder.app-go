@@ -41,7 +41,11 @@ func main() {
 	handler, stopWorkers := app.Handler(&ac, ctx)
 	defer stopWorkers()
 
-	addr := ":8080"
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	addr := ":" + port
 
 	server := &http.Server{
 		Addr:    addr,
