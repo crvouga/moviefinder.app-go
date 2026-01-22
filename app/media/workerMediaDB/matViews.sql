@@ -1,7 +1,12 @@
 -- migrate:up
 
 -- Media materialized view from TMDB data
-CREATE MATERIALIZED VIEW media_mv AS
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_matviews WHERE matviewname = 'media_mv'
+    ) THEN
+        CREATE MATERIALIZED VIEW media_mv AS
 SELECT 
     COALESCE((data->>'id')::text, md5(random()::text)::text) as id,
     COALESCE(data->>'title', '') as title,
@@ -17,12 +22,19 @@ FROM entities
 WHERE type = 'tmdb/movie'
 AND data ? 'id';
 
-CREATE UNIQUE INDEX idx_media_mv_id ON media_mv (id);
-CREATE INDEX idx_media_mv_popularity ON media_mv (popularity DESC);
-CREATE INDEX idx_media_mv_is_adult ON media_mv (is_adult) WHERE is_adult = false;
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_media_mv_id ON media_mv (id);
+        CREATE INDEX IF NOT EXISTS idx_media_mv_popularity ON media_mv (popularity DESC);
+        CREATE INDEX IF NOT EXISTS idx_media_mv_is_adult ON media_mv (is_adult) WHERE is_adult = false;
+    END IF;
+END $$;
 
 -- Media images materialized view from TMDB data
-CREATE MATERIALIZED VIEW media_images_mv AS
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_matviews WHERE matviewname = 'media_images_mv'
+    ) THEN
+        CREATE MATERIALIZED VIEW media_images_mv AS
 WITH config_data AS (
     SELECT data
     FROM entities 
@@ -89,21 +101,35 @@ SELECT * FROM poster_images
 UNION ALL
 SELECT * FROM backdrop_images;
 
-CREATE UNIQUE INDEX idx_media_images_mv_id ON media_images_mv (id);
-CREATE INDEX idx_media_images_mv_lookup ON media_images_mv (media_id, image_type, url);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_media_images_mv_id ON media_images_mv (id);
+        CREATE INDEX IF NOT EXISTS idx_media_images_mv_lookup ON media_images_mv (media_id, image_type, url);
+    END IF;
+END $$;
 
 -- Genres materialized view from TMDB data
-CREATE MATERIALIZED VIEW genres_mv AS
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_matviews WHERE matviewname = 'genres_mv'
+    ) THEN
+        CREATE MATERIALIZED VIEW genres_mv AS
 SELECT DISTINCT
     ed.id::text as id,
     ed.data->>'name' as name
 FROM entities ed
 WHERE ed.type = 'tmdb/genres/movie';
 
-CREATE UNIQUE INDEX idx_genres_mv_id ON genres_mv (id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_genres_mv_id ON genres_mv (id);
+    END IF;
+END $$;
 
 -- Media genres relationship materialized view
-CREATE MATERIALIZED VIEW media_genres_mv AS
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_matviews WHERE matviewname = 'media_genres_mv'
+    ) THEN
+        CREATE MATERIALIZED VIEW media_genres_mv AS
 SELECT 
     (ed.data->>'id')::text as media_id,
     genre_id::text as genre_id
@@ -113,13 +139,19 @@ WHERE ed.type = 'tmdb/movie'
 AND ed.data ? 'genre_ids'
 AND jsonb_typeof(ed.data->'genre_ids') = 'array';
 
-CREATE INDEX idx_media_genres_mv_media_id ON media_genres_mv (media_id);
-CREATE INDEX idx_media_genres_mv_genre_id ON media_genres_mv (genre_id);
-CREATE UNIQUE INDEX idx_media_genres_mv_pkey ON media_genres_mv (media_id, genre_id);
-
+        CREATE INDEX IF NOT EXISTS idx_media_genres_mv_media_id ON media_genres_mv (media_id);
+        CREATE INDEX IF NOT EXISTS idx_media_genres_mv_genre_id ON media_genres_mv (genre_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_media_genres_mv_pkey ON media_genres_mv (media_id, genre_id);
+    END IF;
+END $$;
 
 -- Create denormalized media view
-CREATE VIEW media_denormalized_v AS
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_views WHERE viewname = 'media_denormalized_v'
+    ) THEN
+        CREATE VIEW media_denormalized_v AS
 SELECT
   m.id,
   m.title,
@@ -143,6 +175,8 @@ SELECT
     LIMIT 1
   ), '') AS backdrop_url
 FROM media_mv m;
+    END IF;
+END $$;
 
 -- Refresh function to update all materialized views
 CREATE OR REPLACE FUNCTION refresh_media_mv() 

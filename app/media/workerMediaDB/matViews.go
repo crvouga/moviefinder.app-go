@@ -3,10 +3,13 @@ package workerMediaDB
 import (
 	"database/sql"
 	_ "embed"
+	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 type MatViews struct {
@@ -35,11 +38,24 @@ func (m *MatViews) Up() error {
 
 	_, err := m.db.Exec(upSQL)
 	if err != nil {
+		// Check if error is "already exists" - this is not fatal
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) {
+			// PostgreSQL error code 42P07 = duplicate_table
+			if pqErr.Code == "42P07" || strings.Contains(err.Error(), "already exists") {
+				m.logger.Warn("Materialized views already exist, skipping creation", "error", err)
+				return nil
+			}
+		} else if strings.Contains(err.Error(), "already exists") {
+			// Fallback check for error message
+			m.logger.Warn("Materialized views already exist, skipping creation", "error", err)
+			return nil
+		}
 		m.logger.Error("Failed to run up migration", "error", err)
 		return err
 	}
 	m.logger.Info("Successfully ran up migration")
-	return err
+	return nil
 }
 
 func (m *MatViews) Down() error {
@@ -76,6 +92,19 @@ func (m *MatViews) refresh() error {
 func (m *MatViews) Init() error {
 	m.logger.Info("Initializing materialized views")
 	if err := m.Up(); err != nil {
+		// Check if error is "already exists" - this is not fatal
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) {
+			// PostgreSQL error code 42P07 = duplicate_table
+			if pqErr.Code == "42P07" || strings.Contains(err.Error(), "already exists") {
+				m.logger.Warn("Materialized views already exist, continuing", "error", err)
+				return nil
+			}
+		} else if strings.Contains(err.Error(), "already exists") {
+			// Fallback check for error message
+			m.logger.Warn("Materialized views already exist, continuing", "error", err)
+			return nil
+		}
 		m.logger.Error("Failed to run up migration during init", "error", err)
 		return err
 	}
