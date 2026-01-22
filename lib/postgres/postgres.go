@@ -3,6 +3,7 @@ package postgres
 import (
 	"database/sql"
 	"log/slog"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -19,6 +20,14 @@ func New(databaseURL string, logger *slog.Logger) (*Postgres, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Configure connection pool to prevent connection leaks
+	// MaxOpenConns: maximum number of open connections to the database
+	db.SetMaxOpenConns(25)
+	// MaxIdleConns: maximum number of connections in the idle connection pool
+	db.SetMaxIdleConns(5)
+	// ConnMaxLifetime: maximum amount of time a connection may be reused
+	db.SetConnMaxLifetime(5 * time.Minute)
 
 	err = db.Ping()
 	if err != nil {
