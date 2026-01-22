@@ -40,6 +40,9 @@ func NewFromEnv(logger *slog.Logger) (*Client, error) {
 
 	readAccessToken := os.Getenv("TMDB_API_READ_ACCESS_TOKEN")
 
+	// Remove leading/trailing quotes if present
+	readAccessToken = strings.Trim(readAccessToken, `"'`)
+
 	if readAccessToken == "" {
 		return nil, errors.New("TMDB_API_READ_ACCESS_TOKEN is not set")
 	}

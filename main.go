@@ -7,6 +7,7 @@ import (
 	"movieFinder/app/ctx/appCtx"
 	"movieFinder/app/media/workerMediaDB"
 	"movieFinder/db"
+	"movieFinder/lib/dotEnv"
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,6 +18,12 @@ import (
 )
 
 func main() {
+	// Load environment variables from .env file
+	if err := dotEnv.Load(); err != nil {
+		// Log error but don't fail - .env file is optional
+		// Environment variables can also be set via system/env
+	}
+
 	ac := appCtx.New()
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
