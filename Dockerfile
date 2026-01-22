@@ -24,6 +24,10 @@ WORKDIR /app
 # Copy binary from builder
 COPY --from=builder /build/main .
 
+# Copy app directory with HTML templates (needed at runtime for template loading)
+# Must maintain same path structure as build stage since runtime.Caller() uses compile-time paths
+COPY --from=builder /build/app /build/app
+
 # Copy public directory with static assets
 COPY --from=builder /build/public ./public
 

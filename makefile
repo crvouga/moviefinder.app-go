@@ -92,7 +92,7 @@ docker-stop-all:
 
 
 preview:
-	docker build -t moviefinder-app-go . && docker run --rm -it -p 8080:8080 --env-file .env moviefinder-app-go
+	docker build -t moviefinder-app-go . && docker run --rm -it -p 8080:8080 --env-file .env -e DATABASE_URL=postgres://postgres:postgres@host.docker.internal:5433/postgres?sslmode=disable moviefinder-app-go
 
 preview-fresh:
-	make local && make preview
+	make local-destroy && make local && make preview
