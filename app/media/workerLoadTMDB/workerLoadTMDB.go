@@ -47,7 +47,8 @@ func (l *Worker) waitForMediaView(ctx context.Context) error {
 				SELECT EXISTS (
 					SELECT 1 
 					FROM information_schema.views 
-					WHERE table_name = 'media_denormalized_v'
+					WHERE table_schema = 'moviefinder_app_go'
+					  AND table_name = 'media_denormalized_v'
 				)
 			`).Scan(&exists)
 

@@ -1,17 +1,17 @@
 -- migrate:up
 
-DROP FUNCTION IF EXISTS public.refresh_media_mv() CASCADE;
-DROP TABLE IF EXISTS public.credits CASCADE;
-DROP TABLE IF EXISTS public.media CASCADE;
-DROP TABLE IF EXISTS public.media_genres CASCADE;
-DROP TABLE IF EXISTS public.media_images CASCADE;
-DROP TABLE IF EXISTS public.media_relationships CASCADE;
-DROP TABLE IF EXISTS public.people CASCADE;
-DROP TABLE IF EXISTS public.videos CASCADE;
+DROP FUNCTION IF EXISTS moviefinder_app_go.refresh_media_mv() CASCADE;
+DROP TABLE IF EXISTS moviefinder_app_go.credits CASCADE;
+DROP TABLE IF EXISTS moviefinder_app_go.media CASCADE;
+DROP TABLE IF EXISTS moviefinder_app_go.media_genres CASCADE;
+DROP TABLE IF EXISTS moviefinder_app_go.media_images CASCADE;
+DROP TABLE IF EXISTS moviefinder_app_go.media_relationships CASCADE;
+DROP TABLE IF EXISTS moviefinder_app_go.people CASCADE;
+DROP TABLE IF EXISTS moviefinder_app_go.videos CASCADE;
 
 -- migrate:down
 
-CREATE TABLE public.credits (
+CREATE TABLE moviefinder_app_go.credits (
     id text NOT NULL,
     media_id text NOT NULL,
     person_id text NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE public.credits (
     CONSTRAINT credits_type_check CHECK ((type = ANY (ARRAY['cast'::text, 'crew'::text])))
 );
 
-CREATE TABLE public.media (
+CREATE TABLE moviefinder_app_go.media (
     id text NOT NULL,
     title text NOT NULL,
     description text NOT NULL,
@@ -44,12 +44,12 @@ CREATE TABLE public.media (
     is_adult boolean DEFAULT false NOT NULL
 );
 
-CREATE TABLE public.media_genres (
+CREATE TABLE moviefinder_app_go.media_genres (
     media_id text NOT NULL,
     genre_id text NOT NULL
 );
 
-CREATE TABLE public.media_images (
+CREATE TABLE moviefinder_app_go.media_images (
     id text NOT NULL,
     media_id text NOT NULL,
     image_type text NOT NULL,
@@ -57,7 +57,7 @@ CREATE TABLE public.media_images (
     url text NOT NULL
 );
 
-CREATE TABLE public.media_relationships (
+CREATE TABLE moviefinder_app_go.media_relationships (
     id text NOT NULL,
     "from" text NOT NULL,
     "to" text NOT NULL,
@@ -66,7 +66,7 @@ CREATE TABLE public.media_relationships (
     CONSTRAINT media_relationships_type_check CHECK ((type = ANY (ARRAY['recommendation'::text, 'similar'::text])))
 );
 
-CREATE TABLE public.people (
+CREATE TABLE moviefinder_app_go.people (
     id text NOT NULL,
     name text NOT NULL,
     popularity double precision DEFAULT 0 NOT NULL

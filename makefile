@@ -60,7 +60,7 @@ db-up:
 	mkdir -p db && ./dbmate up
 
 db-dump:
-	docker compose -f db/docker-compose.yml exec -T postgres pg_dump -U postgres -d postgres --no-owner --schema-only > db/schema.sql
+	docker compose -f db/docker-compose.yml exec -T postgres pg_dump -U postgres -d postgres --no-owner --schema=moviefinder_app_go --schema-only > db/schema.sql
 
 dbmate:
 	make dbmate-download-cached

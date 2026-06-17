@@ -15,28 +15,33 @@ type Postgres struct {
 }
 
 func New(databaseURL string, logger *slog.Logger) (*Postgres, error) {
-	db, err := sql.Open("postgres", databaseURL)
-
+	schemaURL, err := WithSchema(databaseURL)
 	if err != nil {
 		return nil, err
 	}
 
-	// Configure connection pool to prevent connection leaks
-	// MaxOpenConns: maximum number of open connections to the database
+	db, err := sql.Open("postgres", schemaURL)
+	if err != nil {
+		return nil, err
+	}
+
 	db.SetMaxOpenConns(25)
-	// MaxIdleConns: maximum number of connections in the idle connection pool
 	db.SetMaxIdleConns(5)
-	// ConnMaxLifetime: maximum amount of time a connection may be reused
 	db.SetConnMaxLifetime(5 * time.Minute)
 
-	err = db.Ping()
-	if err != nil {
+	if err := db.Ping(); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+
+	if err := EnsureSchema(db); err != nil {
+		_ = db.Close()
 		return nil, err
 	}
 
 	return &Postgres{
 		DB:          db,
-		DatabaseURL: databaseURL,
+		DatabaseURL: schemaURL,
 		Logger:      logger,
 	}, nil
 }

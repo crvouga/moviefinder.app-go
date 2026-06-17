@@ -4,7 +4,7 @@
 DO $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM pg_matviews WHERE matviewname = 'media_mv'
+        SELECT 1 FROM pg_matviews WHERE schemaname = 'moviefinder_app_go' AND matviewname = 'media_mv'
     ) THEN
         CREATE MATERIALIZED VIEW media_mv AS
 SELECT 
@@ -32,7 +32,7 @@ END $$;
 DO $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM pg_matviews WHERE matviewname = 'media_images_mv'
+        SELECT 1 FROM pg_matviews WHERE schemaname = 'moviefinder_app_go' AND matviewname = 'media_images_mv'
     ) THEN
         CREATE MATERIALIZED VIEW media_images_mv AS
 WITH config_data AS (
@@ -110,7 +110,7 @@ END $$;
 DO $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM pg_matviews WHERE matviewname = 'genres_mv'
+        SELECT 1 FROM pg_matviews WHERE schemaname = 'moviefinder_app_go' AND matviewname = 'genres_mv'
     ) THEN
         CREATE MATERIALIZED VIEW genres_mv AS
 SELECT DISTINCT
@@ -127,7 +127,7 @@ END $$;
 DO $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM pg_matviews WHERE matviewname = 'media_genres_mv'
+        SELECT 1 FROM pg_matviews WHERE schemaname = 'moviefinder_app_go' AND matviewname = 'media_genres_mv'
     ) THEN
         CREATE MATERIALIZED VIEW media_genres_mv AS
 SELECT 
@@ -149,7 +149,7 @@ END $$;
 DO $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM pg_views WHERE viewname = 'media_denormalized_v'
+        SELECT 1 FROM pg_views WHERE schemaname = 'moviefinder_app_go' AND viewname = 'media_denormalized_v'
     ) THEN
         CREATE VIEW media_denormalized_v AS
 SELECT

@@ -110,7 +110,7 @@ func (m *DBMaintenance) GetTableStats(tableName string) (*TableStats, error) {
 			last_vacuum,
 			last_autovacuum
 		FROM pg_stat_user_tables
-		WHERE tablename = $1
+		WHERE schemaname = 'moviefinder_app_go' AND tablename = $1
 	`
 
 	stats := &TableStats{}
