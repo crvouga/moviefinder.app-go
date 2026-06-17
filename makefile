@@ -96,3 +96,6 @@ preview:
 
 preview-fresh:
 	make local-destroy && make local && make preview
+
+gh:
+	open https://github.com/crvouga/moviefinder.app-go/actions
