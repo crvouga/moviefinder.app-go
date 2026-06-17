@@ -11,11 +11,26 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync/atomic"
 	"syscall"
 	"time"
 
 	_ "embed"
 )
+
+// readinessGate serves 200 on / while migrations run so Fly health checks pass.
+type readinessGate struct {
+	ready atomic.Bool
+	app   http.Handler
+}
+
+func (g *readinessGate) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if !g.ready.Load() {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	g.app.ServeHTTP(w, r)
+}
 
 func main() {
 	// Load environment variables from .env file
@@ -28,6 +43,26 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	addr := ":" + port
+
+	gate := &readinessGate{}
+	server := &http.Server{
+		Addr:    addr,
+		Handler: gate,
+	}
+
+	go func() {
+		ac.Logger.Info("Server listening", "addr", addr)
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			ac.Logger.Error("Failed to start server", "error", err)
+			os.Exit(1)
+		}
+	}()
 
 	err := ac.Postgres.MigrateUp(db.MigrationsFs, db.MigrationsDir)
 
@@ -48,24 +83,8 @@ func main() {
 	handler, stopWorkers := app.Handler(&ac, ctx)
 	defer stopWorkers()
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-	addr := ":" + port
-
-	server := &http.Server{
-		Addr:    addr,
-		Handler: handler,
-	}
-
-	go func() {
-		ac.Logger.Info("Server live", "url", "http://localhost"+addr+"/")
-		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			ac.Logger.Error("Failed to start server", "error", err)
-			os.Exit(1)
-		}
-	}()
+	gate.app = handler
+	gate.ready.Store(true)
 
 	<-ctx.Done()
 
