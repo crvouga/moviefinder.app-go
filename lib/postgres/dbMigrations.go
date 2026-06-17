@@ -36,9 +36,11 @@ func (p *Postgres) MigrateUp(migrationsFS embed.FS, migrationsDir string) error 
 	db := dbmate.New(u)
 	db.FS = migrationsFS
 	db.MigrationsDir = []string{migrationsDir}
+	db.MigrationsTableName = MigrationsTable()
+	db.AutoDumpSchema = false
 
 	p.Logger.Info("Running database migrations", "schema", SchemaName)
-	if err := db.CreateAndMigrate(); err != nil {
+	if err := db.Migrate(); err != nil {
 		p.Logger.Error("Failed to run migrations", "error", err)
 		return err
 	}

@@ -8,19 +8,17 @@ import (
 const bootstrapFromPublicSQL = `
 CREATE SCHEMA IF NOT EXISTS moviefinder_app_go;
 
-CREATE TABLE IF NOT EXISTS moviefinder_app_go.schema_migrations (
-	version varchar(128) PRIMARY KEY
-);
-
+-- Drop empty duplicate from a prior partial bootstrap so public.schema_migrations can move.
 DO $$
 BEGIN
 	IF EXISTS (
 		SELECT 1 FROM information_schema.tables
 		WHERE table_schema = 'public' AND table_name = 'schema_migrations'
+	) AND EXISTS (
+		SELECT 1 FROM information_schema.tables
+		WHERE table_schema = 'moviefinder_app_go' AND table_name = 'schema_migrations'
 	) THEN
-		INSERT INTO moviefinder_app_go.schema_migrations (version)
-		SELECT version FROM public.schema_migrations
-		ON CONFLICT (version) DO NOTHING;
+		DROP TABLE moviefinder_app_go.schema_migrations;
 	END IF;
 END $$;
 
@@ -37,7 +35,7 @@ BEGIN
 		IF EXISTS (
 			SELECT 1 FROM information_schema.tables
 			WHERE table_schema = 'public' AND table_name = obj
-		) AND obj <> 'schema_migrations' THEN
+		) THEN
 			EXECUTE format('ALTER TABLE public.%I SET SCHEMA moviefinder_app_go', obj);
 		END IF;
 	END LOOP;
@@ -79,8 +77,8 @@ BEGIN
 END $$;
 `
 
-// BootstrapFromPublic moves legacy public objects into moviefinder_app_go and copies
-// dbmate version rows so migrations are not re-applied after search_path changes.
+// BootstrapFromPublic moves legacy public objects into moviefinder_app_go so dbmate
+// does not re-apply migrations after search_path changes.
 func BootstrapFromPublic(db *sql.DB, logger *slog.Logger) error {
 	logger.Info("Bootstrapping legacy public schema", "target", SchemaName)
 	_, err := db.Exec(bootstrapFromPublicSQL)

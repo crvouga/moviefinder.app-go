@@ -1,6 +1,6 @@
 
-run:
-	clear && go run main.go
+run go:
+	go run main.go
 
 build:
 	make tw-build & go build -o main main.go
@@ -22,10 +22,19 @@ clean:
 	rm -f main
 	rm -rf tmp
 
-.PHONY: run dev test build clean
+.PHONY: run go dev test build clean preview preview-fresh
 
-preview:
-	docker build -t moviefinder . && docker run -p 8080:8080 moviefinder
+MIGRATIONS_TABLE := moviefinder_app_go.schema_migrations
+DBMATE_FLAGS := --migrations-table "$(MIGRATIONS_TABLE)" --no-dump-schema
+export DBMATE_MIGRATIONS_TABLE := $(MIGRATIONS_TABLE)
+export DBMATE_NO_DUMP_SCHEMA := true
+
+define run_dbmate
+	@set -e; \
+	test -n "$$DATABASE_URL" || { echo "DATABASE_URL required (e.g. vault run -- make db-up)" >&2; exit 1; }; \
+	DB_URL=$$(DATABASE_URL="$$DATABASE_URL" go run ./scripts/dbmate-database-url); \
+	mkdir -p db && DATABASE_URL="$$DB_URL" ./dbmate $(DBMATE_FLAGS) $(1)
+endef
 
 q:
 	psql postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable
@@ -55,20 +64,17 @@ dbmate-download-cached:
 		make dbmate-download; \
 	fi
 
-db-up:
-	make dbmate-download-cached
-	mkdir -p db && ./dbmate up
+db-up: dbmate-download-cached
+	$(call run_dbmate,up)
 
 db-dump:
 	docker compose -f db/docker-compose.yml exec -T postgres pg_dump -U postgres -d postgres --no-owner --schema=moviefinder_app_go --schema-only > db/schema.sql
 
-dbmate:
-	make dbmate-download-cached
-	mkdir -p db && ./dbmate new "$(filter-out $@,$(MAKECMDGOALS))"
+dbmate: dbmate-download-cached
+	mkdir -p db && ./dbmate $(DBMATE_FLAGS) new "$(filter-out $@,$(MAKECMDGOALS))"
 
-db-down:
-	./dbmate down
-	mkdir -p db && ./dbmate down
+db-down: dbmate-download-cached
+	$(call run_dbmate,down)
 
 tw-download:
 	curl -fsSL -o tailwindcss https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-macos-arm64

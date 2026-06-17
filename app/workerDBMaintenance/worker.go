@@ -18,15 +18,8 @@ type Worker struct {
 	cancel        context.CancelFunc
 }
 
-// High-activity tables that need frequent maintenance
-var highActivityTables = []string{
-	"entities",
-	"media",
-	"media_images",
-	"feed",
-	"feed_session_mapping",
-	"user_sessions",
-}
+// High-activity tables that need frequent maintenance (see dbMaintenance.HighActivityTables).
+var highActivityTables = dbMaintenance.HighActivityTables
 
 func parseDuration(envVar string, defaultDuration time.Duration) time.Duration {
 	value := os.Getenv(envVar)
