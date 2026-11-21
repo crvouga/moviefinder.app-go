@@ -24,4 +24,4 @@ jobs:
       dockerfile: ./Dockerfile
       context: .
       image_prefix: chrisvouga
-      infra_github_repo: crvouga/infra
+      infra_github_repo: crvouga-organization/personal
