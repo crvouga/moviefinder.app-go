@@ -104,4 +104,4 @@ preview-fresh:
 	make local-destroy && make local && make preview
 
 gh:
-	open https://github.com/crvouga/moviefinder.app-go/actions
+	open https://github.com/crvouga-organization/moviefinder.app-go/actions
