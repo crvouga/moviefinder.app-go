@@ -14,11 +14,16 @@ permissions:
   contents: read
   packages: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
 # The shared reusable-publish-image.yml workflow this used to call no longer
 # exists, and the service isn't in the infra inventory, so nothing deploys it.
 # Publish to this repository's own package, which GITHUB_TOKEN can create and push.
 jobs:
   publish:
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     env:
       IMAGE: ghcr.io/${{ github.repository }}
